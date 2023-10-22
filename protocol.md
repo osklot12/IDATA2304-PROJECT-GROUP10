@@ -1,42 +1,524 @@
-# Communication protocol
+# Node-Oriented Farming System Protocol (NOFSP)
 
-This document describes the protocol used for communication between the different nodes of the
-distributed application.
+This document describes the protocol for data communication between nodes in a distributed application for farming
+environments, called Node-Oriented Farming System Protocol (NOFSP). The protocol provides modularity and flexibility,
+and a combination of speed and reliability to any system implementing it. NOFSP is best suited for distributed
+farming environments, transmitting sensor data continuously.
 
 ## Terminology
 
-* Sensor - a device which senses the environment and describes it with a value (an integer value in
+* __sensor__ - a device which senses the environment and describes it with a value (an integer value in
   the context of this project). Examples: temperature sensor, humidity sensor.
-* Actuator - a device which can influence the environment. Examples: a fan, a window opener/closer,
+* __actuator__ - a device which can influence the environment. Examples: a fan, a window opener/closer,
   door opener/closer, heater.
-* Sensor and actuator node - a computer which has direct access to a set of sensors, a set of
+* __field node__ - a computer which has direct access to a set of sensors, a set of
   actuators and is connected to the Internet.
-* Control-panel node - a device connected to the Internet which visualizes status of sensor and
+* __control panel__ node - a device connected to the Internet which visualizes status of sensor and
   actuator nodes and sends control commands to them.
+* __field node system table__ - a table containing information about each sensor and actuator connected to a field
+node, such as their type and address.
+* __channel__ - a logical channel for communication between a client and a server
 * Graphical User Interface (GUI) - A graphical interface where users of the system can interact with
   it.
 
 ## The underlying transport protocol
 
-TODO - what transport-layer protocol do you use? TCP? UDP? What port number(s)? Why did you 
-choose this transport layer protocol?
+_TODO - what transport-layer protocol do you use? TCP? UDP? What port number(s)? Why did you 
+choose this transport layer protocol?_
+
+As NOFSP is an application layer protocol, it needs to receive service from transport layer protocols. This section
+describes how this works in the protocol.
+
+### Control data and sensor data
+
+The data transmitted in a system implementing NOFSP can be divided into two categories: __control data__ and
+__sensor data__. Control data refers to any data used for control in the environment, like adding new sensor nodes
+or activating actuators. Sensor data refers to any data captured by a sensor, like temperature or humidity.
+Control data exchange is always bidirectional, meaning the message exchange for this category consists of a request and a
+response. On the other hand, sensor data exchange is always unidirectional, meaning it always consists of one part
+pushing data to another, and never receiving any response.
+
+The reliability of control data is crucial for the system to work properly. Lost packets to any actuator could
+eventually harm the farming environment and be expensive. The reliability of sensor data however, is not as important.
+Some lost packets from any continuous sensor will not impact the system in any significant way, as a new packet will
+shortly arrive and cover this loss. It is important to note that this is only true for sensors collecting data
+continuously, where the average data for a period is more significant than the individual measurements. This protocol
+is not suited for systems using sensors that collect data where every individual packet is significant, at least not
+the current version of the protocol. The sensor data transmission for any system implementing NOFSP consists of relatively
+small packets, where the packets are transmitted frequently, in contrast to control data that only occurs in events
+involving "control" of the system, and may carry bigger loads of data.
+
+
+### Hybrid transport solution
+
+Because of how data in NOFSP is split into two categories, which each has different
+requirements, a hybrid transport protocol solution is used: TCP is used for control data and UDP is used for 
+sensor data. This approach can be viewed as having two logical channels for communication in NOFSP, one for TCP 
+and one for UDP. The reasons for this approach is explained in the following two paragraphs.
+
+![Illustration of two logical channels transporting data](images/nofsp_hybrid_transport.png)
+
+#### TCP for Control Data
+
+Control data requires a reliable way to be transmitted, which makes TCP a perfect fit. As mentioned earlier, loss
+of packets containing control data can seriously harm the farming environment. TCP makes sure that any lost 
+(including corrupt) packets will be retransmitted, resulting in no loss of packets. TCP also provide order
+preservation, which can also be crucial for transmission of control data.
+
+#### UDP for Sensor Data
+
+Unlike control data, which necessitates a reliable way of transmitting data, sensor data prioritizes 
+efficiency and speed, which makes UDP the best fit. UDP does not require resources for not time for mechanisms
+such as error handling (retransmission of packets), connection establishment and order preservation. Instead,
+packets are sent in a fast and efficient way, not needing to care about lost packets. Another benefit UDP provides,
+it that the headers are much smaller to that of TCP. This makes the overhead in the network smaller, 
+which can significantly reduce traffic when small amounts of data are transmitted frequently.
+
+One drawback worth considering for this approach is that UDP per se does not provide any means of congestion control.
+This might or might not be a problem for the system implementing the protocol, and might require a custom solution.
+
+### Port numbers
+
+Any client application implementing NOFSP can use any not well-known port, but it is recommended to use an ephemeral
+(private) port to avoid possible collisions with registered ports.
+
+As server applications implementing NOFSP will need to run two services; one TCP service for control data, and one 
+UDP service for sensor-data, two different port numbers needs to be established as a result.
+The server listens for __control data__ on port __60 005__ (_Control Service_), and listens for __sensor data__ 
+messages on port __60 006__ (_Sensor Data Collection Service_). However, before any connection has been established,
+the client only needs to be aware of the control service port number. The server will communicate the port number
+for the sensor data collection service in the registration phase, which is explained in detail later in the
+document.
 
 ## The architecture
 
-TODO - show the general architecture of your network. Which part is a server? Who are clients? 
-Do you have one or several servers? Perhaps include a picture here. 
+_TODO - show the general architecture of your network. Which part is a server? Who are clients? 
+Do you have one or several servers? Perhaps include a picture here._
 
+The architecture of NOFSP is designed to make a system modular, and allows for scaling. The following section
+describes the entities in the protocol, the roles of the entities as well as their relationship to each other.
+
+### Entities
+
+The entities in NOFSP at the highest level are __field nodes__, __control panels__ and the __central
+server__. Both the field nodes and control panels are called nodes in the network. 
+All the three entities require different software applications, as they have different responsibilities.
+Together, they create a system for a farming environment that can capture sensor data, monitor the environment and
+activate actuators, with minimal effort from the farmer.
+
+#### Field nodes
+
+A field node is an already established sub-system consisting of smaller devices: sensors and actuators. 
+The protocol treats the field node as a single entity in the network, lets the node itself do the job of managing 
+sensors and actuators. A field nodes is not constrained by the protocol in terms of either the quantity or the variety 
+of sensors and actuators it accommodates. However, the field nodes itself needs to be aware of the sensors and actuators
+it possesses.
+
+The field node has two jobs in NOFSP: collecting sensor data and handle actuators. It can do both of these jobs or one
+of them. A field node with none of these jobs will not be recognized as a field node. The entity can both send and 
+receive control data, but only send sensor data.
+
+##### Field Node Names
+
+A field node can optionally be assigned a specific name, making it easier for the farmer to recognize the field node
+in the system. This name must be a string and does not have to be unique. The given name for a field node
+has no function to the system itself.
+
+##### Field Node Device Classes
+
+Even though the protocol does not interfere with how the field node manages its connected devices, a common language
+is needed for the field node to communicate the devices it possesses to the rest of the system. Each device will
+send or handle data differently, and the system needs to know how to handle this. The format for how to define such a
+class is given as _TYPE:CATEGORY_, without the semicolon, where the _type_ refers to the type of device, such as sensors 
+and actuators, and the _category_ refers to the category of that type, such as humidity sensors or fan actuators. The 
+type is either _S_ for sensors or _A_ for actuators, while the category is represented by a positive integer. A class 
+for a temperature sensor could look like this: _S1_.
+
+This approach for classifying field node devices allows for the addition of both new sensors and actuators,
+as long as they are given a new class. It is important to know that the category only refers to how data is transmitted,
+not to the device itself. Two different devices can go under the same class, as long as they transmit/receive data
+the same way. Another important point is that the classes needs to be universal for the system, meaning that
+all entities in the system uses the same class for the same category. This does not mean that all entities need to
+recognize all the classes used in the system; some entities may support more classes than others.
+The table below shows an example of how field node device classes can be defined in a system.
+
+| Type     | Category (data format)                 | Class |
+|----------|----------------------------------------|-------|
+| sensor   | single temperature in celsius          | S1    |
+| sensor   | block of humidity values in percentage | S7    |
+| actuator | 1 or 0 for on or off                   | A2    |
+
+
+##### Field Node System Table (FNST)
+
+The __field node system table (FNST)__ is a table used for communicating the devices connected to the field node.
+The table contains a row for each device connected, each represented by their class and an address. The class is
+given by the method explained in the previous section. The address is assigned by giving each device a unique
+positive integer. The field node is responsible for both creating and storing this table, and is essential for the
+system to work. By the addition or removal of a new device, the table must be updated accordingly.
+The following table shows an example of how a FNST could look.
+
+| Class | Address |
+|-------|---------|
+| S7    | 1       |
+| S1    | 2       |
+| A5    | 2       |
+| S7    | 3       |
+| A2    | 4       | 
+
+##### Active Device List (ADL)
+
+The __active device list__ is a list that keeps track of which devices the field node need to push data from.
+Any device that does not appear on this list can be ignored completely in terms of data communication.
+ADL helps to reduce traffic in the network by only pushing data that is actually used. The list looks a bit like
+the __compatibility list__ for the control panels, which is explained later. Unlike the compatibility list,
+which only describes the devices understood by a single control panel, ADL tells which devices are
+used and not used for the whole network.
+
+#### Control panels
+
+A __control panel__ is an entity in the network responsible for monitoring captured sensor data from field nodes, 
+as well as to give the user control over the actuators. It can monitor only some of the field nodes in the network,
+or all of them. The entity can both send and receive control data, but only receive sensor data.
+
+##### Compatibility list
+
+While the field node needs to keep an FNST, the control panel needs to keep a __compatibility list__.
+The compatibility list is a list containing all the field device classes the control panel supports.
+In other words, the compatibility list tells what kind of data the control panel can handle. The use of the 
+compatibility list allows for backward compatibility, meaning that an older version of a control panel may
+interact with a newer version of a field node. The network will in turn not be flooded by data that the control panel
+do not understand.
+
+Like FNST, it is the job of the control panel to create and store this its compatibility list. The following list
+shows an example of how a compatibility list can look like.
+
+    S13, S6, A13, S2, S3, S5, A19, S1
+
+##### FNST copies
+
+For the control panel to be able to understand and address the different parts of the system for a field node, it
+needs to store a copy of the FNST for the field node. Since FNST is a dynamic table, and might change over time,
+it needs to be regularly updated.
+
+#### Central Server
+
+The __central server__ is an entity in the network responsible for routing data messages in the network.
+All data sent from a field node to a control panel will go through this entity, and vice versa.
+Only one central server should exist in a system implementing NOFSP, and serves as the heart of the system.
+The entity can both send and receive control data, as well as sensor data.
+
+The field nodes and control panels does not know about each other, they are both only aware of the central
+server. It is the job of this central server to coordinate all communication that needs to happen between
+the field nodes and control panels.
+
+##### Field Node Pool
+
+The central server needs to keep track of some information for all the field nodes in the network. This is done
+by storing something called the __field node pool__. The field node pool is some data structure keeping information
+about all the field node addresses, any assigned name as well as the FNST for each field node.
+
+##### Network Node Routing Table (NNRT)
+
+The central server introduces a new table to the protocol: the __network node routing table__. This table
+describes the relation between field nodes and control panels in the system. Each field node is given such a table to
+keep track of their _subscribers_, which are control panel nodes. It is important to note that this table is created,
+stored and managed by the central server, and not the field node itself. The field node is not aware it its subscribers,
+and does only focus on collecting and pushing data.
+
+NNRT maps each field node to some control panels in the network. The table also needs to include the compatibility
+list for each control panel. When an incoming packet is received from a field node, the central server checks the
+table and only sends the packet to the given control panels. If the received packet contains sensor data, the packet
+is only forwarded if the sensor category is in the compatibility list. The following table shows how such a table
+could look like.
+
+| Control Panel | Compatibility list |
+|---------------|--------------------|
+| 1             | S1, A4, A6         |
+| 2             | S1, S2, A4, A8     |
+
+##### Field Node Status Map (FNSM)
+
+Instead of the central server requesting the status of the actuators for a field node every time, it simply keeps
+a map containing this data. It is the responsibility of the field node to notify the central server in case of a 
+status change, such that the central server can update its map accordingly. This mechanism saves a lot of
+unnecessary network traffic. Such a map is called a __field node status map__, and the following table shows
+an example of how such a map for a field node could look like.
+
+| Actuator | Status code |
+|----------|-------------|
+| 1        | 4           |
+| 2        | 0           |
+| 3        | 1           |
+
+The status of an actuator is not universal for all actuators, as different actuators might allow for different states.
+The status code is to be interpreted by a control panel in combination with the class for the actuator, and together
+make a more meaningful status description for the actuator.
+
+### Client/server paradigm
+
+The general architecture of a NOFSP system follows the client/server paradigm. Both the field nodes and control panels
+act as clients, while the central server acts as a server. This means that it is always the field nodes and control
+panels initiating connections, while the central server is always listening for incoming connections.
+The field nodes and control panels will however need to run different client applications, as they are responsible
+for different tasks.
+
+Both the two clients and the server runs two different processes for communication, due to data in NOFSP being
+divided into two different categories. These are not two independent services but rather one service
+divided into two sub-services. The system as a whole relies on both to operate properly. The two processes
+are called the __control process__ and the __data process__.
+
+The __control process__ is used for transmission of control data. This process runs on TCP and can both send and
+receive messages for all the three entities.
+
+The __data process__ is used for transmission of sensor data. This process runs on UDP and can only send messages
+for the field nodes, only receive messages for the control panels, while being able to both send and receive
+messages for the central server.
+
+![Illustration of the architecture of NOFSP](images/nofsp_paradigm.png)
+
+As for most client/server architectures, a server failure will result in a system shutdown. This can be prevented
+by simply adding one or more secondary servers to the network, but is beyond the scope of this protocol.
+
+### Node Addressing
+
+As NOFSP allows for both many field nodes and control panel nodes, there is a need for addressing these nodes.
+This is done giving every client connecting to the server the smallest available positive integer. The central server
+needs to keep track of all connected clients, and be able to find the smallest available integer for any new client
+connections. The following table shows an example of how a node address table could look like.
+
+| Node     | Address |
+|----------|---------|
+| sensor   | 1       |
+| sensor   | 2       |
+| actuator | 3       |
+| actuator | 4       |
+| sensor   | 6       |
+
+This example shows the node address table for a central server connected to five different clients. The system
+had at one time at least 6 connected clients, since there is a gap in the addresses. Even if client number five left,
+client number 6 still keeps its address. If a new client connects at this time, it will be assigned address five, since
+it is the smallest available positive integer.
 
 ## The flow of information and events
 
-TODO - describe what each network node does and when. Some periodic events? Some reaction on 
+_TODO - describe what each network node does and when. Some periodic events? Some reaction on 
 incoming packets? Perhaps split into several subsections, where each subsection describes one 
-node type (For example: one subsection for sensor/actuator nodes, one for control panel nodes).
+node type (For example: one subsection for sensor/actuator nodes, one for control panel nodes)._
+
+When discussing with flow of information and events in NOFSP, it is crucial to remember that messages are transmitted
+through two different channels: one for control messages and one for sensor data messages. The flow of information
+is generally simpler in the case of sensor data transmission. The following section describes how messages are
+exchanged in each event in NOFSP. Most events follow the request-response pattern.
+
+### Field node registration
+
+_Requester_: __field node__
+
+_Responder_: __central server__
+
+Field node registration involves a field node registering itself at the central server. This phase is done for
+every field node that wants to connect to the system, everytime. Since field nodes and control panels are registered
+differently, the events are explained separately. All messages for this event are control messages, hence only the 
+control processes is used.
+
+1. __Initiation__: The field node client initiates an active open to a passive open server. This establishes a 
+TCP connection between the two control processes, using the famous three-way handshake.
+2. __Field node system reveal__: Once a connection has been made to the control service of the server, the field node
+client sends a message containing its FNST. This message also includes the name of the field node, if it has
+any.
+3. __Integration__: The server responds back with an address for the field node if the registration was successful.
+In the case of a failed registration, an error message will be sent instead.
+
+### Control panel registration
+
+_Requester_: __control panel__
+
+_Responder_: __central server__
+
+Control panel registration involves a control panel registering itself at the central server. This phase is somewhat
+similar to a field node registration. All messages for this event are control messages, hence only the control process
+is used.
+
+1. __Initiation__: The control node client initiates an active open to a passive open server. This establishes a
+   TCP connection between the two control processes, using the famous three-way handshake.
+2. __Compatibility reveal__: Once a connection has been made to the control service of the server, the control panel
+client sends a message containing its compatibility list.
+3. __Integration__: The server responds back with an address for the control panel if the registration was successful.
+In the case of a failed registration, an error message will be sent instead.
+
+### Heartbeats
+
+_Requester_: __central server__
+
+_Responder_: __any client__
+
+Heartbeats is a mechanism used for maintaining TCP connections. Once a client has been registered at a central server,
+the server sends out "heartbeats" every 15 seconds. A heartbeat is a small packet meant as a request for a response
+if the client is still alive. If no response is given to a heartbeat within 15 seconds, the TCP connection will
+be closed. All messages for this event are control messages, hence only the control process is used.
+
+1. __Heart beats__: A small TCP packet is sent out to the client, carrying a special flag indicating that it is
+a heartbeat.
+2. __Acknowledgement__: If a client receives the heartbeat, it will respond with an acknowledgement, and the timer
+will be reset. If the client for some reason does not acknowledge the heartbeat, the connection will be closed.
+
+### Field node pool pull
+
+_Requester_: __control panel__
+
+_Responder_: __central server__
+
+A field node pool pull happens when a control panel wants to know about all the field nodes in the network.
+This is done when a control panel wants to choose which field nodes it wants to "connect" to. All messages for this
+event are control messages, hence only the control process is used.
+
+1. __Pool request__: The control panel client requests a pull for the field node pool of the central server.
+2. __Pool response__: The server responds with its field node pool.
+
+### Subscribing to a field node
+
+_Requester_: __control panel__
+
+_Responder_: __central server__
+
+Since the control panels never actually directly connects to any field node, using the term "connecting" is somewhat
+misleading. The event is instead referred to as _subscribing_. When a control panel subscribes to a field node,
+it tells the central server that it wants to receive all sensor data for that particular field node, and be able
+to control its actuators. All messages for this event are control messages, hence only the control process is used.
+
+1. __Subscription request__: The control panel client sends a request for subscribing to a specific field node.
+This is done by sending a request containing the address of the given field node.
+2. __Subscription confirmation__: In the case of a successful subscription, the server responds with a confirmation 
+containing the field nodes FNST, FNSM and name. The NNRT for the field node will be updated and
+any field node sensor data will now be forwarded to the control panel. This will also trigger an ADL update.
+In case of a failed subscription request, the server responds with an error message.
+
+### ADL update
+
+_Requester_: __central server__
+
+_Responder_: __field node__
+
+Once a control panel subscribes to a field node, the central server will check the compatibility between the two.
+It will then compare the extracted field node device classes with the NNRT for the field node, to check if any
+new classes are introduced. If so, the server will tell the field node to update its ADL accordingly.
+The same thing happens when a control panel unsubscribes from a field node: if any class is left unused, the server
+will tell the field node to update its ADL accordingly. All messages for this event are control messages, hence only
+the control process is used.
+
+1. __Update request__: The server sends a request to the field node containing relevant ADL update data.
+2. __Update confirmation__: The field node responds with a confirmation if the update was successful.
+In the case of a failed update, the field node responds with an error message.
+
+### Sensor data push
+
+_Requester_: __field node__
+
+_Responder_: __none__
+
+Once a field node has established a control connection to a central server, it can start pushing sensor data using
+the data process (UDP). It will only push data from sensors that can be found in the ADL, making it crucial to keep
+the ADL for the field node up to date. This event includes the pushing of data in two iterations: first from the field
+node to the central server, then from the central server to the subscribed control panels. This is always the case,
+because the mechanisms of ADL prevents the field node from pushing any data when no control panel is subscribed.
+All messages for this event are sensor data messages, hence only the data process is used.
+
+1. __Data pushing__: Whenever the field node captures any data from one of its sensors, it checks its ADL whether this 
+sensor data is used by the network. If so, it pushes the data to the central server using the data process.
+2. __Data routing__: The central server only checks the header of the sensor data message, not the actual data.
+The header is used for further routing of the data. If the message does not have any receivers, it is discarded and
+an ADL event is triggered. No response is given back.
+
+    If the message has one or more receivers, it is routed to the appropriate control panels. This is done by the 
+    central server pushing a copy of the message to each subscribed control panel.
+
+### Actuator status push
+
+When the state of an actuator on a field node changes, it needs to communicate this change to the rest of the network.
+This event is referred to as an __actuator status push__. This message first needs to go from the field node to the
+central server, then from the central server to any subscribed control panels. All messages for this event are
+control messages, hence only the control process is used.
+
+1. __Initial notification__: When a field node registers a change of state for an actuator, it sends a message
+to the central server notifying this change.
+2. __FNSM update and message forwarding__: When receiving a notification from a field node, the central server then 
+updates its FNSM for the field node accordingly, and forwards the message to any subscribed control panel.
+
+### Actuator activation
+
+An __actuator activation__ event occurs when a control panel wants to activate a certain actuator for a field node.
+The request has to go through the central server before reaching the desired field node. All messages in this event
+are control messages, hence only the control process is used.
+
+1. __Control panel request__: The control panel sends a request to activate an actuator to the central server,
+containing the address of the field node and the actuator.
+2. __Server request forwarding__: The server does not check the validity of the request, and simply forwards the
+request to the field node. If the field node is reachable and the request forwarded, the server responds to the control
+panel telling it that the request has been forwarded.
+If the field node is not reachable, the server responds to the control panel with
+an error message.
+3. __Actuator activation and response__: If the request reaches the field node, the field node reads the request
+and activates the relevant actuator if possible. This triggers an actuator status push, and the field node
+responds to the central server with a confirmation that the request was accepted. In case of activation failure,
+the field node responds to the central server with an error message.
+
+### Unsubscribing from a field node
+
+A control panel unsubscribing to a field node can happen in two ways:
+* __actively unsubscribing__: the control panel actively unsubscribes from a field node. In this case, the control
+panel first needs to notify the central server about this event, so that the central server can handle the unsubscribing.
+* __connection closed__: in the case of closure of a control connection to a control panel, the control panel will
+automatically be unsubscribed by the central server. This happens either if the control panel disconnects, or if the
+heartbeat mechanism discovers a dead connection. This case does not involve any data communication in the network as
+it is processed internally at the central server, and is therefore not described by NOFSP.
+
+All messages in this event are control messages, hence only the control process is used.
+
+1. __Cancel subscription request__: A request is sent from the control panel to the central server, 
+containing the address of the desired field node to unsubscribe from.
+2. __Central server response__: If the control panel is successfully unsubscribed, the central server updates its NNRT 
+for the given field node accordingly, triggers an ADL update for the field node, and a confirmation message is sent as 
+a response to the control panel. In case of an error, an error message is sent back to the control panel.
+
+### Disconnecting
+
+Any node, both field nodes and control panels, can disconnect from the system. This event includes closure of the
+control process connection and triggering of some other events. The goal of a proper disconnection is to let all 
+parties serving the node know of the event. All messages in this event are control messages, hence only the control 
+process is used.
+
+1. __Disconnection__: There are two ways for a disconnection to occur. A __passive disconnection__ occurs when
+the connection to a node is forced to be closed by the heartbeat mechanism. An __active disconnection__ occurs
+when a node pushes a message to the central server, telling it that it is disconnecting. The disconnecting node
+does not get a response from this type of message.
+2. __Notifying involved parties__: Once a disconnection is detected by the central server, the server lets the
+involved parties know about the event. 
+   - If a control panel disconnects, it will simply trigger an unsubscription event for all the field nodes it 
+   subscribes to. In other words, the control panel will unsubscribe to all its previously subscribed to field nodes,
+   before the central server purges the control panel from its address storing mechanism.
+   - If a field node disconnects, the central server will notify all the subscribed control panels. This message
+   does not get any response from the control panels. The central server will then remove its NNRT for this
+   field node, before it purges the field node from its address storing mechanism.
 
 ## Connection and state
 
-TODO - is your communication protocol connection-oriented or connection-less? Is it stateful or 
-stateless? 
+_TODO - is your communication protocol connection-oriented or connection-less? Is it stateful or 
+stateless?_ 
+
+NOFSP is a connection-oriented protocol because all communication in the network relies on established TCP control
+connections. Even though a "connection-less" sub-protocol for sensor data built on UDP is used, using this sub-protocol
+does not work without an established TCP connection. Any entity that wants to use the NOFSP, will have to both start
+and end their interaction with the system using the TCP control connection.
+
+The protocol is also stateful, and this is a key reason to why it all works. First of all, only registered clients
+are allowed to use the services of the protocol. The server stores successfully registered clients and assigns them
+an address. Non-registered users are not able to interact with the server at all, except for registering.
+Secondly, the server stores states for each client, like the field nodes a control panel subscribes to, or the status
+for the actuators of a field node. Clients do not need to tell the server everything every time, the server
+"remembers" the state of the clients. This significantly reduces the amount of traffic in the network, and can
+help reduce congestion and hence data loss, which is crucial when dealing with non-reliable transport protocols
+like UDP.
 
 ## Types, constants
 
@@ -47,6 +529,13 @@ them here.
 
 TODO - describe the general format of all messages. Then describe specific format for each 
 message type in your protocol.
+
+node address, sensor address
+
+
+
+Sensor data message:
+1 (node address), 3 (sensor address), 27 (data)
 
 ### Error messages
 

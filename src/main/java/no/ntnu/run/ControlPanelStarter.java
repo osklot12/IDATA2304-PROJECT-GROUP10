@@ -26,7 +26,7 @@ public class ControlPanelStarter {
    *             use real socket communication.
    */
   public static void main(String[] args) {
-    boolean fake = false;
+    boolean fake = true;
     if (args.length == 1 && "fake".equals(args[0])) {
       fake = true;
       Logger.info("Using FAKE events");
