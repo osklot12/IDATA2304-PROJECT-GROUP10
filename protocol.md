@@ -1,4 +1,5 @@
 # Node-Oriented Farming System Protocol (NOFSP)
+_version 1.0_
 
 This document describes the protocol for data communication between nodes in a distributed application for farming
 environments, called Node-Oriented Farming System Protocol (NOFSP). The protocol provides modularity and flexibility,
@@ -34,9 +35,9 @@ describes how this works in the protocol.
 The data transmitted in a system implementing NOFSP can be divided into two categories: __control data__ and
 __sensor data__. Control data refers to any data used for control in the environment, like adding new sensor nodes
 or activating actuators. Sensor data refers to any data captured by a sensor, like temperature or humidity.
-Control data exchange is always bidirectional, meaning the message exchange for this category consists of a request and a
-response. On the other hand, sensor data exchange is always unidirectional, meaning it always consists of one part
-pushing data to another, and never receiving any response.
+Control data exchange is _bidirectional_, meaning the message exchange for this category consists of a 
+request and a response. On the other hand, sensor data exchange is _unidirectional_, meaning it always consists of 
+one part pushing data to another, and never receiving any response.
 
 The reliability of control data is crucial for the system to work properly. Lost packets to any actuator could
 eventually harm the farming environment and be expensive. The reliability of sensor data however, is not as important.
@@ -287,13 +288,13 @@ This is done giving every client connecting to the server the smallest available
 needs to keep track of all connected clients, and be able to find the smallest available integer for any new client
 connections. The following table shows an example of how a node address table could look like.
 
-| Node     | Address |
-|----------|---------|
-| sensor   | 1       |
-| sensor   | 2       |
-| actuator | 3       |
-| actuator | 4       |
-| sensor   | 6       |
+| Node          | Address |
+|---------------|---------|
+| field node    | 1       |
+| field node    | 2       |
+| control panel | 3       |
+| control panel | 4       |
+| field node    | 6       |
 
 This example shows the node address table for a central server connected to five different clients. The system
 had at one time at least 6 connected clients, since there is a gap in the addresses. Even if client number five left,
@@ -435,43 +436,85 @@ an ADL event is triggered. No response is given back.
 
 ### Actuator status push
 
+_Requester_: __field node__
+
+_Responder_: __central server__
+
 When the state of an actuator on a field node changes, it needs to communicate this change to the rest of the network.
-This event is referred to as an __actuator status push__. This message first needs to go from the field node to the
-central server, then from the central server to any subscribed control panels. All messages for this event are
-control messages, hence only the control process is used.
+This event is referred to as an __actuator status push__, and is done by first requesting to update this data at the
+central server. All messages for this event are control messages, hence only the control process is used.
 
 1. __Initial notification__: When a field node registers a change of state for an actuator, it sends a message
 to the central server notifying this change.
 2. __FNSM update and message forwarding__: When receiving a notification from a field node, the central server then 
-updates its FNSM for the field node accordingly, and forwards the message to any subscribed control panel.
+updates its FNSM for the field node accordingly, forwards the message to any subscribed control panel, triggering
+an __actuator status forwarding__ event, and responds with a message confirming the event. If the update is failed,
+the response will be an error message.
 
-### Actuator activation
+### Actuator status forwarding
 
-An __actuator activation__ event occurs when a control panel wants to activate a certain actuator for a field node.
-The request has to go through the central server before reaching the desired field node. All messages in this event
-are control messages, hence only the control process is used.
+_Requester_: __central server__
 
-1. __Control panel request__: The control panel sends a request to activate an actuator to the central server,
+_Responder_: __control panel__
+
+When a central server updates its FNSM, it needs to communicate this change to all already subscribed control panels.
+This event is referred to as an __actuator status forwarding__, and is done using the NNRT for the field node that
+owns the actuator. All messages for this event are control messages, hence only the control process is used.
+
+1. __Initial notification__: When the central server registers a change of a FNSM, it sends a message to subscribed
+control panels for the field node that owns the FNSM.
+2. __Control panel response:__ When the control panel receives a request for updating its implementation of the
+field node actuator status, it responds with a confirmation of the request. If the update is failed,
+the response will be an error message.
+
+### Actuator activation (control panel to central server)
+
+_Requester_: __control panel__
+
+_Responder_: __central server__
+
+An __actuator activation (control panel to central server)__ event occurs when a control panel wants to activate a 
+certain actuator for a field node. Since the control panel does not have a direct way to communicate with a field node, 
+this request needs to go through the central server. All messages in this event are control messages, hence only the 
+control process is used.
+
+1. __Activation request__: The control panel sends a request to activate an actuator to the central server,
 containing the address of the field node and the actuator.
-2. __Server request forwarding__: The server does not check the validity of the request, and simply forwards the
-request to the field node. If the field node is reachable and the request forwarded, the server responds to the control
-panel telling it that the request has been forwarded.
-If the field node is not reachable, the server responds to the control panel with
-an error message.
-3. __Actuator activation and response__: If the request reaches the field node, the field node reads the request
-and activates the relevant actuator if possible. This triggers an actuator status push, and the field node
-responds to the central server with a confirmation that the request was accepted. In case of activation failure,
-the field node responds to the central server with an error message.
+2. __Central server response__: When receiving an activation request, the central server needs to send an activation
+request to the field node. If this event is successful, and the central server receives a confirmation response from the
+field node, it will respond to the control panel with a confirmation message. If for some reason an error occurs during
+this event, the central server will respond with an error message.
+
+### Actuator activation (central server to field node)
+
+_Requester_: __central server__
+
+_Responder_: __field node__
+
+An __actuator activation (central server to field node)__ event occurs when the central server wants to activate a
+certain actuator for a field node. All messages in this event are control messages, hence only the control process 
+is used.
+
+1. __Activation request__:  The central server sends a request to activate an actuator to the field node, containing
+the address of the actuator.
+2. __Field node response__: When receiving an activation request, the field node needs to activate the addressed
+actuator. If the field node successfully activates its actuator, a confirmation message is sent back to the central
+server as a response. If for some reason an error occurs during this event, the field node will respond with an
+error message.
 
 ### Unsubscribing from a field node
+
+_Requester_: __control panel__
+
+_Responder_: __central server__
 
 A control panel unsubscribing to a field node can happen in two ways:
 * __actively unsubscribing__: the control panel actively unsubscribes from a field node. In this case, the control
 panel first needs to notify the central server about this event, so that the central server can handle the unsubscribing.
 * __connection closed__: in the case of closure of a control connection to a control panel, the control panel will
 automatically be unsubscribed by the central server. This happens either if the control panel disconnects, or if the
-heartbeat mechanism discovers a dead connection. This case does not involve any data communication in the network as
-it is processed internally at the central server, and is therefore not described by NOFSP.
+heartbeat mechanism discovers a dead connection. This case does not involve any data communication in the network other
+than triggering an ADL for the field node, as it is processed internally at the central server.
 
 All messages in this event are control messages, hence only the control process is used.
 
@@ -483,23 +526,35 @@ a response to the control panel. In case of an error, an error message is sent b
 
 ### Disconnecting
 
+_Requester_: __any node__
+
+_Responder_: __central server__
+
 Any node, both field nodes and control panels, can disconnect from the system. This event includes closure of the
 control process connection and triggering of some other events. The goal of a proper disconnection is to let all 
-parties serving the node know of the event. All messages in this event are control messages, hence only the control 
+parties serving the node know of the event. 
+
+There are two ways for a disconnection to occur. A __passive disconnection__ occurs when
+the connection to a node is forced to be closed by the heartbeat mechanism. An __active disconnection__ occurs
+when a node sends a request to the central server for disconnecting. Only an active disconnection will trigger this 
+event, because it makes no sense to try to communicate with a node that cannot be reached.
+
+All messages in this event are control messages, hence only the control 
 process is used.
 
-1. __Disconnection__: There are two ways for a disconnection to occur. A __passive disconnection__ occurs when
-the connection to a node is forced to be closed by the heartbeat mechanism. An __active disconnection__ occurs
-when a node pushes a message to the central server, telling it that it is disconnecting. The disconnecting node
-does not get a response from this type of message.
+1. __Disconnection__: The node sends a request for disconnecting from the system to the central server.
 2. __Notifying involved parties__: Once a disconnection is detected by the central server, the server lets the
-involved parties know about the event. 
+involved parties know about the event.
    - If a control panel disconnects, it will simply trigger an unsubscription event for all the field nodes it 
    subscribes to. In other words, the control panel will unsubscribe to all its previously subscribed to field nodes,
    before the central server purges the control panel from its address storing mechanism.
    - If a field node disconnects, the central server will notify all the subscribed control panels. This message
    does not get any response from the control panels. The central server will then remove its NNRT for this
    field node, before it purges the field node from its address storing mechanism.
+
+After all involved parties have been notified, the central server sends a confirming response message if the
+node is allowed to disconnect. If the node does not close its control connection within 10 seconds, the central server
+will do it instead. If the note is not allowed to disconnect at the time, the central server will respond with an error.
 
 ## Connection and state
 
@@ -525,17 +580,80 @@ like UDP.
 TODO - Do you have some specific value types you use in several messages? They you can describe 
 them here.
 
+### Data types
+
+Every field in every message for NOFSP uses a specific data type. The different types used are:
+* __version number__: Float
+* __command__: String
+* __status__: Integer
+* __node address__: Integer
+* __device address__: Integer
+* __data__: String
+
+### Constants
+
+
+
 ## Message format
 
 TODO - describe the general format of all messages. Then describe specific format for each 
 message type in your protocol.
 
+Since NOFSP consists of two different message categories, _control messages_ and _sensor data messages_, the protocol
+describes a different format for each of them. All messages in NOFSP follows one of the formats described below.
+
+### Control Message Format
+
+Communication using control messages involves a request and a response. A request message is always sent first,
+which is answered by a response. We therefor need to define two formats for these types of messages: one for
+requests and one for responses.
+
+#### Control Request
+
+A control request contains three fields described as follows:
+* __version__: the version field describes the version of NOFSP used for the message. It is important to note that this
+does not describe the version of the application implementing NOFSP. This field is used to check compatibility between
+different entities in the network. This field can never be empty.
+* __command__: the command field describes the command used for the request. This field can never be empty.
+The command also indicates what kind of data is sent, and how it should be interpreted.
+* __data__: the data field acts as a parameter for the given command. This field may or may not be empty, depending on 
+the requirements of the command.
+
+![Illustration of control request format](images/controlrequest.png)
+
+#### Control Response
+
+A control response contains three fields described as follows:
+
+* __version__: the version field describes the version of NOFSP used for the message. It is important to note that this
+does not describe the version of the application implementing NOFSP. This field is used to check compatibility between
+different entities in the network. This field can never be empty.
+* __status__: the status field describes the status of the response given to a request. This indicates how to request
+was handled. The status also indicates what kind of data is sent, and how it should be interpreted.
+* __data__: the data field acts as a parameter for the given status. This field may or may not be empty, depending on
+the requirements of the status.
+
+![Illustration of control response format](images/controlresponse.png)
+
+### Sensor Data Message Format
+
+Communication using sensor data messages involves only requests: all data for this type is pushed from one network
+entity to another. There is never any direct response for these messages. Therefore, only one format for these
+messages is defined.
+
 node address, sensor address
 
+* __version__: the version field describes the version of NOFSP used for the message. It is important to note that this
+  does not describe the version of the application implementing NOFSP. This field is used to check compatibility between
+  different entities in the network. This field can never be empty.
+* __node address__: the node address field gives the address for the field node that captured the data. This field can
+never be empty.
+* __device address__: the device address field gives the address for the field node device that captured the data. This
+field can never be empty.
+* __data__: the data field contains data captured by the sensor. This field may or may not be empty, depending on
+the format for the data.
 
-
-Sensor data message:
-1 (node address), 3 (sensor address), 27 (data)
+![Illustration of sensor data format](images/sensordataformat.png)
 
 ### Error messages
 
