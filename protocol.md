@@ -276,7 +276,7 @@ The __data process__ is used for transmission of sensor data. This process runs 
 for the field nodes, only receive messages for the control panels, while being able to both send and receive
 messages for the central server.
 
-![Illustration of the architecture of NOFSP](images/nofsp_paradigm.png)
+![Illustration of the architecture of NOFSP](images/nofsp_arc_greybg.png)
 
 As for most client/server architectures, a server failure will result in a system shutdown. This can be prevented
 by simply adding one or more secondary servers to the network, but is beyond the scope of this protocol.
