@@ -1,12 +1,13 @@
 package no.ntnu.fieldnode.device.actuator;
 
+import no.ntnu.environment.EnvironmentStateModifier;
 import no.ntnu.fieldnode.device.Device;
 import no.ntnu.exception.ActuatorInvalidStateException;
 
 /**
  * A device able to change the state of an environment.
  */
-public interface Actuator extends Device {
+public interface Actuator extends Device, EnvironmentStateModifier {
     /**
      * Returns the state of the actuator.
      *

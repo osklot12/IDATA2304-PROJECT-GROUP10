@@ -9,5 +9,5 @@ public interface SensorListener {
      *
      * @param sensor the sensor that captured data
      */
-    void dataCaptured(Sensor sensor);
+    void sensorDataCaptured(Sensor sensor);
 }

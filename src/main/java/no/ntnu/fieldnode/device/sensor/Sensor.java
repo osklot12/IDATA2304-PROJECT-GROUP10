@@ -4,7 +4,7 @@ import no.ntnu.fieldnode.device.Device;
 import no.ntnu.environment.Environment;
 
 /**
- * A device capturing data using some sensor.
+ * A device capturing data using some sensor for an environment.
  */
 public interface Sensor extends Device {
     /**

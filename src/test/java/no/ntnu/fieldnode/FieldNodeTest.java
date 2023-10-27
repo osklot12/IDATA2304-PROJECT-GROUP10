@@ -56,7 +56,7 @@ public class FieldNodeTest {
      * Tests that a valid actuator will be added successfully.
      */
     public void testAddActuatorValid() {
-        
+
     }
 
     public void testAddActuatorInvalid() {

@@ -1,6 +1,7 @@
 package no.ntnu.fieldnode;
 
 import no.ntnu.fieldnode.device.actuator.Actuator;
+import no.ntnu.fieldnode.device.actuator.ActuatorListener;
 import no.ntnu.fieldnode.device.sensor.Sensor;
 import no.ntnu.fieldnode.device.sensor.SensorListener;
 import no.ntnu.environment.Environment;
@@ -14,7 +15,7 @@ import java.util.Set;
  * A class representing the logic for a field node in the network.
  * A field node is a subsystem in the network consisting of sensors and actuators.
  */
-public class FieldNode implements SensorListener {
+public class FieldNode implements SensorListener, ActuatorListener {
     private final Environment environment;
     private final Map<Integer, Sensor> sensors;
     private final Map<Integer, Actuator> actuators;
@@ -52,9 +53,13 @@ public class FieldNode implements SensorListener {
     public int addSensor(Sensor sensor) {
         int address = -1;
 
-        if (!sensors.containsValue(sensor)) {
-            address = generateNewDeviceAddress(sensors.keySet());
-            sensors.put(address, sensor);
+        if (sensor.connectToFieldNode(this)) {
+            if (!sensors.containsValue(sensor)) {
+                address = generateNewDeviceAddress(sensors.keySet());
+                sensors.put(address, sensor);
+            } else {
+                sensor.disconnectFromFieldNode(this);
+            }
         }
 
         return address;
@@ -69,9 +74,13 @@ public class FieldNode implements SensorListener {
     public int addActuator(Actuator actuator) {
         int address = -1;
 
-        if (!actuators.containsValue(actuator)) {
-            address = generateNewDeviceAddress(actuators.keySet());
-            actuators.put(address, actuator);
+        if (actuator.connectToFieldNode(this)) {
+            if (!actuators.containsValue(actuator)) {
+                address = generateNewDeviceAddress(actuators.keySet());
+                actuators.put(address, actuator);
+            } else {
+                actuator.disconnectFromFieldNode(this);
+            }
         }
 
         return address;
@@ -124,7 +133,12 @@ public class FieldNode implements SensorListener {
     }
 
     @Override
-    public void dataCaptured(Sensor sensor) {
+    public void sensorDataCaptured(Sensor sensor) {
         System.out.println("Data captured: " + sensor.getSensorData().toFormattedData());
+    }
+
+    @Override
+    public void actuatorStateChanged(Actuator actuator) {
+        System.out.println("State changed to " + actuator.getState());
     }
 }
