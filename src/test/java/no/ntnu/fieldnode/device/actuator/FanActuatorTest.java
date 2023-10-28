@@ -8,6 +8,7 @@ import static org.junit.Assert.*;
 
 /**
  * JUnit tests for the FanActuator class.
+ * This class also tests the logic for the abstract class StandardActuator.
  */
 public class FanActuatorTest {
     Environment environment;

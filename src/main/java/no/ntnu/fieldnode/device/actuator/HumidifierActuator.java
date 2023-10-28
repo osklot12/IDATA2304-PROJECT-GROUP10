@@ -1,30 +1,24 @@
 package no.ntnu.fieldnode.device.actuator;
 
-import no.ntnu.broker.ActuatorStateBroker;
 import no.ntnu.environment.Environment;
-import no.ntnu.exception.ActuatorInvalidStateException;
-import no.ntnu.fieldnode.FieldNode;
 import no.ntnu.fieldnode.device.DeviceClass;
 
 /**
- * An actuator controlling a fan.
+ * An actuator controlling a dehumidifier.
  */
-public class FanActuator extends StandardActuator {
-    /**
-     * Creates a new FanActuator.
-     */
-    public FanActuator() {
-        super(DeviceClass.A1, new int[] {0, 1, 2, 3});
+public class HumidifierActuator extends StandardActuator {
+    public HumidifierActuator() {
+        super(DeviceClass.A2, new int[] {0, 1, 2, 3, 4});
     }
 
     @Override
     public void setEnvironment(Environment environment){
         if (!(this.environment == null)) {
-            this.environment.removeTemperatureModifier(this);
+            this.environment.removeHumidityModifier(this);
         }
 
         if (!(environment == null)) {
-            environment.addTemperatureModifier(this);
+            environment.addHumidityModifier(this);
             this.environment = environment;
         }
     }
@@ -33,15 +27,19 @@ public class FanActuator extends StandardActuator {
     public double modifyEnvironmentState(Double value) {
         switch (state.getState()) {
             case 1:
-                value -= 1;
+                value-=40;
                 break;
 
             case 2:
-                value -= 2;
+                value-=20;
                 break;
 
             case 3:
-                value -= 3;
+                value+=20;
+                break;
+
+            case 4:
+                value+=40;
                 break;
 
             default:

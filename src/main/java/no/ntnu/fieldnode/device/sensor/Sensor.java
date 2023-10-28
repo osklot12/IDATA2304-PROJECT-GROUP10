@@ -1,5 +1,7 @@
 package no.ntnu.fieldnode.device.sensor;
 
+import no.ntnu.exception.NoEnvironmentSetException;
+import no.ntnu.fieldnode.FieldNode;
 import no.ntnu.fieldnode.device.Device;
 import no.ntnu.environment.Environment;
 
@@ -8,17 +10,24 @@ import no.ntnu.environment.Environment;
  */
 public interface Sensor extends Device {
     /**
-     * Captures data in an environment.
-     *
-     * @param environment the environment to captured data from
-     * @param sensorAddress the sensor address to capture data for
+     * Captures data instant in an environment.
      */
-    void captureData(Environment environment, int sensorAddress);
+    void captureData() throws NoEnvironmentSetException;
 
     /**
-     * Returns the current data for the sensor.
+     * Pushes the latest data captured by the sensor to a sensor listener.
      *
-     * @return current sensor data
+     * @param listener a sensor listener
      */
-    SensorData getSensorData();
+    void pushData(SensorListener listener);
+
+    /**
+     * Starts the sensors timer, capturing data independently.
+     */
+    void start();
+
+    /**
+     * Stops the sensors timer.
+     */
+    void stop();
 }

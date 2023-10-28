@@ -1,10 +1,5 @@
 package no.ntnu.environment;
 
-import no.ntnu.fieldnode.device.actuator.Actuator;
-import no.ntnu.fieldnode.device.actuator.ActuatorListener;
-
-import java.util.List;
-
 /**
  * A class simulating an actual farming environment.
  */
@@ -18,7 +13,7 @@ public class Environment {
      */
     public Environment() {
         this.temperature = new EnvironmentState(27, 10);
-        this.humidity = new EnvironmentState(50, 100);
+        this.humidity = new EnvironmentState(50, 80);
         this.luminosity = new EnvironmentState(10000, 5000);
     }
 

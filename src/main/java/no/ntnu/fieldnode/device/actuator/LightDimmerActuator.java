@@ -1,30 +1,27 @@
 package no.ntnu.fieldnode.device.actuator;
 
-import no.ntnu.broker.ActuatorStateBroker;
 import no.ntnu.environment.Environment;
-import no.ntnu.exception.ActuatorInvalidStateException;
-import no.ntnu.fieldnode.FieldNode;
 import no.ntnu.fieldnode.device.DeviceClass;
 
 /**
- * An actuator controlling a fan.
+ * An actuator controlling a light dimmer.
  */
-public class FanActuator extends StandardActuator {
+public class LightDimmerActuator extends StandardActuator {
     /**
-     * Creates a new FanActuator.
+     * Creates a new LightDimmerActuator.
      */
-    public FanActuator() {
-        super(DeviceClass.A1, new int[] {0, 1, 2, 3});
+    public LightDimmerActuator() {
+        super(DeviceClass.A3, new int[] {0, 1, 2, 3, 4, 5, 6 ,7});
     }
 
     @Override
     public void setEnvironment(Environment environment){
         if (!(this.environment == null)) {
-            this.environment.removeTemperatureModifier(this);
+            this.environment.removeLuminosityModifier(this);
         }
 
         if (!(environment == null)) {
-            environment.addTemperatureModifier(this);
+            environment.addLuminosityModifier(this);
             this.environment = environment;
         }
     }
@@ -33,15 +30,27 @@ public class FanActuator extends StandardActuator {
     public double modifyEnvironmentState(Double value) {
         switch (state.getState()) {
             case 1:
-                value -= 1;
+                value-=1500;
                 break;
 
             case 2:
-                value -= 2;
+                value-=1000;
                 break;
 
             case 3:
-                value -= 3;
+                value-=500;
+                break;
+
+            case 4:
+                value+=500;
+                break;
+
+            case 5:
+                value+=1000;
+                break;
+
+            case 6:
+                value+=1500;
                 break;
 
             default:

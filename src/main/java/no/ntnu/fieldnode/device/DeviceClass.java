@@ -8,7 +8,8 @@ public enum DeviceClass {
     S2("Humidity sensor using SDU sensor data."),
     S3("Luminosity sensor using SDU sensor data."),
     A1("Fan actuator using 4 different states for its fan."),
-    A2("Humidifier actuator using 10 different statues for its ");
+    A2("Humidifier actuator using 5 different states for its humidifier"),
+    A3("Light dimmer actuator using 7 different states for its dimmer.");
 
     private final String description;
 

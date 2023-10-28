@@ -1,53 +1,42 @@
 package no.ntnu.fieldnode.device.sensor;
 
+import no.ntnu.broker.SensorDataBroker;
 import no.ntnu.exception.EnvironmentNotSupportedException;
+import no.ntnu.exception.NoEnvironmentSetException;
 import no.ntnu.fieldnode.FieldNode;
 import no.ntnu.fieldnode.device.DeviceClass;
 import no.ntnu.environment.Environment;
 
+import java.util.Timer;
+import java.util.TimerTask;
+
 /**
- * A sensor for measuring temperatures.
+ * A sensor for measuring temperatures in an environment.
  */
-public class TemperatureSensor implements Sensor {
-    private final DeviceClass deviceClass;
-
-    private SensorData sensorData;
-
+public class TemperatureSensor extends SDUSensor {
     /**
      * Creates a new TemperatureSensor.
+     *
+     * @param sensorNoise amount of noise interfering with the sensor. 0 is no noise, higher values adds more noise.
+     *                    Must be a non-negative value.
      */
-    public TemperatureSensor() {
-        this.deviceClass = DeviceClass.S1;
-        this.sensorData = null;
-    }
-
-    public void setEnvironment(Environment environment) throws EnvironmentNotSupportedException {
-
+    public TemperatureSensor(int sensorNoise) {
+        super(DeviceClass.S1, "C", sensorNoise);
     }
 
     @Override
-    public void captureData(Environment environment, int sensorAddress) {
-        double capturedTemperature = environment.getSimulatedTemperature();
-        sensorData = new SDUSensorData(sensorAddress, capturedTemperature, "C");
+    public void captureData() throws NoEnvironmentSetException {
+        if (environment == null) {
+            throw new NoEnvironmentSetException("Cannot capture data, because no environment is set for the sensor.");
+        }
+
+        double capturedTemperature = readAndProcessTemperature();
+        this.sensorData = new SDUSensorData(capturedTemperature, unit);
+        dataBroker.notifyListeners(this);
     }
 
-    @Override
-    public SensorData getSensorData() {
-        return this.sensorData;
-    }
-
-    @Override
-    public DeviceClass getDeviceClass() {
-        return deviceClass;
-    }
-
-    @Override
-    public boolean connectToFieldNode(FieldNode fieldNode) {
-        return false;
-    }
-
-    @Override
-    public boolean disconnectFromFieldNode(FieldNode fieldNode) {
-        return false;
+    private double readAndProcessTemperature() {
+        double capturedTempValue = environment.getSimulatedTemperature();
+        return roundValue(addNoise(capturedTempValue));
     }
 }
