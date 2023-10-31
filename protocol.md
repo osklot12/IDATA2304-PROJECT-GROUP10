@@ -163,9 +163,9 @@ The following table shows an example of how a FNST could look.
 |-------|---------|
 | S7    | 1       |
 | S1    | 2       |
-| A5    | 2       |
-| S7    | 3       |
-| A2    | 4       | 
+| A5    | 3       |
+| S7    | 4       |
+| A2    | 5       | 
 
 ##### Active Device List (ADL)
 
@@ -359,8 +359,8 @@ the server sends out "heartbeats" every 15 seconds. A heartbeat is a small packe
 if the client is still alive. If no response is given to a heartbeat within 15 seconds, the TCP connection will
 be closed. All messages for this event are control messages, hence only the control process is used.
 
-1. __Heart beats__: A small TCP packet is sent out to the client, carrying a special flag indicating that it is
-a heartbeat.
+1. __Heart beats__: A small TCP packet is sent out to the client, requesting a response whether the client is alive
+or not.
 2. __Acknowledgement__: If a client receives the heartbeat, it will respond with an acknowledgement, and the timer
 will be reset. If the client for some reason does not acknowledge the heartbeat, the connection will be closed.
 
@@ -462,7 +462,7 @@ This event is referred to as an __actuator status forwarding__, and is done usin
 owns the actuator. All messages for this event are control messages, hence only the control process is used.
 
 1. __Initial notification__: When the central server registers a change of a FNSM, it sends a message to subscribed
-control panels for the field node that owns the FNSM.
+   control panels for the field node that owns the FNSM.
 2. __Control panel response:__ When the control panel receives a request for updating its implementation of the
 field node actuator status, it responds with a confirmation of the request. If the update is failed,
 the response will be an error message.
@@ -591,6 +591,30 @@ Every field in every message for NOFSP uses a specific data type. The different 
 * __data__: String
 
 ### Constants
+
+Control messages sent in NOFSP need to carry either a __command__ for request messages, or a __status code__ for 
+response messages. Since there are only one type of sensor data messages, there is no need to define any constants for 
+this type. Below are a list of all the command and status constants used in the protocol.
+
+#### Command
+
+| Command | Parameters                                             | Description                                                                                                                                                                                                                                                                                                                   |
+|---------|--------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| REGFN   | _FNST_, _name_                                         | Registering a field node to a central server. The command takes two parameters: the field node system table and the name of the field node. While the FNST parameter is mandatory, the name parameter is optional.                                                                                                            |
+| REGCP   | _compatibility list_                                   | Registering a control panel to a central server. The command takes one parameter: the compatibility list of the control panel. This parameter is mandatory.                                                                                                                                                                   |
+| HBEAT   |                                                        | Checks whether a client is still alive. The command takes no parameters.                                                                                                                                                                                                                                                      |
+| PPULL   |                                                        | A control panel requests to receive the field pool: information about all the field nodes in the network. The command takes no parameters.                                                                                                                                                                                    |
+| FNSUB   | _field node address_                                   | A control panel requests to subscribe to a field node. The command takes one parameter: the address for the given field node.                                                                                                                                                                                                 |
+| ADLUPD  | _ADL data_                                             | The central server requests for a ADL update at a field node. The command takes one parameter: the ADL data to update.                                                                                                                                                                                                        |
+| ACTNOT  | _actuator address_, _new status_                       | An field node requests for an FNSM update at the central server, notifying that an actuator has chagned its state. The command takes two arguments: the actuator address incidating the address of the actuator, and the new status for the actuator. Both parameters are mandatory.                                          |
+| FNSMNOT | _field node address_, _actuator address_, _new status_ | The central server requests for an update of the status for an actuator at the control panel. The command takes three parameters: the field node address indicating the address of the field node, the actuator address indicating the address of the actuator, and the new status indicating the new status of the actuator. |
+| ACTACT  | _field node address_, _actuator address_, _new status_ | The control panel requests for an activation of an acutator at a given field node. The command takes three parameters: the field node address indicating the address for the field node, the actuator address indicating the address for the actuator, and the desired new status for the actuator.                           |
+| ACTACT  | _actuator address_, _new status_                       | The central server requests for an activation of an actuator at a given field node. The command takes two parameters: the actuator address indicating the address of the actuator, and the desired new status for the actuator.                                                                                               |
+| FNUNSUB | _field node address_                                   | The control panel requests to unsubscribe from a given field node. The command takes one parameter: the field node address indicating the address for the field node.                                                                                                                                                         |
+| DISC    |                                                        | A field node or a control panel requests to disconnect from the central server. The command takes no parameters.                                                                                                                                                                                                              |
+
+#### Status
+
 
 
 

@@ -22,7 +22,6 @@ import static org.junit.Assert.*;
  */
 public class FieldNodeTest {
     Environment environment;
-
     FieldNode fieldNode;
 
     /**
