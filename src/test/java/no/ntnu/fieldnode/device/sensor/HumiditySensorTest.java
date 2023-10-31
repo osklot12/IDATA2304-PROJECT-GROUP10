@@ -32,6 +32,6 @@ public class HumiditySensorTest {
 
         sensor.captureData();
 
-        assertEquals(actualTemperature, sensor.getSensorData().value(), 0);
+        assertEquals(actualTemperature, sensor.getSensorData(), 0);
     }
 }

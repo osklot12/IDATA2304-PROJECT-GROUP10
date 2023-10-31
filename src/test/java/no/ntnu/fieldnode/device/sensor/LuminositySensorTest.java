@@ -32,6 +32,6 @@ public class LuminositySensorTest {
 
         sensor.captureData();
 
-        assertEquals(actualLuminosity, sensor.getSensorData().value(), 0);
+        assertEquals(actualLuminosity, sensor.getSensorData(), 0);
     }
 }

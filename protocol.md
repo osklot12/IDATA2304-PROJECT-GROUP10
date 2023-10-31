@@ -8,7 +8,7 @@ farming environments, transmitting sensor data continuously.
 
 ## Terminology
 
-* __sensor__ - a device which senses the environment and describes it with a value (an integer value in
+* __sensor__ - a device which senses the environment and describes it with a value (a double value in
   the context of this project). Examples: temperature sensor, humidity sensor.
 * __actuator__ - a device which can influence the environment. Examples: a fan, a window opener/closer,
   door opener/closer, heater.

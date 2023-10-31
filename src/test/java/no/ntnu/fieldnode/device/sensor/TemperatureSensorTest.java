@@ -34,7 +34,7 @@ public class TemperatureSensorTest {
 
         temperatureSensor.captureData();
 
-        assertEquals(actualTemperature, temperatureSensor.getSensorData().value(), 0);
+        assertEquals(actualTemperature, temperatureSensor.getSensorData(), 0);
     }
 
     /**
@@ -58,6 +58,6 @@ public class TemperatureSensorTest {
         fan.setState(2);
         temperatureSensor.captureData();
 
-        assertEquals(environment.getSimulatedTemperature(), temperatureSensor.getSensorData().value(), 0);
+        assertEquals(environment.getSimulatedTemperature(), temperatureSensor.getSensorData(), 0);
     }
 }

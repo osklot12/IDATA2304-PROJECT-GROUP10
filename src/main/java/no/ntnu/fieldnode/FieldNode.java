@@ -5,7 +5,6 @@ import no.ntnu.fieldnode.device.DeviceClass;
 import no.ntnu.fieldnode.device.actuator.Actuator;
 import no.ntnu.fieldnode.device.actuator.ActuatorListener;
 import no.ntnu.fieldnode.device.sensor.SDUSensor;
-import no.ntnu.fieldnode.device.sensor.SDUSensorData;
 import no.ntnu.fieldnode.device.sensor.Sensor;
 import no.ntnu.fieldnode.device.sensor.SensorListener;
 import no.ntnu.environment.Environment;
@@ -14,13 +13,13 @@ import no.ntnu.exception.ActuatorInteractionFailedException;
 import java.util.*;
 
 /**
- * A class representing the logic for a field node in the network.
+ * A class responsible for the logic for a field node in the network.
  * A field node is a subsystem in the network consisting of sensors and actuators.
  */
 public class FieldNode implements SensorListener, ActuatorListener {
     private Environment environment;
     private final Map<Integer, Device> devices;
-    private SDUSensorData latestSensorData;
+    private double latestSensorData;
 
     /**
      * Creates a new FieldNode.
@@ -182,7 +181,7 @@ public class FieldNode implements SensorListener, ActuatorListener {
      *
      * @return latest sdu sensor data
      */
-    public SDUSensorData getLatestSensorData() {
+    public double getLatestSensorData() {
         return latestSensorData;
     }
 

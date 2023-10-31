@@ -23,8 +23,7 @@ public class LuminositySensor extends SDUSensor {
             throw new NoEnvironmentSetException("Cannot capture data, because no environment is set for the sensor.");
         }
 
-        double capturedHumidity = readAndProcessLuminosity();
-        this.sensorData = new SDUSensorData(capturedHumidity, unit);
+        this.sensorData = readAndProcessLuminosity();
         dataBroker.notifyListeners(this);
     }
 

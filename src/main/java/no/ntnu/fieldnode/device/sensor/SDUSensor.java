@@ -19,7 +19,7 @@ public abstract class SDUSensor implements Sensor {
     protected final int sensorNoise;
     protected final SensorDataBroker dataBroker;
     protected Timer captureTimer;
-    protected SDUSensorData sensorData;
+    protected double sensorData;
     protected Environment environment;
 
     /**
@@ -74,7 +74,7 @@ public abstract class SDUSensor implements Sensor {
      *
      * @return last sensor data captured
      */
-    public SDUSensorData getSensorData() {
+    public double getSensorData() {
         return this.sensorData;
     }
 

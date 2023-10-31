@@ -30,8 +30,7 @@ public class TemperatureSensor extends SDUSensor {
             throw new NoEnvironmentSetException("Cannot capture data, because no environment is set for the sensor.");
         }
 
-        double capturedTemperature = readAndProcessTemperature();
-        this.sensorData = new SDUSensorData(capturedTemperature, unit);
+        this.sensorData = readAndProcessTemperature();
         dataBroker.notifyListeners(this);
     }
 
