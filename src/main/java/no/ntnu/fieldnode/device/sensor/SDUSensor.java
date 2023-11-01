@@ -97,17 +97,17 @@ public abstract class SDUSensor implements Sensor {
     }
 
     @Override
-    public boolean connectToFieldNode(FieldNode fieldNode) {
-        return dataBroker.addSubscriber(fieldNode);
-    }
-
-    @Override
-    public boolean disconnectFromFieldNode(FieldNode fieldNode) {
-        return dataBroker.removeSubscriber(fieldNode);
-    }
-
-    @Override
     public DeviceClass getDeviceClass() {
         return deviceClass;
+    }
+
+    @Override
+    public boolean addListener(SensorListener sensorListener) {
+        return dataBroker.addSubscriber(sensorListener);
+    }
+
+    @Override
+    public boolean removeListener(SensorListener sensorListener) {
+        return dataBroker.removeSubscriber(sensorListener);
     }
 }

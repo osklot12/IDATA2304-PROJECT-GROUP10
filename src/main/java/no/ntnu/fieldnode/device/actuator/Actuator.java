@@ -21,4 +21,20 @@ public interface Actuator extends Device, EnvironmentStateModifier {
      * @throws ActuatorInvalidStateException throws an exception if the state is invalid
      */
     void setState(int state) throws ActuatorInvalidStateException;
+
+    /**
+     * Adds a listener to the actuator.
+     *
+     * @param actuatorListener listener to add
+     * @return true if successfully added
+     */
+    boolean addListener(ActuatorListener actuatorListener);
+
+    /**
+     * Removes a listener from the actuator.
+     *
+     * @param actuatorListener listener to remove
+     * @return true if successfully removed
+     */
+    boolean removeListener(ActuatorListener actuatorListener);
 }

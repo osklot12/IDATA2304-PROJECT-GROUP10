@@ -13,7 +13,7 @@ import no.ntnu.exception.ActuatorInteractionFailedException;
 import java.util.*;
 
 /**
- * A class responsible for the logic for a field node in the network.
+ * A class responsible for the logic of the field node in the network.
  * A field node is a subsystem in the network consisting of sensors and actuators.
  */
 public class FieldNode implements SensorListener, ActuatorListener {
@@ -108,20 +108,55 @@ public class FieldNode implements SensorListener, ActuatorListener {
         int address = -1;
 
         if (!(devices.containsValue(device))) {
-            if (device.connectToFieldNode(this)) {
+            if (connectDevice(device)) {
                 address = generateNewDeviceAddress();
-                device.setEnvironment(environment);
-                handleSpecificDeviceSetup(device);
                 devices.put(address, device);
+            } else {
+                disconnectDevice(device);
             }
         }
 
         return address;
     }
 
-    private static void handleSpecificDeviceSetup(Device device) {
+    private boolean connectDevice(Device device) {
+        boolean success = true;
+
+        device.setEnvironment(environment);
+
         if (device instanceof Sensor sensor) {
+            success = connectSensor(sensor);
+        }
+
+        if (device instanceof Actuator actuator) {
+            success = success && connectActuator(actuator);
+        }
+
+        return success;
+    }
+
+    private boolean connectSensor(Sensor sensor) {
+        boolean success = false;
+
+        if (sensor.addListener(this)) {
             sensor.start();
+            success = true;
+        };
+
+        return success;
+    }
+
+    private boolean connectActuator(Actuator actuator) {
+        return actuator.addListener(this);
+    }
+
+    private void disconnectDevice(Device device) {
+        if (device instanceof Sensor sensor) {
+            sensor.removeListener(this);
+        }
+
+        if (device instanceof Actuator actuator) {
+            actuator.removeListener(this);
         }
     }
 

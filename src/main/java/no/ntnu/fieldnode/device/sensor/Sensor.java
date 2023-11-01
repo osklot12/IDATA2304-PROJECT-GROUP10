@@ -10,7 +10,7 @@ import no.ntnu.environment.Environment;
  */
 public interface Sensor extends Device {
     /**
-     * Captures data instant in an environment.
+     * Captures data in an environment.
      */
     void captureData() throws NoEnvironmentSetException;
 
@@ -30,4 +30,20 @@ public interface Sensor extends Device {
      * Stops the sensors timer.
      */
     void stop();
+
+    /**
+     * Adds a listener to the sensor.
+     *
+     * @param sensorListener listener to add
+     * @return true if successfully added
+     */
+    boolean addListener(SensorListener sensorListener);
+
+    /**
+     * Removes a listener from the sensor.
+     *
+     * @param sensorListener the listener to remove
+     * @return true if successfully removed
+     */
+    boolean removeListener(SensorListener sensorListener);
 }

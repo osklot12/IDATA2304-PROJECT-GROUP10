@@ -5,7 +5,7 @@ import no.ntnu.exception.EnvironmentNotSupportedException;
 import no.ntnu.fieldnode.FieldNode;
 
 /**
- * A device connected to a field node.
+ * A device interacting with an environment.
  */
 public interface Device {
     /**
@@ -14,22 +14,6 @@ public interface Device {
      * @return class of device
      */
     DeviceClass getDeviceClass();
-
-    /**
-     * 'Connects' the device to a field node, allowing the device to push notifications to the field node.
-     *
-     * @param fieldNode the field node to connect to
-     * @return true is successfully connected, false on error
-     */
-    boolean connectToFieldNode(FieldNode fieldNode);
-
-    /**
-     * 'Disconnects' the device from a field node, stopping the device from pushing notifications to the field node.
-     *
-     * @param fieldNode the field node to disconnect from
-     * @return true if successfully disconnected, false on error
-     */
-    boolean disconnectFromFieldNode(FieldNode fieldNode);
 
     /**
      * Sets an environment for the device.

@@ -53,12 +53,12 @@ public abstract class StandardActuator implements Actuator, EnvironmentStateModi
     }
 
     @Override
-    public boolean connectToFieldNode(FieldNode fieldNode) {
-        return stateBroker.addSubscriber(fieldNode);
+    public boolean addListener(ActuatorListener actuatorListener) {
+        return stateBroker.addSubscriber(actuatorListener);
     }
 
     @Override
-    public boolean disconnectFromFieldNode(FieldNode fieldNode) {
-        return stateBroker.removeSubscriber(fieldNode);
+    public boolean removeListener(ActuatorListener actuatorListener) {
+        return stateBroker.removeSubscriber(actuatorListener);
     }
 }
