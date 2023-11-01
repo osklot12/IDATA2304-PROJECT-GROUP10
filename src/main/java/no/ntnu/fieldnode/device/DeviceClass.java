@@ -1,7 +1,7 @@
 package no.ntnu.fieldnode.device;
 
 /**
- * Lists all available device classes for the application.
+ * All available device classes for the application.
  */
 public enum DeviceClass {
     S1("Temperature sensor using SDU sensor data."),
@@ -13,6 +13,11 @@ public enum DeviceClass {
 
     private final String description;
 
+    /**
+     * Creates a new {@code DeviceClass} with a given description.
+     *
+     * @param description a descriptive text for the device class
+     */
     DeviceClass(String description) {
         this.description = description;
     }

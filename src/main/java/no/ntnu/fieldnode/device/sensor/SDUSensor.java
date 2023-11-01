@@ -29,7 +29,7 @@ public abstract class SDUSensor implements Sensor {
      * @param sensorNoise amount of noise interfering with the sensor. 0 is no noise, higher values adds more noise.
      *                    noise. Must be a non-negative value.
      */
-    public SDUSensor(DeviceClass deviceClass, String unit, int sensorNoise) {
+    protected SDUSensor(DeviceClass deviceClass, String unit, int sensorNoise) {
         if (null == deviceClass) {
             throw new IllegalArgumentException("Cannot create SDUSensor, because device class is null.");
         }

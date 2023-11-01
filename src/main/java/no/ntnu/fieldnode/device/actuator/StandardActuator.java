@@ -22,7 +22,7 @@ public abstract class StandardActuator implements Actuator, EnvironmentStateModi
      * @param deviceClass the class of the device
      * @param states the allowed states for the actuator
      */
-    public StandardActuator(DeviceClass deviceClass, int[] states) {
+    protected StandardActuator(DeviceClass deviceClass, int[] states) {
         if (null == deviceClass) {
             throw new IllegalArgumentException("Cannot create Actuator, because device class is null.");
         }

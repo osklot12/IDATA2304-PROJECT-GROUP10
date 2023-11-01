@@ -14,7 +14,7 @@ public abstract class VirtualDevice {
      *
      * @param deviceClass the class for the device
      */
-    public VirtualDevice(DeviceClass deviceClass) {
+    protected VirtualDevice(DeviceClass deviceClass) {
         if (deviceClass == null) {
             throw new IllegalArgumentException("Cannot create VirtualDevice, because the device class is not defined.");
         }
