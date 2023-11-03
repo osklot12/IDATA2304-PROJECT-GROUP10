@@ -30,6 +30,7 @@ import java.util.Map;
 public class CentralServer {
     public static final int PORT_NUMBER = 60005;
     private ServerSocket serverSocket;
+    private final ClientRegister clientRegister;
     private boolean running;
 
 
@@ -37,7 +38,8 @@ public class CentralServer {
      * Creates a new CentralServer.
      */
     public CentralServer() {
-        running = false;
+        clientRegister = new ClientRegister();
+        this.running = false;
     }
 
     /**
@@ -60,11 +62,19 @@ public class CentralServer {
         }
     }
 
+    /**
+     * Stops the server.
+     */
+    public void stop() {
+        running = false;
+    }
+
     private Socket acceptNextClient() {
         Socket clientSocket = null;
 
         try {
             clientSocket = serverSocket.accept();
+            Logger.info("Client " + clientSocket.getRemoteSocketAddress() + " has connected to the server.");
         } catch (IOException e) {
             Logger.error("Cannot accept next client: " + e.getMessage());
         }

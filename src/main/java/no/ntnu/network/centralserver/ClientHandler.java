@@ -1,8 +1,12 @@
 package no.ntnu.network.centralserver;
 
+import no.ntnu.network.message.Message;
+import no.ntnu.network.message.serialize.ByteDeserializable;
 import no.ntnu.tools.Logger;
 
-import java.io.*;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.Socket;
 
 /**
@@ -10,8 +14,9 @@ import java.net.Socket;
  */
 public class ClientHandler {
     private final Socket clientSocket;
-    private BufferedReader socketReader;
-    private PrintWriter socketWriter;
+    private InputStream inputStream;
+    private OutputStream outputStream;
+
 
     /**
      * Creates a new ClientHandler.
@@ -30,39 +35,58 @@ public class ClientHandler {
      * Runs the ClientHandler.
      */
     public void run() {
-        if (establishSocketStreams()) {
+        if (establishStreams()) {
 
+        } else {
+            Logger.error("Cannot establish streams for client socket.");
         }
     }
 
-    private boolean establishSocketStreams() {
-        socketReader = establishSocketReader(clientSocket);
-        socketWriter = establishSocketWriter(clientSocket);
+    private boolean establishStreams() {
+        boolean success = false;
 
-        return (socketReader != null) && (socketWriter != null);
+        inputStream = establishInputStream();
+
+        if (inputStream != null) {
+            outputStream = establishOutputStream();
+
+            if (outputStream != null) {
+                success = true;
+            }
+        }
+
+        return success;
     }
 
-    private PrintWriter establishSocketWriter(Socket clientSocket) {
-        PrintWriter writer = null;
+    private OutputStream establishOutputStream() {
+        OutputStream stream = null;
 
         try {
-            writer = new PrintWriter(new OutputStreamWriter(clientSocket.getOutputStream()));
+            stream = clientSocket.getOutputStream();
         } catch (IOException e) {
-            Logger.error("Cannot establish output stream for client: " + e.getMessage());
+            Logger.error("Cannot establish output stream for client socket.");
         }
 
-        return writer;
+        return stream;
     }
 
-    private BufferedReader establishSocketReader(Socket clientSocket) {
-        BufferedReader reader = null;
+    private InputStream establishInputStream() {
+        InputStream stream = null;
 
         try {
-            reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+            stream = clientSocket.getInputStream();
         } catch (IOException e) {
-            Logger.error("Cannot establish input stream for client:" + e.getMessage());
+            Logger.error("Cannot establish input stream for client socket.");
         }
 
-        return reader;
+        return stream;
+    }
+
+    private Message readClientMessage() {
+        Message clientMessage = null;
+
+
+
+        return clientMessage;
     }
 }

@@ -341,7 +341,7 @@ Control panel registration involves a control panel registering itself at the ce
 similar to a field node registration. All messages for this event are control messages, hence only the control process
 is used.
 
-1. __Initiation__: The control node client initiates an active open to a passive open server. This establishes a
+1. __Initiation__: The control panel client initiates an active open to a passive open server. This establishes a
    TCP connection between the two control processes, using the famous three-way handshake.
 2. __Compatibility reveal__: Once a connection has been made to the control service of the server, the control panel
 client sends a message containing its compatibility list.
@@ -594,9 +594,13 @@ Every field in every message for NOFSP uses a specific data type. The different 
 
 Control messages sent in NOFSP need to carry either a __command__ for request messages, or a __status code__ for 
 response messages. Since there are only one type of sensor data messages, there is no need to define any constants for 
-this type. Below are a list of all the command and status constants used in the protocol.
+this type.
 
-#### Command
+#### Requests
+
+Requests always carries a command, often together with parameters. The list below shows all available commands for the
+protocol. Some parameters are optional, some of them are mandatory. The description clarifies which parameters needs to
+be included.
 
 | Command | Parameters                                             | Description                                                                                                                                                                                                                                                                                                                   |
 |---------|--------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -613,18 +617,60 @@ this type. Below are a list of all the command and status constants used in the 
 | FNUNSUB | _field node address_                                   | The control panel requests to unsubscribe from a given field node. The command takes one parameter: the field node address indicating the address for the field node.                                                                                                                                                         |
 | DISC    |                                                        | A field node or a control panel requests to disconnect from the central server. The command takes no parameters.                                                                                                                                                                                                              |
 
-#### Status
+#### Responses
 
+Responses always carries a status code, indicating the status of execution of a previously sent request. Some responses
+also has additional parameters, depending on the type of status code. The status code domain is divided into three main
+groups:
+* __0 - 99__: Successful requests
+* __100 - 199__: Errors
+* __200 - 299__: Warnings
 
+The list below shows all available responses in the protocol.
 
+| Status code | Parameters            | Description                                                                                                                                               |
+|-------------|-----------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------|
+| 0           |                       | Heartbeat response - the client confirms it is still alive.                                                                                               |
+| 1           | _node/client address_ | The central server confirms a node/client registration and responds with their assigned address for the network.                                          |
+| 10          | _field node pool_     | The central server responds to a field node pool pull request, confirming that the request was successfully handled, sending the field node pool with it. |
 
 ## Message format
 
 TODO - describe the general format of all messages. Then describe specific format for each 
 message type in your protocol.
 
-Since NOFSP consists of two different message categories, _control messages_ and _sensor data messages_, the protocol
-describes a different format for each of them. All messages in NOFSP follows one of the formats described below.
+NOFSP uses _TLV (Type-Length-Value)_ marshalling for the serialization of its messages. This method is particularly
+advantageous as it accommodates various message types, each necessitating distinct space allocations. TLV facilitates
+this by enabling messages to self-specify their length. Moreover, this marshalling technique streamlines the
+classification of messages, ensuring that the integration of additional message types is straightforward. TLV
+marshalling proves to be beneficial for sensor data as well; it seamlessly supports the inclusion of new sensors,
+even those transmitting extensive or intricate data, by merely extending the message’s length.
+
+Due to the different types of messages in NOFSP, TLV is used recursively. An outer TLV structure
+encapsulates an inner message, also presented in a TVL structure. The outer structure is referred to as
+the __message frame__, and the inner structure is referred to as the __message__.
+
+### Message frame
+
+The message frame encapsulates a higher level message. All messages sent in the protocol needs a message frame before
+being sent over the network. The message frame is responsible for indicating the type of message it encapsulates,
+the length of the message and holding the message itself. The fields for the message frame are described below.
+
+* __Type__: 1-byte type field - defining the type of message encapsulated
+* __Length__: 2-byte length field - defining the length of the value field
+* __Value__: up to 65 536 bytes, depending on the length field - containing the higher level message
+
+#### Sensor data frame constraints
+
+Since sensor data messages in NOFSP uses the services of UDP to send data, there are some constraints that need to be
+set in order for the sensor data messages to use the same message frames. Due to the connection-less nature of UDP,
+UDP lacks any packet retransmission mechanism, and the loss of a single fragment prevents the reassembly of the entire
+datagram. This can cause a decrease in performance, and is therefore best avoided. NOFSP deals with this by setting
+a constraint on the size of sensor data frame messages, limiting it to under 1500 bytes, which is the typical
+Maximum Transmission Unit (MTU) on an Ethernet network. The size limit for a sensor data message is __1000__ bytes,
+making space for IP, UDP and message frame headers, while leaving some room for future changes. Any sensor data bigger
+message than this will not be accepted by the protocol.
+
 
 ### Control Message Format
 
@@ -634,7 +680,7 @@ requests and one for responses.
 
 #### Control Request
 
-A control request contains three fields described as follows:
+At a high level, a control request contains three fields described as follows:
 * __version__: the version field describes the version of NOFSP used for the message. It is important to note that this
 does not describe the version of the application implementing NOFSP. This field is used to check compatibility between
 different entities in the network. This field can never be empty.
@@ -644,6 +690,13 @@ The command also indicates what kind of data is sent, and how it should be inter
 the requirements of the command.
 
 ![Illustration of control request format](images/controlrequest.png)
+
+For a control request to be encapsulated inside a message frame, it needs to follow the TLV structure. Applying the TLV
+structure to a control request, it looks like this:
+* __Version__
+  * __Type__: 1-byte type field - 1, indicating that it is a version field
+  * __Length__: 2-byte length field - defining the length for the value field
+  * __Value__: up to 
 
 #### Control Response
 
@@ -678,6 +731,8 @@ field can never be empty.
 the format for the data.
 
 ![Illustration of sensor data format](images/sensordataformat.png)
+
+### Data marshalling
 
 ### Error messages
 

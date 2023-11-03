@@ -1,5 +1,6 @@
 package no.ntnu.network.centralserver;
 
+import no.ntnu.exception.ClientAlreadyRegisteredException;
 import no.ntnu.exception.NoSuchClientException;
 import no.ntnu.network.centralserver.clientproxy.ClientProxy;
 import no.ntnu.network.centralserver.clientproxy.FieldNodeClientProxy;
@@ -22,13 +23,21 @@ public class ClientRegister {
         this.register = new HashMap<>();
     }
 
-    public int addClient(ClientProxy client) {
+    /**
+     * Adds a new client to the register.
+     *
+     * @param client client to add
+     * @return the address for the client
+     * @throws ClientAlreadyRegisteredException thrown if the client is already registered
+     */
+    public int addClient(ClientProxy client) throws ClientAlreadyRegisteredException {
         if (client == null) {
             throw new IllegalArgumentException("Cannot add client to ClientRegister, because client is null.");
         }
 
         if (register.containsValue(client)) {
-            throw new IllegalArgumentException("Cannot add client to ClientRegister, because client is already registered.");
+            throw new ClientAlreadyRegisteredException("Cannot add client to ClientRegister, because client is " +
+                    "already registered.");
         }
 
         int clientAddress = generateNewClientAddress();
