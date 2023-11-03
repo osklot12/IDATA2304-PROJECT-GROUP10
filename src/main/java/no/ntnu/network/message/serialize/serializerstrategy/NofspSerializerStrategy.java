@@ -29,9 +29,13 @@ public class NofspSerializerStrategy implements SerializerStrategy {
 
     @Override
     public ByteSerializable deserialize(byte[] bytes) {
+        ByteSerializable serializable = null;
+
         byte[] typeBytes = Arrays.copyOfRange(bytes, 0, TYPE_FIELD_LENGTH - 1);
 
-        if ()
+        if (typeBytes == INTEGER_BYTE) {
+            serializable = seri
+        }
     }
 
     private static byte[] intToBytes(int value, int length) {
