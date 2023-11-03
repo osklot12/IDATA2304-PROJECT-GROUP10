@@ -19,8 +19,39 @@ public class ByteDeserializedInteger implements ByteSerializable {
         this.integer = i;
     }
 
+    /**
+     * Returns the integer.
+     *
+     * @return the integer
+     */
+    public int getInteger() {
+        return integer;
+    }
+
     @Override
     public ByteDeserializable serialize(SerializerStrategy strategy) {
         return strategy.serializeInteger(integer);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == this) {
+            return true;
+        }
+
+        if (!(o instanceof ByteDeserializedInteger b)) {
+            return false;
+        }
+
+        return b.getInteger() == integer;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = 17;
+
+        result = result * 31 + integer;
+
+        return result;
     }
 }

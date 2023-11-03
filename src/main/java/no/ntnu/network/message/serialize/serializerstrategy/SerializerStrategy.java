@@ -1,6 +1,6 @@
 package no.ntnu.network.message.serialize.serializerstrategy;
 
-import no.ntnu.network.message.common.byteserializable.ByteSerializableList;
+import no.ntnu.exception.SerializationException;
 import no.ntnu.network.message.serialize.ByteDeserializable;
 import no.ntnu.network.message.serialize.ByteSerializable;
 
@@ -20,8 +20,9 @@ public interface SerializerStrategy {
     /**
      * Deserializes a {@code ByteSerializable} object.
      *
-     * @param bytes the bytes to deserialize
+     * @param deserializable the deserializable object to deserialize
      * @return a {@code ByteSerializable} object
+     * @throws SerializationException thrown if deserializable cannot be deserialized
      */
-    ByteSerializable deserialize(byte[] bytes);
+    ByteSerializable deserialize(ByteDeserializable deserializable) throws SerializationException;
 }

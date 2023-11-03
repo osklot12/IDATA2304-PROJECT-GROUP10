@@ -39,9 +39,11 @@ public class ByteBuffer {
      *
      * @param bytes array of bytes
      */
-    public void addBytes(byte[] bytes) {
-        for (byte aByte : bytes) {
-            addByte(aByte);
+    public void addBytes(byte[]... bytes) {
+        for (byte[] byteArray : bytes) {
+            for (byte aByte : byteArray) {
+                addByte(aByte);
+            }
         }
     }
 

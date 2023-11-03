@@ -18,11 +18,11 @@ public class ByteSerializedInteger implements ByteDeserializable {
 
     @Override
     public ByteSerializable deserialize(SerializerStrategy strategy) {
-        return null;
+        return strategy.deserialize(this);
     }
 
     @Override
     public byte[] getBytes() {
-        return new byte[0];
+        return bytes;
     }
 }
