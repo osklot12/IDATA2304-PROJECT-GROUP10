@@ -1,7 +1,7 @@
 package no.ntnu.network.message;
 
 import no.ntnu.exception.MessageProcessException;
-import no.ntnu.network.message.serialize.ByteSerializable;
+import no.ntnu.network.message.serialize.composite.ByteSerializable;
 
 /**
  * A message sent from one entity in the network to another.

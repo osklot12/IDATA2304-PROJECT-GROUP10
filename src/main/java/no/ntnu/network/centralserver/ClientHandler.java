@@ -1,7 +1,6 @@
 package no.ntnu.network.centralserver;
 
 import no.ntnu.network.message.Message;
-import no.ntnu.network.message.serialize.ByteDeserializable;
 import no.ntnu.tools.Logger;
 
 import java.io.IOException;

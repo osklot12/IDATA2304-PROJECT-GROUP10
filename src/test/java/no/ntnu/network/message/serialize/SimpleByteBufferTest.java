@@ -1,5 +1,6 @@
-package no.ntnu.network.message.serialize.serializerstrategy;
+package no.ntnu.network.message.serialize;
 
+import no.ntnu.network.message.serialize.tool.SimpleByteBuffer;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -8,15 +9,15 @@ import static org.junit.Assert.*;
 /**
  * JUnit testing for the ByteBuffer class.
  */
-public class ByteBufferTest {
-    ByteBuffer buffer;
+public class SimpleByteBufferTest {
+    SimpleByteBuffer buffer;
 
     /**
      * Setting up for the following test methods.
      */
     @Before
     public void setup() {
-        buffer = new ByteBuffer();
+        buffer = new SimpleByteBuffer();
     }
 
     /**

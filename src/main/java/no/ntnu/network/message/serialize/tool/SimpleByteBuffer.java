@@ -1,17 +1,17 @@
-package no.ntnu.network.message.serialize.serializerstrategy;
+package no.ntnu.network.message.serialize.tool;
 
 /**
  * A buffer for holding bytes.
  * The buffer automatically increases when bytes are added, and automatically shrinks when bytes are removed.
  */
-public class ByteBuffer {
+public class SimpleByteBuffer {
     private byte[] buffer;
     private int tail;
 
     /**
      * Creates a new ByteBuffer.
      */
-    public ByteBuffer() {
+    public SimpleByteBuffer() {
         this.buffer = new byte[32];
         this.tail = 0;
     }
@@ -73,7 +73,7 @@ public class ByteBuffer {
     }
 
     /**
-     * Returns the buffer as an array
+     * Returns the buffer as an array.
      *
      * @return buffer as array
      */

@@ -1,21 +1,21 @@
-package no.ntnu.network.message.common.bytedeserialized;
+package no.ntnu.network.message.common.byteserializable;
 
-import no.ntnu.network.message.serialize.ByteDeserializable;
-import no.ntnu.network.message.serialize.ByteSerializable;
-import no.ntnu.network.message.serialize.serializerstrategy.SerializerStrategy;
+import no.ntnu.network.message.serialize.composite.ByteSerializable;
+import no.ntnu.network.message.serialize.visitor.ByteSerializerVisitor;
 
 /**
  * A deserialized integer that can be serialized.
  */
-public class ByteDeserializedInteger implements ByteSerializable {
+public class ByteSerializableInteger implements ByteSerializable {
+    private static final int SERIALIZATION_CODE = 0;
     private final int integer;
 
     /**
-     * Creates a new ByteDeserializedInteger.
+     * Creates a new ByteSerializableInteger.
      *
      * @param i any integer
      */
-    public ByteDeserializedInteger(int i) {
+    public ByteSerializableInteger(int i) {
         this.integer = i;
     }
 
@@ -29,8 +29,8 @@ public class ByteDeserializedInteger implements ByteSerializable {
     }
 
     @Override
-    public ByteDeserializable serialize(SerializerStrategy strategy) {
-        return strategy.serializeInteger(integer);
+    public byte[] accept(ByteSerializerVisitor visitor) {
+        return new byte[0];
     }
 
     @Override
@@ -39,7 +39,7 @@ public class ByteDeserializedInteger implements ByteSerializable {
             return true;
         }
 
-        if (!(o instanceof ByteDeserializedInteger b)) {
+        if (!(o instanceof ByteSerializableInteger b)) {
             return false;
         }
 

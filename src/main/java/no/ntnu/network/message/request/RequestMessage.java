@@ -1,8 +1,6 @@
 package no.ntnu.network.message.request;
 
 import no.ntnu.network.message.Message;
-import no.ntnu.network.message.serialize.ByteDeserializable;
-import no.ntnu.network.message.serialize.serializerstrategy.SerializerStrategy;
 
 /**
  * A Message used for requesting a service.
