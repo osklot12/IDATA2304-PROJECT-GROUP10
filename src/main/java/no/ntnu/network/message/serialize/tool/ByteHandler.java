@@ -1,11 +1,20 @@
 package no.ntnu.network.message.serialize.tool;
 
+import no.ntnu.exception.SerializationException;
+
+import java.nio.ByteBuffer;
 import java.util.Arrays;
 
 /**
  * A class handling arrays of bytes.
+ * The {@code ByteHandler} is responsible for translating primitive datatype into bytes and arranging the
+ * representation.
  */
 public class ByteHandler {
+    private ByteHandler() {
+
+    }
+
     /**
      * Removes padding (leading 0's) from any given array of bytes.
      *
@@ -18,6 +27,19 @@ public class ByteHandler {
         }
 
         return dynamicLengthBytes(Arrays.copyOfRange(bytes, 1, bytes.length));
+    }
+
+    /**
+     * Translates an integer into an array of bytes.
+     *
+     * @param value the integer to translate
+     * @return array of bytes representing the integer
+     */
+    public static byte[] intToBytes(int value) {
+        ByteBuffer buffer = ByteBuffer.allocate(Integer.BYTES);
+        buffer.putInt(value);
+
+        return dynamicLengthBytes(buffer.array());
     }
 
     /**
@@ -51,5 +73,28 @@ public class ByteHandler {
 
 
         return result;
+    }
+
+    /**
+     * Translates an array of bytes into an integer.
+     *
+     * @param bytes bytes to translate
+     * @return translated integer
+     * @throws SerializationException thrown when bytes cannot be converted into integer
+     */
+    public static int bytesToInt(byte[] bytes) throws SerializationException {
+        // removes any leading padding for the bytes
+        bytes = ByteHandler.dynamicLengthBytes(bytes);
+
+        if (bytes.length < Integer.BYTES) {
+            try {
+                bytes = ByteHandler.addLeadingPadding(bytes, Integer.BYTES);
+            } catch (IllegalArgumentException e) {
+                throw new SerializationException("Cannot convert bytes to integer: " + e.getMessage());
+            }
+        }
+
+        ByteBuffer buffer = ByteBuffer.wrap(bytes);
+        return buffer.getInt();
     }
 }

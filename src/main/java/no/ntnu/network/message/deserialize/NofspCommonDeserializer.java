@@ -2,11 +2,13 @@ package no.ntnu.network.message.deserialize;
 
 import no.ntnu.exception.SerializationException;
 import no.ntnu.network.message.common.byteserializable.ByteSerializableInteger;
+import no.ntnu.network.message.common.byteserializable.ByteSerializableList;
 import no.ntnu.network.message.serialize.NofspSerializationConstants;
 import no.ntnu.network.message.serialize.composite.ByteSerializable;
 import no.ntnu.network.message.serialize.tool.ByteHandler;
+import no.ntnu.network.message.serialize.tool.TlvFrame;
+import no.ntnu.network.message.serialize.tool.TlvReader;
 
-import java.nio.ByteBuffer;
 import java.util.Arrays;
 
 /**
@@ -14,6 +16,8 @@ import java.util.Arrays;
  * The deserializer follows the technique described by NOFSP.
  */
 public class NofspCommonDeserializer {
+    private static final TlvFrame TLV_FRAME = NofspSerializationConstants.tlvFrame;
+
     private NofspCommonDeserializer() {
 
     }
@@ -30,50 +34,61 @@ public class NofspCommonDeserializer {
             throw new SerializationException("Cannot identify type field, because bytes is null.");
         }
 
+        byte[] typeField = TlvReader.getTypeField(bytes, TLV_FRAME);
+        byte[] valueField = TlvReader.getValueField(bytes, TLV_FRAME);
+
         ByteSerializable serializable = null;
 
         // type field: integer
-        if (Arrays.equals(getTypeField(bytes), NofspSerializationConstants.INTEGER_BYTES)) {
-            serializable = getInteger(getValueField(bytes));
+        if (Arrays.equals(typeField, NofspSerializationConstants.INTEGER_BYTES)) {
+            serializable = getInteger(valueField);
+        }
+
+        // type field: list
+        if (Arrays.equals(typeField, NofspSerializationConstants.LIST_BYTES)) {
+            Class<? extends ByteSerializable> listElementTypeClass = getListElementClass(valueField);
+
+            if (listElementTypeClass != null) {
+                serializable = getList(valueField, listElementTypeClass);
+            }
         }
 
         return serializable;
     }
 
-    public static byte[] getTypeField(byte[] bytes) {
-        return Arrays.copyOfRange(bytes, 0, NofspSerializationConstants.TYPE_FIELD_LENGTH);
+    private static ByteSerializableInteger getInteger(byte[] bytes) {
+        return new ByteSerializableInteger(ByteHandler.bytesToInt(bytes));
     }
 
-    public static byte[] getLengthField(byte[] bytes) {
-        return Arrays.copyOfRange(bytes, 0, NofspSerializationConstants.LENGTH_FIELD_LENGTH);
-    }
+    private static <T extends ByteSerializable> ByteSerializableList<T> getList(byte[] bytes, Class<T> typeClass) {
+        ByteSerializableList<T> list = new ByteSerializableList<>();
 
-    public static byte[] getValueField(byte[] bytes) {
-        int valueStartIndex = NofspSerializationConstants.TYPE_FIELD_LENGTH + NofspSerializationConstants.LENGTH_FIELD_LENGTH;
-        int valueEndIndex = bytes.length;
+        TlvReader tlvReader = new TlvReader(bytes, NofspSerializationConstants.tlvFrame);
 
-        return Arrays.copyOfRange(bytes, valueStartIndex, valueEndIndex);
-    }
-
-    public static ByteSerializableInteger getInteger(byte[] bytes) {
-        return new ByteSerializableInteger(bytesToInt(getValueField(bytes)));
-    }
-
-    private static int bytesToInt(byte[] bytes) throws SerializationException {
-        byte[] bytesToConvert = bytes;
-
-        // removes any leading padding for the bytes
-        bytesToConvert = ByteHandler.dynamicLengthBytes(bytes);
-
-        if (bytesToConvert.length < Integer.BYTES) {
-            try {
-                bytesToConvert = ByteHandler.addLeadingPadding(bytesToConvert, Integer.BYTES);
-            } catch (IllegalArgumentException e) {
-                throw new SerializationException("Cannot convert bytes to integer: " + e.getMessage());
+        byte[] tlv = tlvReader.readNextTlv();
+        while (tlv != null) {
+            ByteSerializable serializable = deserialize(tlv);
+            if (typeClass.isInstance(serializable)) {
+                list.add(typeClass.cast(serializable));
             }
+
+            tlv = tlvReader.readNextTlv();
         }
 
-        ByteBuffer buffer = ByteBuffer.wrap(bytesToConvert);
-        return buffer.getInt();
+        return list;
+    }
+
+    private static Class<? extends ByteSerializable> getListElementClass(byte[] bytes) {
+        Class<? extends ByteSerializable> typeClass = null;
+
+        TlvReader tlvReader = new TlvReader(bytes, NofspSerializationConstants.tlvFrame);
+
+        byte[] firstElement = tlvReader.readNextTlv();
+        ByteSerializable serializable = deserialize(firstElement);
+        if (serializable != null) {
+            typeClass = serializable.getClass();
+        }
+
+        return typeClass;
     }
 }

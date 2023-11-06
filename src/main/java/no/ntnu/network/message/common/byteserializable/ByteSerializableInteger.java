@@ -7,7 +7,6 @@ import no.ntnu.network.message.serialize.visitor.ByteSerializerVisitor;
  * A deserialized integer that can be serialized.
  */
 public class ByteSerializableInteger implements ByteSerializable {
-    private static final int SERIALIZATION_CODE = 0;
     private final int integer;
 
     /**
@@ -30,7 +29,7 @@ public class ByteSerializableInteger implements ByteSerializable {
 
     @Override
     public byte[] accept(ByteSerializerVisitor visitor) {
-        return new byte[0];
+        return visitor.visitInteger(this);
     }
 
     @Override
@@ -53,5 +52,10 @@ public class ByteSerializableInteger implements ByteSerializable {
         result = result * 31 + integer;
 
         return result;
+    }
+
+    @Override
+    public String toString() {
+        return Integer.toString(integer);
     }
 }

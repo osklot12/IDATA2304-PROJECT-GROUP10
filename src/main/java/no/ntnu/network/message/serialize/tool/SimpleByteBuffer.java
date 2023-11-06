@@ -9,11 +9,23 @@ public class SimpleByteBuffer {
     private int tail;
 
     /**
-     * Creates a new ByteBuffer.
+     * Creates a new SimpleByteBuffer.
      */
     public SimpleByteBuffer() {
         this.buffer = new byte[32];
         this.tail = 0;
+    }
+
+    /**
+     * Creates a new SimpleByteBuffer.
+     *
+     * @param bytes bytes to add to buffer
+     */
+    public SimpleByteBuffer(byte[] bytes) {
+        this.buffer = new byte[32];
+        this.tail = 0;
+
+        addBytes(bytes);
     }
 
     /**

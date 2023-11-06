@@ -46,10 +46,18 @@ public class Logger {
    */
   public static void printBytes(byte[] bytes) {
     StringBuilder sb = new StringBuilder();
+    int n = 16; // bytes per line
 
+    int byteCounter = 1;
     for (byte b : bytes) {
       String binaryString = String.format("%8s", Integer.toBinaryString(b & 0xFF)).replace(' ', '0');
-      sb.append(binaryString).append(" "); // Append a space for readability
+      sb.append(binaryString).append(" ");
+
+      // creates a new line every n bytes
+      if (byteCounter % n == 0) {
+        sb.append(System.lineSeparator());
+      }
+      byteCounter++;
     }
 
     System.out.println(sb.toString().trim());

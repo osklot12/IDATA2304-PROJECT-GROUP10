@@ -6,7 +6,7 @@ import no.ntnu.network.message.common.byteserializable.ByteSerializableList;
 import no.ntnu.network.message.serialize.composite.ByteSerializable;
 
 /**
- * A serializer acting as the visitor in the Visitor design pattern.
+ * A serializer for common data, acting as the visitor in the Visitor design pattern.
  * A class implementing the interface extracts the serialization methods from the objects on which they operate.
  * <p/>
  * The class works with objects implementing the {@code ByteSerializable} interface, which is used as a component
@@ -24,20 +24,20 @@ public interface ByteSerializerVisitor {
     byte[] serialize(ByteSerializable serializable) throws SerializationException;
 
     /**
-     * Visits a {@code ByteSerializableInteger}.
+     * Serializes a {@code ByteSerializableInteger} object.
      *
-     * @param integer byte serializable integer to visit
+     * @param integer integer to serialize
      * @return the serialized integer
-     * @throws SerializationException thrown when integer cannot be serialized
+     * @throws SerializationException thrown if serialization fails
      */
     byte[] visitInteger(ByteSerializableInteger integer) throws SerializationException;
 
     /**
-     * Visits a {@code ByteSerializableList}.
+     * Serializes a {@code ByteSerializableList} object.
      *
-     * @param list byte serializable list to visit
+     * @param list list to serialize
      * @return the serialized list
-     * @throws SerializationException thrown when list cannot be serialized
+     * @throws SerializationException thrown if serialization fails
      */
-    byte[] visitList(ByteSerializableList list) throws SerializationException;
+    <T extends ByteSerializable> byte[] visitList(ByteSerializableList<T> list) throws SerializationException;
 }

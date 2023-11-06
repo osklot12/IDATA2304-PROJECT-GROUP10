@@ -11,23 +11,12 @@ import java.util.List;
  *
  * @param <T> any class implementing the {@code ByteSerializable} interface
  */
-public class ByteSerializableList<T extends ByteSerializable> implements ByteSerializable {
-    private final List<T> list;
-
+public class ByteSerializableList<T extends ByteSerializable> extends ArrayList<T> implements ByteSerializable {
     /**
      * Creates a new ByteSerializableList.
      */
     public ByteSerializableList() {
-        this.list = new ArrayList<>();
-    }
-
-    /**
-     * Returns the list.
-     *
-     * @return list of {@code ByteSerializable} objects
-     */
-    public List<T> getList() {
-        return this.list;
+        super();
     }
 
     @Override
