@@ -1,12 +1,15 @@
 package no.ntnu.network.message.serialize.visitor;
 
 import no.ntnu.exception.SerializationException;
-import no.ntnu.network.message.common.byteserializable.ByteSerializableInteger;
-import no.ntnu.network.message.common.byteserializable.ByteSerializableList;
+import no.ntnu.network.message.common.ByteSerializableInteger;
+import no.ntnu.network.message.common.ByteSerializableList;
+import no.ntnu.network.message.common.ByteSerializableString;
 import no.ntnu.network.message.serialize.NofspSerializationConstants;
 import no.ntnu.network.message.serialize.composite.ByteSerializable;
 import no.ntnu.network.message.serialize.tool.SimpleByteBuffer;
 import no.ntnu.network.message.serialize.tool.ByteHandler;
+
+import java.nio.charset.StandardCharsets;
 
 /**
  * A serializer that handles serialization of common data using the serialization technique described by NOFSP.
@@ -26,13 +29,26 @@ public class NofspSerializer implements ByteSerializerVisitor {
 
     @Override
     public byte[] visitInteger(ByteSerializableInteger integer) throws SerializationException {
+        byte[] typeField = NofspSerializationConstants.INTEGER_BYTES;
         byte[] lengthField = null;
-
         byte[] valueBytes = ByteHandler.intToBytes(integer.getInteger());
         lengthField = getLengthField(valueBytes.length);
 
         SimpleByteBuffer tlv = new SimpleByteBuffer();
-        tlv.addBytes(NofspSerializationConstants.INTEGER_BYTES, lengthField, valueBytes);
+        tlv.addBytes(typeField, lengthField, valueBytes);
+
+        return tlv.toArray();
+    }
+
+    @Override
+    public byte[] visitString(ByteSerializableString string) throws SerializationException {
+        byte[] typeField = NofspSerializationConstants.STRING_BYTES;
+        byte[] lengthField = null;
+        byte[] valueBytes = string.getString().getBytes(StandardCharsets.UTF_8);
+        lengthField = getLengthField(valueBytes.length);
+
+        SimpleByteBuffer tlv = new SimpleByteBuffer();
+        tlv.addBytes(typeField, lengthField, valueBytes);
 
         return tlv.toArray();
     }

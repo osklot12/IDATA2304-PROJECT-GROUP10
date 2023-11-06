@@ -1,14 +1,16 @@
 package no.ntnu.network.message.deserialize;
 
 import no.ntnu.exception.SerializationException;
-import no.ntnu.network.message.common.byteserializable.ByteSerializableInteger;
-import no.ntnu.network.message.common.byteserializable.ByteSerializableList;
+import no.ntnu.network.message.common.ByteSerializableInteger;
+import no.ntnu.network.message.common.ByteSerializableList;
+import no.ntnu.network.message.common.ByteSerializableString;
 import no.ntnu.network.message.serialize.NofspSerializationConstants;
 import no.ntnu.network.message.serialize.composite.ByteSerializable;
 import no.ntnu.network.message.serialize.tool.ByteHandler;
 import no.ntnu.network.message.serialize.tool.TlvFrame;
 import no.ntnu.network.message.serialize.tool.TlvReader;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
 /**
@@ -44,6 +46,11 @@ public class NofspCommonDeserializer {
             serializable = getInteger(valueField);
         }
 
+        // type field: string
+        if (Arrays.equals(typeField, NofspSerializationConstants.STRING_BYTES)) {
+            serializable = getString(valueField);
+        }
+
         // type field: list
         if (Arrays.equals(typeField, NofspSerializationConstants.LIST_BYTES)) {
             Class<? extends ByteSerializable> listElementTypeClass = getListElementClass(valueField);
@@ -54,6 +61,12 @@ public class NofspCommonDeserializer {
         }
 
         return serializable;
+    }
+
+    private static ByteSerializableString getString(byte[] bytes) {
+        String deserializedString = new String(bytes, StandardCharsets.UTF_8);
+
+        return new ByteSerializableString(deserializedString);
     }
 
     private static ByteSerializableInteger getInteger(byte[] bytes) {

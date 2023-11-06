@@ -1,4 +1,4 @@
-package no.ntnu.network.message.common.byteserializable;
+package no.ntnu.network.message.common;
 
 import no.ntnu.network.message.serialize.composite.ByteSerializable;
 import no.ntnu.network.message.serialize.visitor.ByteSerializerVisitor;
@@ -22,5 +22,18 @@ public class ByteSerializableList<T extends ByteSerializable> extends ArrayList<
     @Override
     public byte[] accept(ByteSerializerVisitor visitor) {
         return visitor.visitList(this);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof ByteSerializableList<?>)) return false;
+
+        return super.equals(o);
+    }
+
+    @Override
+    public int hashCode() {
+        return super.hashCode();
     }
 }

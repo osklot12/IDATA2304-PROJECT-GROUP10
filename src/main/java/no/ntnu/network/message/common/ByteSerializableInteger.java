@@ -1,10 +1,10 @@
-package no.ntnu.network.message.common.byteserializable;
+package no.ntnu.network.message.common;
 
 import no.ntnu.network.message.serialize.composite.ByteSerializable;
 import no.ntnu.network.message.serialize.visitor.ByteSerializerVisitor;
 
 /**
- * A deserialized integer that can be serialized.
+ * A serializable integer.
  */
 public class ByteSerializableInteger implements ByteSerializable {
     private final int integer;

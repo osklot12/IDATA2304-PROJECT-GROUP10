@@ -1,8 +1,9 @@
 package no.ntnu.network.message.serialize.visitor;
 
 import no.ntnu.exception.SerializationException;
-import no.ntnu.network.message.common.byteserializable.ByteSerializableInteger;
-import no.ntnu.network.message.common.byteserializable.ByteSerializableList;
+import no.ntnu.network.message.common.ByteSerializableInteger;
+import no.ntnu.network.message.common.ByteSerializableList;
+import no.ntnu.network.message.common.ByteSerializableString;
 import no.ntnu.network.message.serialize.composite.ByteSerializable;
 
 /**
@@ -31,6 +32,15 @@ public interface ByteSerializerVisitor {
      * @throws SerializationException thrown if serialization fails
      */
     byte[] visitInteger(ByteSerializableInteger integer) throws SerializationException;
+
+    /**
+     * Serializes a {@code ByteSerializableString} object.
+     *
+     * @param string string to serialize
+     * @return the serialized string
+     * @throws SerializationException thrown if serialization fails
+     */
+    byte[] visitString(ByteSerializableString string) throws SerializationException;
 
     /**
      * Serializes a {@code ByteSerializableList} object.

@@ -11,5 +11,6 @@ public class NofspSerializationConstants {
 
     // byte constants
     public static final byte[] INTEGER_BYTES = new byte[] {0, 0};
+    public static final byte[] STRING_BYTES = new byte[] {0, 1};
     public static final byte[] LIST_BYTES = new byte[] {0, 2};
 }
