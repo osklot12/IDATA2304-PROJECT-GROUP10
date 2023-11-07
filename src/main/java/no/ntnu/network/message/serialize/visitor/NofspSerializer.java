@@ -5,6 +5,7 @@ import no.ntnu.network.message.common.ByteSerializableInteger;
 import no.ntnu.network.message.common.ByteSerializableList;
 import no.ntnu.network.message.common.ByteSerializableMap;
 import no.ntnu.network.message.common.ByteSerializableString;
+import no.ntnu.network.message.request.RegisterControlPanelRequest;
 import no.ntnu.network.message.serialize.NofspSerializationConstants;
 import no.ntnu.network.message.serialize.composite.ByteSerializable;
 import no.ntnu.network.message.serialize.tool.SimpleByteBuffer;
@@ -110,6 +111,45 @@ public class NofspSerializer implements ByteSerializerVisitor {
         tlv = createTlv(typeField, lengthField, valueField);
 
         return tlv;
+    }
+
+    @Override
+    public byte[] visitRegisterControlPanelRequest(RegisterControlPanelRequest request) throws SerializationException {
+        byte[] tlv = null;
+
+        byte[] commandTlv = serialize(new ByteSerializableString(request.getCommand()));
+        byte[] dataTlv = request.getSerializableCompatibilityList().accept(this);
+
+        tlv = packInRequestFrame(commandTlv, dataTlv);
+
+        return tlv;
+    }
+
+    private byte[] packInRequestFrame(byte[] commandTlv, byte[] dataTlv) {
+        byte[] tlv = null;
+
+        byte[] typeField = NofspSerializationConstants.REQUEST_BYTES;
+        byte[] lengthField = null;
+        byte[] valueField = null;
+
+        SimpleByteBuffer valueBuffer = new SimpleByteBuffer();
+        valueBuffer.addBytes(commandTlv, dataTlv);
+        valueField = valueBuffer.toArray();
+        lengthField = getLengthField(valueField.length);
+
+        tlv = createTlv(typeField, lengthField, valueField);
+
+        return tlv;
+    }
+
+    private byte[] getProtocolVersionTlv() {
+        byte[] versionTlv = null;
+
+        String versionString = NofspSerializationConstants.VERSION;
+        ByteSerializableString serializableString = new ByteSerializableString(versionString);
+        versionTlv = serialize(serializableString);
+
+        return versionTlv;
     }
 
     private static byte[] createTlv(byte[] typeField, byte[] lengthField, byte[] valueBytes) {

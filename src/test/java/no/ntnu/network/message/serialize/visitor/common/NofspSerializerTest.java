@@ -1,16 +1,21 @@
 package no.ntnu.network.message.serialize.visitor.common;
 
+import no.ntnu.fieldnode.device.DeviceClass;
 import no.ntnu.network.message.common.ByteSerializableInteger;
 import no.ntnu.network.message.common.ByteSerializableList;
 import no.ntnu.network.message.common.ByteSerializableMap;
 import no.ntnu.network.message.common.ByteSerializableString;
-import no.ntnu.network.message.deserialize.NofspCommonDeserializer;
+import no.ntnu.network.message.deserialize.NofspDeserializer;
+import no.ntnu.network.message.request.RegisterControlPanelRequest;
 import no.ntnu.network.message.serialize.composite.ByteSerializable;
 import no.ntnu.network.message.serialize.visitor.ByteSerializerVisitor;
 import no.ntnu.network.message.serialize.visitor.NofspSerializer;
 import no.ntnu.tools.Logger;
 import org.junit.Before;
 import org.junit.Test;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.junit.Assert.*;
 
@@ -38,7 +43,7 @@ public class NofspSerializerTest {
 
         byte[] bytes = serializer.serialize(integer);
 
-        assertEquals(integer, NofspCommonDeserializer.deserialize(bytes));
+        assertEquals(integer, NofspDeserializer.deserialize(bytes));
     }
 
     /**
@@ -50,7 +55,7 @@ public class NofspSerializerTest {
 
         byte[] bytes = serializer.serialize(integer);
 
-        assertEquals(integer, NofspCommonDeserializer.deserialize(bytes));
+        assertEquals(integer, NofspDeserializer.deserialize(bytes));
     }
 
     /**
@@ -62,7 +67,7 @@ public class NofspSerializerTest {
 
         byte[] bytes = serializer.serialize(integer);
 
-        assertEquals(integer, NofspCommonDeserializer.deserialize(bytes));
+        assertEquals(integer, NofspDeserializer.deserialize(bytes));
     }
 
     /**
@@ -74,7 +79,7 @@ public class NofspSerializerTest {
 
         byte[] bytes = serializer.serialize(integer);
 
-        assertEquals(integer, NofspCommonDeserializer.deserialize(bytes));
+        assertEquals(integer, NofspDeserializer.deserialize(bytes));
     }
 
     /**
@@ -86,7 +91,7 @@ public class NofspSerializerTest {
 
         byte[] bytes = serializer.serialize(string);
 
-        assertEquals(string, NofspCommonDeserializer.deserialize(bytes));
+        assertEquals(string, NofspDeserializer.deserialize(bytes));
     }
 
     /**
@@ -100,7 +105,7 @@ public class NofspSerializerTest {
         byte[] bytes = serializer.serialize(string);
         byte[] differentBytes = serializer.serialize(anotherString);
 
-        assertNotEquals(NofspCommonDeserializer.deserialize(bytes), NofspCommonDeserializer.deserialize(differentBytes));
+        assertNotEquals(NofspDeserializer.deserialize(bytes), NofspDeserializer.deserialize(differentBytes));
     }
 
     /**
@@ -117,7 +122,7 @@ public class NofspSerializerTest {
         list.add(minusTwoHundredAndThree);
 
         byte[] bytes = serializer.serialize(list);
-        ByteSerializable reconstructedList = NofspCommonDeserializer.deserialize(bytes);
+        ByteSerializable reconstructedList = NofspDeserializer.deserialize(bytes);
 
         assertEquals(list, reconstructedList);
     }
@@ -136,7 +141,7 @@ public class NofspSerializerTest {
         list.add(thirdString);
 
         byte[] bytes = serializer.serialize(list);
-        ByteSerializable reconstructedList = NofspCommonDeserializer.deserialize(bytes);
+        ByteSerializable reconstructedList = NofspDeserializer.deserialize(bytes);
 
         assertEquals(list, reconstructedList);
     }
@@ -152,8 +157,24 @@ public class NofspSerializerTest {
         map.put(new ByteSerializableInteger(-60), new ByteSerializableString("Goodbye!"));
 
         byte[] bytes = serializer.serialize(map);
-        ByteSerializable reconstructedMap = NofspCommonDeserializer.deserialize(bytes);
+        ByteSerializable reconstructedMap = NofspDeserializer.deserialize(bytes);
 
         assertEquals(map, reconstructedMap);
+    }
+
+    /**
+     * Tests that a RegisterControlPanelRequest is serialized and deserialized successfully.
+     */
+    @Test
+    public void testRegisterControlPanelRequestSerialization() {
+        List<DeviceClass> compatibilityList = new ArrayList<>();
+        compatibilityList.add(DeviceClass.A1);
+        compatibilityList.add(DeviceClass.S3);
+        RegisterControlPanelRequest request = new RegisterControlPanelRequest(compatibilityList);
+
+        byte[] bytes = serializer.serialize(request);
+        ByteSerializable reconstructedRequest = NofspDeserializer.deserialize(bytes);
+
+        assertEquals(request, reconstructedRequest);
     }
 }

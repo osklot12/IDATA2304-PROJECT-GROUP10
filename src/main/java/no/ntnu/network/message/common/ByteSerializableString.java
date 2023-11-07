@@ -53,4 +53,9 @@ public class ByteSerializableString implements ByteSerializable {
 
         return result;
     }
+
+    @Override
+    public String toString() {
+        return string;
+    }
 }

@@ -5,6 +5,7 @@ import no.ntnu.network.message.common.ByteSerializableInteger;
 import no.ntnu.network.message.common.ByteSerializableList;
 import no.ntnu.network.message.common.ByteSerializableMap;
 import no.ntnu.network.message.common.ByteSerializableString;
+import no.ntnu.network.message.request.RegisterControlPanelRequest;
 import no.ntnu.network.message.serialize.composite.ByteSerializable;
 
 /**
@@ -62,4 +63,13 @@ public interface ByteSerializerVisitor {
      * @throws SerializationException thrown if serialization fails
      */
     <K extends ByteSerializable, V extends ByteSerializable> byte[] visitMap(ByteSerializableMap<K, V> map) throws SerializationException;
+
+    /**
+     * Serializes a {@code RegisterControlPanelRequest} object.
+     *
+     * @param request the request to serialize
+     * @return serialized request
+     * @throws SerializationException thrown if serialization fails
+     */
+    byte[] visitRegisterControlPanelRequest(RegisterControlPanelRequest request) throws SerializationException;
 }

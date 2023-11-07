@@ -29,8 +29,8 @@ import java.util.Map;
  */
 public class CentralServer {
     public static final int PORT_NUMBER = 60005;
+    private final CentralCore core;
     private ServerSocket serverSocket;
-    private final ClientRegister clientRegister;
     private boolean running;
 
 
@@ -38,7 +38,7 @@ public class CentralServer {
      * Creates a new CentralServer.
      */
     public CentralServer() {
-        clientRegister = new ClientRegister();
+        this.core = new CentralCore();
         this.running = false;
     }
 
