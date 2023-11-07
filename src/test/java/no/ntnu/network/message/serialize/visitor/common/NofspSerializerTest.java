@@ -2,11 +2,13 @@ package no.ntnu.network.message.serialize.visitor.common;
 
 import no.ntnu.network.message.common.ByteSerializableInteger;
 import no.ntnu.network.message.common.ByteSerializableList;
+import no.ntnu.network.message.common.ByteSerializableMap;
 import no.ntnu.network.message.common.ByteSerializableString;
 import no.ntnu.network.message.deserialize.NofspCommonDeserializer;
 import no.ntnu.network.message.serialize.composite.ByteSerializable;
 import no.ntnu.network.message.serialize.visitor.ByteSerializerVisitor;
 import no.ntnu.network.message.serialize.visitor.NofspSerializer;
+import no.ntnu.tools.Logger;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -137,5 +139,21 @@ public class NofspSerializerTest {
         ByteSerializable reconstructedList = NofspCommonDeserializer.deserialize(bytes);
 
         assertEquals(list, reconstructedList);
+    }
+
+    /**
+     * Tests that a map is serialized and deserialized successfully.
+     */
+    @Test
+    public void testMapSerialization() {
+        ByteSerializableMap<ByteSerializableInteger, ByteSerializableString> map = new ByteSerializableMap<>();
+        map.put(new ByteSerializableInteger(2), new ByteSerializableString("Hello"));
+        map.put(new ByteSerializableInteger(206), new ByteSerializableString("Good morning"));
+        map.put(new ByteSerializableInteger(-60), new ByteSerializableString("Goodbye!"));
+
+        byte[] bytes = serializer.serialize(map);
+        ByteSerializable reconstructedMap = NofspCommonDeserializer.deserialize(bytes);
+
+        assertEquals(map, reconstructedMap);
     }
 }

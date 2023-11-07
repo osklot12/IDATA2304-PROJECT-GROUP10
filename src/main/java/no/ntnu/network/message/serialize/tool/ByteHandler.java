@@ -97,4 +97,29 @@ public class ByteHandler {
         ByteBuffer buffer = ByteBuffer.wrap(bytes);
         return buffer.getInt();
     }
+
+    /**
+     * Converts an array of bytes to a String.
+     *
+     * @param bytes bytes to convert
+     * @return bytes represented by a String
+     */
+    public static String bytesToString(byte[] bytes) {
+        StringBuilder sb = new StringBuilder();
+        int n = 16; // bytes per line
+
+        int byteCounter = 1;
+        for (byte b : bytes) {
+            String binaryString = String.format("%8s", Integer.toBinaryString(b & 0xFF)).replace(' ', '0');
+            sb.append(binaryString).append(" ");
+
+            // creates a new line every n bytes
+            if (byteCounter % n == 0) {
+                sb.append(System.lineSeparator());
+            }
+            byteCounter++;
+        }
+
+        return sb.toString().trim();
+    }
 }

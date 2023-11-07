@@ -1,5 +1,7 @@
 package no.ntnu.tools;
 
+import no.ntnu.network.message.serialize.tool.ByteHandler;
+
 /**
  * A logger class for encapsulating all the logging. We can either reduce the number of SonarLint
  * warnings, or implement it properly. This class makes sure we sue the same logging in all
@@ -45,21 +47,6 @@ public class Logger {
    * @param bytes array of bytes to log
    */
   public static void printBytes(byte[] bytes) {
-    StringBuilder sb = new StringBuilder();
-    int n = 16; // bytes per line
-
-    int byteCounter = 1;
-    for (byte b : bytes) {
-      String binaryString = String.format("%8s", Integer.toBinaryString(b & 0xFF)).replace(' ', '0');
-      sb.append(binaryString).append(" ");
-
-      // creates a new line every n bytes
-      if (byteCounter % n == 0) {
-        sb.append(System.lineSeparator());
-      }
-      byteCounter++;
-    }
-
-    System.out.println(sb.toString().trim());
+    System.out.println(ByteHandler.bytesToString(bytes));
   }
 }

@@ -3,6 +3,7 @@ package no.ntnu.network.message.serialize.visitor;
 import no.ntnu.exception.SerializationException;
 import no.ntnu.network.message.common.ByteSerializableInteger;
 import no.ntnu.network.message.common.ByteSerializableList;
+import no.ntnu.network.message.common.ByteSerializableMap;
 import no.ntnu.network.message.common.ByteSerializableString;
 import no.ntnu.network.message.serialize.NofspSerializationConstants;
 import no.ntnu.network.message.serialize.composite.ByteSerializable;
@@ -29,28 +30,30 @@ public class NofspSerializer implements ByteSerializerVisitor {
 
     @Override
     public byte[] visitInteger(ByteSerializableInteger integer) throws SerializationException {
+        byte[] tlv = null;
+
         byte[] typeField = NofspSerializationConstants.INTEGER_BYTES;
         byte[] lengthField = null;
         byte[] valueBytes = ByteHandler.intToBytes(integer.getInteger());
+
         lengthField = getLengthField(valueBytes.length);
+        tlv = createTlv(typeField, lengthField, valueBytes);
 
-        SimpleByteBuffer tlv = new SimpleByteBuffer();
-        tlv.addBytes(typeField, lengthField, valueBytes);
-
-        return tlv.toArray();
+        return tlv;
     }
 
     @Override
     public byte[] visitString(ByteSerializableString string) throws SerializationException {
+        byte[] tlv = null;
+
         byte[] typeField = NofspSerializationConstants.STRING_BYTES;
         byte[] lengthField = null;
-        byte[] valueBytes = string.getString().getBytes(StandardCharsets.UTF_8);
-        lengthField = getLengthField(valueBytes.length);
+        byte[] valueField = string.getString().getBytes(StandardCharsets.UTF_8);
 
-        SimpleByteBuffer tlv = new SimpleByteBuffer();
-        tlv.addBytes(typeField, lengthField, valueBytes);
+        lengthField = getLengthField(valueField.length);
+        tlv = createTlv(typeField, lengthField, valueField);
 
-        return tlv.toArray();
+        return tlv;
     }
 
     @Override
@@ -59,20 +62,74 @@ public class NofspSerializer implements ByteSerializerVisitor {
             throw new SerializationException("Cannot serialize list, because list is empty.");
         }
 
-        byte[] lengthField = null;
-        SimpleByteBuffer valueBuffer = new SimpleByteBuffer();
+        byte[] tlv = null;
 
+        byte[] typeField = NofspSerializationConstants.LIST_BYTES;
+        byte[] lengthField = null;
+        byte[] valueField = null;
+
+        SimpleByteBuffer valueBuffer = new SimpleByteBuffer();
         list.forEach(
                 item -> valueBuffer.addBytes(item.accept(this))
         );
 
-        byte[] valueField = valueBuffer.toArray();
+        valueField = valueBuffer.toArray();
         lengthField = getLengthField(valueField.length);
 
-        SimpleByteBuffer tlv = new SimpleByteBuffer();
-        tlv.addBytes(NofspSerializationConstants.LIST_BYTES, lengthField, valueField);
+        tlv = createTlv(typeField, lengthField, valueField);
 
-        return tlv.toArray();
+        return tlv;
+    }
+
+    @Override
+    public <K extends ByteSerializable, V extends ByteSerializable> byte[] visitMap(ByteSerializableMap<K, V> map) throws SerializationException {
+        if (map.isEmpty()) {
+            throw new SerializationException("Cannot serialize map, because map is empty");
+        }
+
+        byte[] tlv = null;
+
+        byte[] typeField = NofspSerializationConstants.MAP_BYTES;
+        byte[] lengthField = null;
+        byte[] valueField = null;
+
+        SimpleByteBuffer valueBuffer = new SimpleByteBuffer();
+        map.forEach((key, value) -> {
+            valueBuffer.addBytes(key.accept(this));
+
+            if (value != null) {
+                valueBuffer.addBytes(value.accept(this));
+            } else {
+                valueBuffer.addBytes(createNullValueTlv());
+            }
+        });
+
+        valueField = valueBuffer.toArray();
+        lengthField = getLengthField(valueField.length);
+
+        tlv = createTlv(typeField, lengthField, valueField);
+
+        return tlv;
+    }
+
+    private static byte[] createTlv(byte[] typeField, byte[] lengthField, byte[] valueBytes) {
+        byte[] tlv = null;
+
+        SimpleByteBuffer tlvBuffer = new SimpleByteBuffer();
+        tlvBuffer.addBytes(typeField, lengthField, valueBytes);
+        tlv = tlvBuffer.toArray();
+
+        return tlv;
+    }
+
+    private static byte[] createNullValueTlv() {
+        byte[] tlv = null;
+
+        SimpleByteBuffer tlvBuffer = new SimpleByteBuffer();
+        tlvBuffer.addBytes(NofspSerializationConstants.NULL_BYTES, getLengthField(0), new byte[] {});
+        tlv = tlvBuffer.toArray();
+
+        return tlv;
     }
 
     private static byte[] getLengthField(int length) throws SerializationException {

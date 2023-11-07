@@ -3,6 +3,7 @@ package no.ntnu.network.message.serialize.visitor;
 import no.ntnu.exception.SerializationException;
 import no.ntnu.network.message.common.ByteSerializableInteger;
 import no.ntnu.network.message.common.ByteSerializableList;
+import no.ntnu.network.message.common.ByteSerializableMap;
 import no.ntnu.network.message.common.ByteSerializableString;
 import no.ntnu.network.message.serialize.composite.ByteSerializable;
 
@@ -50,4 +51,15 @@ public interface ByteSerializerVisitor {
      * @throws SerializationException thrown if serialization fails
      */
     <T extends ByteSerializable> byte[] visitList(ByteSerializableList<T> list) throws SerializationException;
+
+    /**
+     * Serializes a {@code ByteSerializableMap} object.
+     *
+     * @param map map to serialize
+     * @return the serialized map
+     * @param <K> any key implementing {@code ByteSerializable}
+     * @param <V> any value implementing {@code ByteSerializable}
+     * @throws SerializationException thrown if serialization fails
+     */
+    <K extends ByteSerializable, V extends ByteSerializable> byte[] visitMap(ByteSerializableMap<K, V> map) throws SerializationException;
 }
