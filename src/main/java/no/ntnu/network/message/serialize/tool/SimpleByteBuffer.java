@@ -1,5 +1,7 @@
 package no.ntnu.network.message.serialize.tool;
 
+import java.io.InputStream;
+
 /**
  * A buffer for holding bytes.
  * The buffer automatically increases when bytes are added, and automatically shrinks when bytes are removed.
@@ -22,10 +24,19 @@ public class SimpleByteBuffer {
      * @param bytes bytes to add to buffer
      */
     public SimpleByteBuffer(byte[] bytes) {
-        this.buffer = new byte[32];
-        this.tail = 0;
+        this();
 
         addBytes(bytes);
+    }
+
+    /**
+     * Creates a new SimpleByteBuffer.
+     *
+     * @param inputStream input stream to buffer bytes for
+     */
+    public SimpleByteBuffer(InputStream inputStream) {
+        this();
+
     }
 
     /**
@@ -34,15 +45,14 @@ public class SimpleByteBuffer {
      * @param aByte byte to add
      */
     public void addByte(byte aByte) {
+            handleBufferExpansion();
             buffer[tail] = aByte;
             tail++;
-
-            handleBufferExpansion();
     }
 
     private void handleBufferExpansion() {
-        if (tail > buffer.length/2) {
-            buffer = migrateBytes(buffer, buffer.length * 2);
+        if (tail == buffer.length) {
+            buffer = migrateBytes(buffer, buffer.length + 32);
         }
     }
 

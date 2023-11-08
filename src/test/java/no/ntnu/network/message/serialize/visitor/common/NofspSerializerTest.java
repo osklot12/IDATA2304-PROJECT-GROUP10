@@ -14,8 +14,8 @@ import no.ntnu.tools.Logger;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 import static org.junit.Assert.*;
 
@@ -167,7 +167,7 @@ public class NofspSerializerTest {
      */
     @Test
     public void testRegisterControlPanelRequestSerialization() {
-        List<DeviceClass> compatibilityList = new ArrayList<>();
+        Set<DeviceClass> compatibilityList = new HashSet<>();
         compatibilityList.add(DeviceClass.A1);
         compatibilityList.add(DeviceClass.S3);
         RegisterControlPanelRequest request = new RegisterControlPanelRequest(compatibilityList);

@@ -18,9 +18,7 @@ import no.ntnu.network.message.serialize.tool.TlvReader;
 
 import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 /**
  * A deserializer constructing {@code ByteSerializable} objects from arrays of bytes.
@@ -118,7 +116,7 @@ public class NofspDeserializer {
 
         ByteSerializable serializable = deserialize(bytes);
         if (serializable instanceof ByteSerializableList<?> serializableList) {
-            List<DeviceClass> compatibilityList = getCompatibilityList(serializableList);
+            Set<DeviceClass> compatibilityList = getCompatibilityList(serializableList);
 
             request = new RegisterControlPanelRequest(compatibilityList);
         } else {
@@ -128,8 +126,8 @@ public class NofspDeserializer {
         return request;
     }
 
-    private static List<DeviceClass> getCompatibilityList(ByteSerializableList<?> serializableList) throws SerializationException {
-        List<DeviceClass> compatibilityList = new ArrayList<>();
+    private static Set<DeviceClass> getCompatibilityList(ByteSerializableList<?> serializableList) throws SerializationException {
+        Set<DeviceClass> compatibilityList = new HashSet<>();
 
         serializableList.forEach(
                 item -> {

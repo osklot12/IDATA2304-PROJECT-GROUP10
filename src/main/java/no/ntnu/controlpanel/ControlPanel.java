@@ -1,12 +1,9 @@
 package no.ntnu.controlpanel;
 
-import no.ntnu.broker.VirtualActuatorStateBroker;
 import no.ntnu.controlpanel.virtual.*;
+import no.ntnu.fieldnode.device.DeviceClass;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
+import java.util.*;
 
 /**
  * A class responsible for the logic of the control panel in the network.
@@ -14,6 +11,7 @@ import java.util.Map;
  * actuators.
  */
 public class ControlPanel implements VirtualFieldNodeListener {
+    private static final Set<DeviceClass> COMPATIBILITY_LIST = new HashSet<>();
     private final Map<Integer, VirtualFieldNode> fieldNodes;
 
     /**
@@ -32,7 +30,7 @@ public class ControlPanel implements VirtualFieldNodeListener {
     public int addVirtualFieldNode(VirtualFieldNode fieldNode) {
         int address = -1;
 
-        if (!(fieldNode == null) && !(fieldNodes.containsValue(fieldNode))) {
+        if ((null != fieldNode) && !(fieldNodes.containsValue(fieldNode))) {
             address = generateNewFieldNodeAddress();
             fieldNodes.put(address, fieldNode);
         }
@@ -83,6 +81,15 @@ public class ControlPanel implements VirtualFieldNodeListener {
      */
     public VirtualFieldNode getVirtualFieldNode(int address) {
         return fieldNodes.get(address);
+    }
+
+    /**
+     * Returns the compatibility list for the control panel.
+     *
+     * @return the compatibility list
+     */
+    public Set<DeviceClass> getCompatibilityList() {
+        return COMPATIBILITY_LIST;
     }
 
     @Override

@@ -4,10 +4,11 @@ _version 1.0_
 This document describes the protocol for data communication between nodes in a distributed application for farming
 environments, called Node-Oriented Farming System Protocol (NOFSP). The protocol provides modularity and flexibility,
 and a combination of speed and reliability to any system implementing it. NOFSP is best suited for distributed
-farming environments, transmitting sensor data continuously.
+farming environments transmitting sensor data continuously.
 
 ## Terminology
 
+* __system__ - one or several clients connected to a central server
 * __sensor__ - a device which senses the environment and describes it with a value (a double value in
   the context of this project). Examples: temperature sensor, humidity sensor.
 * __actuator__ - a device which can influence the environment. Examples: a fan, a window opener/closer,
@@ -96,14 +97,20 @@ document.
 _TODO - show the general architecture of your network. Which part is a server? Who are clients? 
 Do you have one or several servers? Perhaps include a picture here._
 
-The architecture of NOFSP is designed to make a system modular, and allows for scaling. The following section
-describes the entities in the protocol, the roles of the entities as well as their relationship to each other.
+The architecture of NOFSP provides modularity and scalability, and is designed in such a way that adding new 
+nodes to a system is as seamless as possible, allowing for easily manageable systems. 
+
+The following section describes the entities in the protocol, the roles of each entity as well as their 
+relationship to each other. It also describes several key concepts for each entity, using defined data structures. 
+It is important to note that these are not rules for implementation, and that they are instead 
+explanations and justifications for the many concepts involved in NOFSP. Precise formats, data types, constants and
+marshalling is described later in the document.
 
 ### Entities
 
 The entities in NOFSP at the highest level are __field nodes__, __control panels__ and the __central
-server__. Both the field nodes and control panels are called nodes in the network. 
-All the three entities require different software applications, as they have different responsibilities.
+server__. All of these three entities is referred to as __nodes__ in the network.
+However, all three entities require different software implementations, as they have different responsibilities.
 Together, they create a system for a farming environment that can capture sensor data, monitor the environment and
 activate actuators, with minimal effort from the farmer.
 
@@ -115,33 +122,43 @@ sensors and actuators. A field nodes is not constrained by the protocol in terms
 of sensors and actuators it accommodates. However, the field nodes itself needs to be aware of the sensors and actuators
 it possesses.
 
-The field node has two jobs in NOFSP: collecting sensor data and handle actuators. It can do both of these jobs or one
-of them. A field node with none of these jobs will not be recognized as a field node. The entity can both send and 
-receive control data, but only send sensor data.
+The field node has two main jobs in NOFSP:
+* __transmitting sensor data__: the field nodes is responsible for transmitting sensor data as soon as possible.
+For transmitting sensor data, the field node is also responsible for communicating what kind of sensor data is being
+sent, and what kind of sensors it possesses.
+* __manage actuators__: the field node is responsible for handling actuator activation requests, and reporting back
+changes in actuator states to the system. For this job, the field node is also responsible for communicating what kind
+of actuators it possesses.
+
+A field node can both send and receive control data. Control data is used for registering the node, managing connections,
+managing actuators and communicate information about its devices. A field node can only send sensor data.
 
 ##### Field Node Names
 
 A field node can optionally be assigned a specific name, making it easier for the farmer to recognize the field node
 in the system. This name must be a string and does not have to be unique. The given name for a field node
-has no function to the system itself.
+has no technical function to the system itself.
 
 ##### Field Node Device Classes
 
 Even though the protocol does not interfere with how the field node manages its connected devices, a common language
 is needed for the field node to communicate the devices it possesses to the rest of the system. Each device will
-send or handle data differently, and the system needs to know how to handle this. The format for how to define such a
-class is given as _TYPE:CATEGORY_, without the semicolon, where the _type_ refers to the type of device, such as sensors 
-and actuators, and the _category_ refers to the category of that type, such as humidity sensors or fan actuators. The 
-type is either _S_ for sensors or _A_ for actuators, while the category is represented by a positive integer. A class 
-for a temperature sensor could look like this: _S1_.
+send or handle data differently, and the system needs to know how to handle this. The solution is to classify these
+devices into __field node device classes__. These classifications need to be agreed on globally in a system, 
+meaning that every node in the system refers to the same kind of data communication technique, when referring to the
+same class.
+
+The format for how to define such a class is given as _TYPE:CATEGORY_, without the semicolon, where the _type_ refers 
+to the type of device, such as sensors and actuators, and the _category_ refers to the category of that type, such as 
+humidity sensors or fan actuators. The type is either _S_ for sensors or _A_ for actuators, while the category is 
+represented by a positive integer. A class for a temperature sensor could look like this: _S1_.
 
 This approach for classifying field node devices allows for the addition of both new sensors and actuators,
 as long as they are given a new class. It is important to know that the category only refers to how data is transmitted,
 not to the device itself. Two different devices can go under the same class, as long as they transmit/receive data
-the same way. Another important point is that the classes needs to be universal for the system, meaning that
-all entities in the system uses the same class for the same category. This does not mean that all entities need to
-recognize all the classes used in the system; some entities may support more classes than others.
-The table below shows an example of how field node device classes can be defined in a system.
+the same way. Even though device classes needs to be agreed on by all nodes in the system, that does not mean that
+every node needs knowledge about all the device classes in the system. The table below demonstrates how these device
+classes can be implemented.
 
 | Type     | Category (data format)                 | Class |
 |----------|----------------------------------------|-------|
@@ -152,12 +169,14 @@ The table below shows an example of how field node device classes can be defined
 
 ##### Field Node System Table (FNST)
 
-The __field node system table (FNST)__ is a table used for communicating the devices connected to the field node.
-The table contains a row for each device connected, each represented by their class and an address. The class is
-given by the method explained in the previous section. The address is assigned by giving each device a unique
-positive integer. The field node is responsible for both creating and storing this table, and is essential for the
-system to work. By the addition or removal of a new device, the table must be updated accordingly.
-The following table shows an example of how a FNST could look.
+The __field node system table (FNST)__ is a table used for communicating the devices connected to a field node.
+The job of this table is to store _address_ - _device class_ pairs for each device connected to a field node.
+Once a field node has generated its FNST, it can then be used to communicate information about the devices the field
+node possesses to other nodes in a system. All nodes that now has access to this table, can simply address the devices
+of the field node by their addresses, and can look up the table to find the corresponding device address.
+
+Each device is assigned a non-negative integer, and has to be unique for that field node.
+FNST allows for multiple devices of the same device class, as long as they are assigned unique addresses.
 
 | Class | Address |
 |-------|---------|
@@ -169,69 +188,78 @@ The following table shows an example of how a FNST could look.
 
 ##### Active Device List (ADL)
 
-The __active device list__ is a list that keeps track of which devices the field node need to push data from.
-Any device that does not appear on this list can be ignored completely in terms of data communication.
-ADL helps to reduce traffic in the network by only pushing data that is actually used. The list looks a bit like
-the __compatibility list__ for the control panels, which is explained later. Unlike the compatibility list,
-which only describes the devices understood by a single control panel, ADL tells which devices are
-used and not used for the whole network.
+The __active device list__ is a list that keeps track of which devices are active.
+Data should not be transmitted for devices that is not in this list. The sole purpose of ADL is to reduce traffic in 
+the network by only pushing data that is actually used. Unlike FNST, which is communicated to other nodes, the ADL itself
+is never transmitted in the network, and is stored only by the field node itself. However, to know when and how to update
+the ADL, the field node needs [ADL update](#adl-update) messages from the central server.
 
 #### Control panels
 
 A __control panel__ is an entity in the network responsible for monitoring captured sensor data from field nodes, 
 as well as to give the user control over the actuators. It can monitor only some of the field nodes in the network,
-or all of them. The entity can both send and receive control data, but only receive sensor data.
+or all of them. The entity can both send and receive control data. Control data is used for registration, connection
+management, subscribing to field nodes and controlling actuators. The control panel can only receive sensor data.
 
 ##### Compatibility list
 
 While the field node needs to keep an FNST, the control panel needs to keep a __compatibility list__.
-The compatibility list is a list containing all the field device classes the control panel supports.
+Despite its name, the compatibility list is actually a _set_, as it does not contain duplicate elements nor does the
+order matter. The job of the compatibility list is to store each device class the control panel supports.
 In other words, the compatibility list tells what kind of data the control panel can handle. The use of the 
 compatibility list allows for backward compatibility, meaning that an older version of a control panel may
 interact with a newer version of a field node. The network will in turn not be flooded by data that the control panel
 do not understand.
 
-Like FNST, it is the job of the control panel to create and store this its compatibility list. The following list
-shows an example of how a compatibility list can look like.
+Like FNST, it is the job of the control panel to create its compatibility list. The following list
+shows an example of what a compatibility list could look like.
 
     S13, S6, A13, S2, S3, S5, A19, S1
 
 ##### FNST copies
 
-For the control panel to be able to understand and address the different parts of the system for a field node, it
-needs to store a copy of the FNST for the field node. Since FNST is a dynamic table, and might change over time,
-it needs to be regularly updated.
+For the control panel to be able to understand and address the different devices of a field node, it
+needs to store a copy of the FNST for each field node it subscribes to. This way, they can communicate using only the
+device addresses, and they will both know what device the other part is referring to.
 
 #### Central Server
 
-The __central server__ is an entity in the network responsible for routing data messages in the network.
+The __central server__ is an entity in the network responsible for routing all messages, acting as a central hub.
+A system is not able to function without the central server.
 All data sent from a field node to a control panel will go through this entity, and vice versa.
-Only one central server should exist in a system implementing NOFSP, and serves as the heart of the system.
-The entity can both send and receive control data, as well as sensor data.
+Only one central server is allowed for each system.
 
-The field nodes and control panels does not know about each other, they are both only aware of the central
+The field nodes and control panels do not directly know about each other, as they are both only aware of the central
 server. It is the job of this central server to coordinate all communication that needs to happen between
 the field nodes and control panels.
 
 ##### Field Node Pool
 
-The central server needs to keep track of some information for all the field nodes in the network. This is done
-by storing something called the __field node pool__. The field node pool is some data structure keeping information
-about all the field node addresses, any assigned name as well as the FNST for each field node.
+The central server needs to keep track of the field nodes connected to it, as well as essential data for each
+field node. This data includes the NFST, FNSM and possibly the assigned name, and is stored in what is
+called the __field node pool__.
+
+The benefit of the field node pool is decreased redundant data transmission, which also decreases network traffic.
+Instead of the field node transmitting its state for every request from a control panel, which might be exactly the
+same transmitted to the previous control panel, this job is delegated to the central server. The field node simply
+lets the central server know about its state and events, and the central server stores this information in its field
+node pool. The central server can then forward this information to the appropriate control panels. In the case of 
+a [field node pool pull](#field-node-pool-pull) request from a control panel, the central server simply sends
+what information it got available. There is no need to involve a field node in such an event.
 
 ##### Network Node Routing Table (NNRT)
 
 The central server introduces a new table to the protocol: the __network node routing table__. This table
-describes the relation between field nodes and control panels in the system. Each field node is given such a table to
-keep track of their _subscribers_, which are control panel nodes. It is important to note that this table is created,
+describes the relation between field nodes and control panels in the system. Each field node is assigned with such a table to
+keep track of their _subscribers_, which can be any number of control panels. It is important to note that this table is created,
 stored and managed by the central server, and not the field node itself. The field node is not aware it its subscribers,
 and does only focus on collecting and pushing data.
 
-NNRT maps each field node to some control panels in the network. The table also needs to include the compatibility
+NNRT maps each field node to a number of control panels in the system. The table also includes the compatibility
 list for each control panel. When an incoming packet is received from a field node, the central server checks the
-table and only sends the packet to the given control panels. If the received packet contains sensor data, the packet
-is only forwarded if the sensor category is in the compatibility list. The following table shows how such a table
-could look like.
+table and only forwards the packet to the appropriate control panels. If a received datagram at the central server
+contains sensor data, the source device is checked against the compatibility list. Only if the control panel supports 
+the data (device class is in compatibility list), will the datagram will be forwarded.
 
 | Control Panel | Compatibility list |
 |---------------|--------------------|
@@ -240,11 +268,11 @@ could look like.
 
 ##### Field Node Status Map (FNSM)
 
-Instead of the central server requesting the status of the actuators for a field node every time, it simply keeps
+The __field node status map__ stores data the actuator states for a given field node.
+Instead of having the central server request the actuator state every time it needs this information, it simply keeps
 a map containing this data. It is the responsibility of the field node to notify the central server in case of a 
 status change, such that the central server can update its map accordingly. This mechanism saves a lot of
-unnecessary network traffic. Such a map is called a __field node status map__, and the following table shows
-an example of how such a map for a field node could look like.
+unnecessary network traffic. The following table shows an example of how such a map for a field node could look like.
 
 | Actuator | Status code |
 |----------|-------------|

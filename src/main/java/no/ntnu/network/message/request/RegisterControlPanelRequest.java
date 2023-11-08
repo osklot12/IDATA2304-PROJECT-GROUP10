@@ -7,20 +7,21 @@ import no.ntnu.network.message.serialize.visitor.ByteSerializerVisitor;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 
 /**
  * A request to register a {@code Control Panel} at the central server.
  */
 public class RegisterControlPanelRequest implements Request {
     private static final String COMMAND = "REGCP";
-    private final List<DeviceClass> compatibilityList;
+    private final Set<DeviceClass> compatibilityList;
 
     /**
      * Creates a new RegisterControlPanelRequest.
      *
      * @param compatibilityList the compatibility list for the control panel
      */
-    public RegisterControlPanelRequest(List<DeviceClass> compatibilityList) {
+    public RegisterControlPanelRequest(Set<DeviceClass> compatibilityList) {
         if (compatibilityList == null) {
             throw new IllegalArgumentException("Cannot create RegisterControlPanelRequest, because compatibility list is null");
         }
@@ -33,7 +34,7 @@ public class RegisterControlPanelRequest implements Request {
      *
      * @return the compatibility list
      */
-    public List<DeviceClass> getCompatibilityList() {
+    public Set<DeviceClass> getCompatibilityList() {
         return compatibilityList;
     }
 
@@ -43,10 +44,10 @@ public class RegisterControlPanelRequest implements Request {
      * @return serializable compatibility list
      */
     public ByteSerializableList<ByteSerializableString> getSerializableCompatibilityList() {
-        return makeListSerializable(compatibilityList);
+        return makeSetSerializable(compatibilityList);
     }
 
-    private ByteSerializableList<ByteSerializableString> makeListSerializable(List<DeviceClass> compatibilityList) {
+    private ByteSerializableList<ByteSerializableString> makeSetSerializable(Set<DeviceClass> compatibilityList) {
         ByteSerializableList<ByteSerializableString> serializableList = new ByteSerializableList<>();
 
         compatibilityList.forEach(
