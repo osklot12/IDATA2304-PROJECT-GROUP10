@@ -1,11 +1,17 @@
 package no.ntnu.network.centralserver;
 
+import no.ntnu.network.message.deserialize.ByteDeserializer;
+import no.ntnu.network.message.deserialize.NofspDeserializer;
+import no.ntnu.network.message.serialize.visitor.ByteSerializerVisitor;
+import no.ntnu.network.message.serialize.visitor.NofspSerializer;
 import no.ntnu.tools.Logger;
 
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * The CentralServer serves as a hub for managing and routing communication between various field nodes and
@@ -29,8 +35,9 @@ import java.util.Map;
  */
 public class CentralServer {
     public static final int PORT_NUMBER = 60005;
-    private final CentralCore core;
-    private Thread listeningThread;
+    private final CentralCore centralCore;
+    private final ByteSerializerVisitor serializer;
+    private final ByteDeserializer deserializer;
     private volatile boolean running;
     private ServerSocket serverSocket;
 
@@ -40,7 +47,9 @@ public class CentralServer {
      * Creates a new CentralServer.
      */
     public CentralServer() {
-        this.core = new CentralCore();
+        this.centralCore = new CentralCore();
+        serializer = NofspSerializer.getInstance();
+        deserializer = NofspDeserializer.getInstance();
         this.running = false;
     }
 
@@ -57,12 +66,12 @@ public class CentralServer {
         if (serverSocket != null) {
             running = true;
 
-            listeningThread = new Thread(() -> {
+            Thread listeningThread = new Thread(() -> {
                 while (!serverSocket.isClosed()) {
                     Socket clientSocket = acceptNextClient();
 
                     if (clientSocket != null) {
-                        ClientHandler clientHandler = new ClientHandler(clientSocket);
+                        ClientHandler clientHandler = new ClientHandler(clientSocket, serializer, deserializer);
                         clientHandler.run();
                     }
                 }
@@ -113,7 +122,7 @@ public class CentralServer {
 
         try {
             socket = new ServerSocket(60005);
-            Logger.info("Server running on port " + PORT_NUMBER);
+            Logger.info("Server listening on port " + PORT_NUMBER + "...");
         } catch (IOException e) {
             Logger.error("Cannot open server socket: " + e.getMessage());
         }

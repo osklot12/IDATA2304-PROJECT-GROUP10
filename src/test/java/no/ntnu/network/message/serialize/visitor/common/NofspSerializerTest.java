@@ -6,6 +6,7 @@ import no.ntnu.network.message.common.ByteSerializableInteger;
 import no.ntnu.network.message.common.ByteSerializableList;
 import no.ntnu.network.message.common.ByteSerializableMap;
 import no.ntnu.network.message.common.ByteSerializableString;
+import no.ntnu.network.message.deserialize.ByteDeserializer;
 import no.ntnu.network.message.deserialize.NofspDeserializer;
 import no.ntnu.network.message.request.RegisterControlPanelRequest;
 import no.ntnu.network.message.serialize.composite.ByteSerializable;
@@ -26,6 +27,7 @@ import static org.junit.Assert.*;
  */
 public class NofspSerializerTest {
     ByteSerializerVisitor serializer;
+    ByteDeserializer deserializer;
 
     /**
      * Setting up for the following test methods.
@@ -33,6 +35,7 @@ public class NofspSerializerTest {
     @Before
     public void setup() {
         serializer = NofspSerializer.getInstance();
+        deserializer = NofspDeserializer.getInstance();
     }
 
     /**
@@ -44,7 +47,7 @@ public class NofspSerializerTest {
 
         byte[] bytes = serializer.serialize(integer);
 
-        assertEquals(integer, NofspDeserializer.deserialize(bytes));
+        assertEquals(integer, deserializer.deserialize(bytes));
     }
 
     /**
@@ -56,7 +59,7 @@ public class NofspSerializerTest {
 
         byte[] bytes = serializer.serialize(integer);
 
-        assertEquals(integer, NofspDeserializer.deserialize(bytes));
+        assertEquals(integer, deserializer.deserialize(bytes));
     }
 
     /**
@@ -68,7 +71,7 @@ public class NofspSerializerTest {
 
         byte[] bytes = serializer.serialize(integer);
 
-        assertEquals(integer, NofspDeserializer.deserialize(bytes));
+        assertEquals(integer, deserializer.deserialize(bytes));
     }
 
     /**
@@ -80,7 +83,7 @@ public class NofspSerializerTest {
 
         byte[] bytes = serializer.serialize(integer);
 
-        assertEquals(integer, NofspDeserializer.deserialize(bytes));
+        assertEquals(integer, deserializer.deserialize(bytes));
     }
 
     /**
@@ -92,7 +95,7 @@ public class NofspSerializerTest {
 
         byte[] bytes = serializer.serialize(string);
 
-        assertEquals(string, NofspDeserializer.deserialize(bytes));
+        assertEquals(string, deserializer.deserialize(bytes));
     }
 
     /**
@@ -106,7 +109,7 @@ public class NofspSerializerTest {
         byte[] bytes = serializer.serialize(string);
         byte[] differentBytes = serializer.serialize(anotherString);
 
-        assertNotEquals(NofspDeserializer.deserialize(bytes), NofspDeserializer.deserialize(differentBytes));
+        assertNotEquals(deserializer.deserialize(bytes), deserializer.deserialize(differentBytes));
     }
 
     /**
@@ -123,7 +126,7 @@ public class NofspSerializerTest {
         list.add(minusTwoHundredAndThree);
 
         byte[] bytes = serializer.serialize(list);
-        ByteSerializable reconstructedList = NofspDeserializer.deserialize(bytes);
+        ByteSerializable reconstructedList = deserializer.deserialize(bytes);
 
         assertEquals(list, reconstructedList);
     }
@@ -142,7 +145,7 @@ public class NofspSerializerTest {
         list.add(thirdString);
 
         byte[] bytes = serializer.serialize(list);
-        ByteSerializable reconstructedList = NofspDeserializer.deserialize(bytes);
+        ByteSerializable reconstructedList = deserializer.deserialize(bytes);
 
         assertEquals(list, reconstructedList);
     }
@@ -158,7 +161,7 @@ public class NofspSerializerTest {
         map.put(new ByteSerializableInteger(-60), new ByteSerializableString("Goodbye!"));
 
         byte[] bytes = serializer.serialize(map);
-        ByteSerializable reconstructedMap = NofspDeserializer.deserialize(bytes);
+        ByteSerializable reconstructedMap = deserializer.deserialize(bytes);
 
         assertEquals(map, reconstructedMap);
     }
@@ -174,7 +177,7 @@ public class NofspSerializerTest {
         RegisterControlPanelRequest request = new RegisterControlPanelRequest(compatibilityList);
 
         byte[] bytes = serializer.serialize(request);
-        ByteSerializable reconstructedRequest = NofspDeserializer.deserialize(bytes);
+        ByteSerializable reconstructedRequest = deserializer.deserialize(bytes);
 
         assertEquals(request, reconstructedRequest);
     }

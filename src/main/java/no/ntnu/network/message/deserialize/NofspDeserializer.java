@@ -23,11 +23,22 @@ import java.util.*;
  * A deserializer constructing {@code ByteSerializable} objects from arrays of bytes.
  * The deserializer implements the technique described by NOFSP.
  */
-public class NofspDeserializer {
+public class NofspDeserializer implements ByteDeserializer {
+    private static NofspDeserializer instance;
     private static final TlvFrame TLV_FRAME = NofspSerializationConstants.TLV_FRAME;
 
+    /**
+     * Creates a new NofspDeserializer.
+     */
     private NofspDeserializer() {
+    }
 
+    public static NofspDeserializer getInstance() {
+        if (instance == null) {
+            instance = new NofspDeserializer();
+        }
+
+        return instance;
     }
 
     /**
@@ -37,7 +48,7 @@ public class NofspDeserializer {
      * @return a {@code ByteSerializable} object
      * @throws SerializationException thrown when bytes cannot be deserialized
      */
-    public static ByteSerializable deserialize(byte[] bytes) throws IOException {
+    public ByteSerializable deserialize(byte[] bytes) throws IOException {
         if (bytes == null) {
             throw new SerializationException("Cannot identify type field, because bytes is null.");
         }
@@ -89,7 +100,7 @@ public class NofspDeserializer {
      * @return the request object
      * @throws IOException thrown if an I/O exception occurs
      */
-    private static Request getRequestMessage(byte[] bytes) throws IOException {
+    private Request getRequestMessage(byte[] bytes) throws IOException {
         Request request = null;
 
         TlvReader tlvReader = new TlvReader(bytes, TLV_FRAME);
@@ -124,7 +135,7 @@ public class NofspDeserializer {
      * @return the request object
      * @throws IOException thrown if an I/O exception occurs
      */
-    private static RegisterControlPanelRequest getRegisterControlPanelRequest(byte[] bytes) throws IOException {
+    private  RegisterControlPanelRequest getRegisterControlPanelRequest(byte[] bytes) throws IOException {
         RegisterControlPanelRequest request = null;
 
         ByteSerializable serializable = deserialize(bytes);
@@ -199,13 +210,13 @@ public class NofspDeserializer {
      * Deserializes an array of bytes into a {@code ByteSerializableList}, with a predefined class for its elements.
      * Only elements with this given class will be added to the resulting list.
      *
-     * @param bytes bytes to deserialize
+     * @param bytes bytes representing the content of the list
      * @param typeClass the class of elements in the list to accept
      * @return the list containing all valid elements
      * @param <T> class of elements in the list, which implements the {@code ByteSerializable} interface
      * @throws IOException thrown if an I/O exception occurs
      */
-    private static <T extends ByteSerializable> ByteSerializableList<T> getList(byte[] bytes, Class<T> typeClass) throws IOException {
+    private <T extends ByteSerializable> ByteSerializableList<T> getList(byte[] bytes, Class<T> typeClass) throws IOException {
         ByteSerializableList<T> list = new ByteSerializableList<>();
 
         TlvReader tlvReader = new TlvReader(bytes, TLV_FRAME);
@@ -236,7 +247,7 @@ public class NofspDeserializer {
      * @return the class of object
      * @throws IOException thrown if an I/O exception occurs
      */
-    private static Class<? extends ByteSerializable> getListElementClass(byte[] bytes) throws IOException {
+    private Class<? extends ByteSerializable> getListElementClass(byte[] bytes) throws IOException {
         Class<? extends ByteSerializable> typeClass = null;
 
         TlvReader tlvReader = new TlvReader(bytes, TLV_FRAME);
@@ -264,7 +275,7 @@ public class NofspDeserializer {
      * @param <V> class of value elements in the entries, implementing the {@code ByteSerializable} interface
      * @throws IOException thrown if an I/O exception occurs
      */
-    private static <K extends ByteSerializable, V extends ByteSerializable> ByteSerializableMap<K, V> getMap(byte[] bytes, Class<K> mapKeyTypeClass, Class<V> mapValueTypeClass) throws IOException {
+    private <K extends ByteSerializable, V extends ByteSerializable> ByteSerializableMap<K, V> getMap(byte[] bytes, Class<K> mapKeyTypeClass, Class<V> mapValueTypeClass) throws IOException {
         ByteSerializableMap<K, V> map = new ByteSerializableMap<>();
 
         TlvReader tlvReader = new TlvReader(bytes, TLV_FRAME);
@@ -326,7 +337,7 @@ public class NofspDeserializer {
      * @return the corresponding class
      * @throws IOException thrown if an I/O exception occurs
      */
-    private static Class<? extends ByteSerializable> getMapKeyClass(byte[] bytes) throws IOException {
+    private Class<? extends ByteSerializable> getMapKeyClass(byte[] bytes) throws IOException {
         Class<? extends ByteSerializable> keyClass = null;
 
         TlvReader tlvReader = new TlvReader(bytes, NofspSerializationConstants.TLV_FRAME);
@@ -349,7 +360,7 @@ public class NofspDeserializer {
      * @return the corresponding class
      * @throws IOException thrown if an I/O exception is thrown
      */
-    private static Class<? extends ByteSerializable> getMapValueClass(byte[] bytes) throws IOException {
+    private Class<? extends ByteSerializable> getMapValueClass(byte[] bytes) throws IOException {
         Class<? extends ByteSerializable> valueClass = null;
 
         TlvReader tlvReader = new TlvReader(bytes, NofspSerializationConstants.TLV_FRAME);
@@ -376,7 +387,7 @@ public class NofspDeserializer {
      * @param <E> class of object, implementing the {@code ByteSerializable} interface
      * @throws IOException thrown if an I/O exception occurs
      */
-    private static <E extends ByteSerializable> E deserializeOfTypeClass(Class<E> elementTypeClass, byte[] bytes) throws IOException {
+    private <E extends ByteSerializable> E deserializeOfTypeClass(Class<E> elementTypeClass, byte[] bytes) throws IOException {
         E element = null;
 
         ByteSerializable serializable = deserialize(bytes);
@@ -385,5 +396,10 @@ public class NofspDeserializer {
         }
 
         return element;
+    }
+
+    @Override
+    public TlvFrame getTlvFrame() {
+        return TLV_FRAME;
     }
 }
