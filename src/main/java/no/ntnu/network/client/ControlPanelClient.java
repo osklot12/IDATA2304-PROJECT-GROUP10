@@ -1,17 +1,16 @@
 package no.ntnu.network.client;
 
 import no.ntnu.controlpanel.ControlPanel;
-import no.ntnu.fieldnode.device.DeviceClass;
+import no.ntnu.exception.NoServerConnectionException;
 import no.ntnu.network.centralserver.CentralServer;
 import no.ntnu.network.message.request.RegisterControlPanelRequest;
-import no.ntnu.network.message.serialize.tool.TlvReader;
+import no.ntnu.network.message.serialize.visitor.ByteSerializerVisitor;
+import no.ntnu.network.message.serialize.visitor.NofspSerializer;
 import no.ntnu.tools.Logger;
 
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.Socket;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * A client for a control panel, connecting it to a central server using NOFSP.
@@ -19,7 +18,8 @@ import java.util.List;
  */
 public class ControlPanelClient {
     private final ControlPanel controlPanel;
-    private OutputStream socketWriter;
+    private final ByteSerializerVisitor serializer;
+    private OutputStream outputStream;
 
     /**
      * Creates a new ControlPanelClient.
@@ -32,6 +32,7 @@ public class ControlPanelClient {
         }
 
         this.controlPanel = controlPanel;
+        this.serializer = NofspSerializer.getInstance();
     }
 
     /**
@@ -41,8 +42,18 @@ public class ControlPanelClient {
      */
     public void connect(String serverAddress) {
         if (establishConnection(serverAddress)) {
+            if (registerClient()) {
 
+            }
         }
+    }
+
+    private boolean registerClient() {
+        boolean success = false;
+
+        RegisterControlPanelRequest registerRequest = new RegisterControlPanelRequest(controlPanel.getCompatibilityList());
+
+        return success;
     }
 
     private boolean establishConnection(String serverAddress) {
@@ -50,12 +61,21 @@ public class ControlPanelClient {
 
         try {
             Socket socket = new Socket(serverAddress, CentralServer.PORT_NUMBER);
-            socketWriter = socket.getOutputStream();
+            outputStream = socket.getOutputStream();
             connected = true;
         } catch (IOException e) {
             Logger.error("Cannot establish connection to server " + serverAddress + ": " + e.getMessage());
         }
 
         return connected;
+    }
+
+    /**
+     * Does a field node pool pull to the connected server.
+     *
+     * @throws NoServerConnectionException thrown if no connection to a server is found
+     */
+    public void getFieldNodePool() throws NoServerConnectionException {
+
     }
 }

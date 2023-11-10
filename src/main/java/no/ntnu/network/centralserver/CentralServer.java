@@ -30,8 +30,10 @@ import java.util.Map;
 public class CentralServer {
     public static final int PORT_NUMBER = 60005;
     private final CentralCore core;
+    private Thread listeningThread;
+    private volatile boolean running;
     private ServerSocket serverSocket;
-    private boolean running;
+
 
 
     /**
@@ -45,27 +47,51 @@ public class CentralServer {
     /**
      * Runs the server.
      */
-    public void run() {
+    public synchronized void run() {
+        if (running) {
+            throw new IllegalStateException("Cannot run server, because server is already running.");
+        }
+
         serverSocket = openListeningSocket();
 
         if (serverSocket != null) {
             running = true;
 
-            while (running) {
-                Socket clientSocket = acceptNextClient();
+            listeningThread = new Thread(() -> {
+                while (!serverSocket.isClosed()) {
+                    Socket clientSocket = acceptNextClient();
 
-                if (clientSocket != null) {
-                    ClientHandler clientHandler = new ClientHandler(clientSocket);
-                    clientHandler.run();
+                    if (clientSocket != null) {
+                        ClientHandler clientHandler = new ClientHandler(clientSocket);
+                        clientHandler.run();
+                    }
                 }
-            }
+
+                running = false;
+            });
+
+            listeningThread.start();
         }
     }
 
     /**
      * Stops the server.
      */
-    public void stop() {
+    public synchronized void stop() {
+        if (!running) {
+            throw new IllegalStateException("Cannot stop server, because it is not currently running.");
+        }
+
+        try {
+            serverSocket.close();
+        } catch (IOException e) {
+            if (serverSocket.isClosed()) {
+                running = false;
+            } else {
+                Logger.error("Cannot stop server: " + e.getMessage());
+            }
+        }
+
         running = false;
     }
 

@@ -1,5 +1,6 @@
 package no.ntnu.network.message.request;
 
+import no.ntnu.exception.SerializationException;
 import no.ntnu.fieldnode.device.DeviceClass;
 import no.ntnu.network.message.common.ByteSerializableList;
 import no.ntnu.network.message.common.ByteSerializableString;
@@ -63,7 +64,7 @@ public class RegisterControlPanelRequest implements Request {
     }
 
     @Override
-    public byte[] accept(ByteSerializerVisitor visitor) {
+    public byte[] accept(ByteSerializerVisitor visitor) throws SerializationException {
         return visitor.visitRegisterControlPanelRequest(this);
     }
 

@@ -1,7 +1,6 @@
 package no.ntnu.network.message.deserialize;
 
 import no.ntnu.exception.SerializationException;
-import no.ntnu.fieldnode.device.Device;
 import no.ntnu.fieldnode.device.DeviceClass;
 import no.ntnu.network.message.common.ByteSerializableInteger;
 import no.ntnu.network.message.common.ByteSerializableList;
@@ -16,7 +15,7 @@ import no.ntnu.network.message.serialize.tool.SimpleByteBuffer;
 import no.ntnu.network.message.serialize.tool.TlvFrame;
 import no.ntnu.network.message.serialize.tool.TlvReader;
 
-import java.io.Serializable;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
@@ -25,7 +24,7 @@ import java.util.*;
  * The deserializer implements the technique described by NOFSP.
  */
 public class NofspDeserializer {
-    private static final TlvFrame TLV_FRAME = NofspSerializationConstants.tlvFrame;
+    private static final TlvFrame TLV_FRAME = NofspSerializationConstants.TLV_FRAME;
 
     private NofspDeserializer() {
 
@@ -38,7 +37,7 @@ public class NofspDeserializer {
      * @return a {@code ByteSerializable} object
      * @throws SerializationException thrown when bytes cannot be deserialized
      */
-    public static ByteSerializable deserialize(byte[] bytes) throws SerializationException {
+    public static ByteSerializable deserialize(byte[] bytes) throws IOException {
         if (bytes == null) {
             throw new SerializationException("Cannot identify type field, because bytes is null.");
         }
@@ -83,7 +82,14 @@ public class NofspDeserializer {
         return serializable;
     }
 
-    private static Request getRequestMessage(byte[] bytes) throws SerializationException {
+    /**
+     * Deserializes an array of bytes into a {@code Request}.
+     *
+     * @param bytes bytes to deserialize
+     * @return the request object
+     * @throws IOException thrown if an I/O exception occurs
+     */
+    private static Request getRequestMessage(byte[] bytes) throws IOException {
         Request request = null;
 
         TlvReader tlvReader = new TlvReader(bytes, TLV_FRAME);
@@ -111,7 +117,14 @@ public class NofspDeserializer {
         return request;
     }
 
-    private static RegisterControlPanelRequest getRegisterControlPanelRequest(byte[] bytes) throws SerializationException {
+    /**
+     * Deserializes an array of bytes into a {@code RegisterControlPanelRequest}.
+     *
+     * @param bytes bytes to deserialize
+     * @return the request object
+     * @throws IOException thrown if an I/O exception occurs
+     */
+    private static RegisterControlPanelRequest getRegisterControlPanelRequest(byte[] bytes) throws IOException {
         RegisterControlPanelRequest request = null;
 
         ByteSerializable serializable = deserialize(bytes);
@@ -126,7 +139,15 @@ public class NofspDeserializer {
         return request;
     }
 
-    private static Set<DeviceClass> getCompatibilityList(ByteSerializableList<?> serializableList) throws SerializationException {
+    /**
+     * Converts a {@code ByteSerializableList} into a compatibility list.
+     * A compatibility list consists of {@code ByteSerializableString} elements representing {@code DeviceClass}
+     * constants. Only elements matching the constant names will be valid.
+     *
+     * @param serializableList the serializable list to convert
+     * @return the compatibility list as a set of {@code DeviceClass} constants
+     */
+    private static Set<DeviceClass> getCompatibilityList(ByteSerializableList<?> serializableList) {
         Set<DeviceClass> compatibilityList = new HashSet<>();
 
         serializableList.forEach(
@@ -137,8 +158,6 @@ public class NofspDeserializer {
                         if (deviceClass != null) {
                             compatibilityList.add(deviceClass);
                         }
-                    } else {
-                        throw new SerializationException("Invalid element found in compatibility list.");
                     }
                 }
         );
@@ -146,6 +165,12 @@ public class NofspDeserializer {
         return compatibilityList;
     }
 
+    /**
+     * Deserializes an array of bytes into a {@code ByteSerializableString}, using UTF-8 decoding.
+     *
+     * @param bytes bytes to deserialize
+     * @return the corresponding String
+     */
     private static ByteSerializableString getString(byte[] bytes) {
         ByteSerializableString result = null;
 
@@ -155,6 +180,12 @@ public class NofspDeserializer {
         return result;
     }
 
+    /**
+     * Deserializes an array of bytes into a {@code ByteSerializableInteger}.
+     *
+     * @param bytes bytes to deserialize
+     * @return the corresponding integer
+     */
     private static ByteSerializableInteger getInteger(byte[] bytes) {
         ByteSerializableInteger result = null;
 
@@ -164,7 +195,17 @@ public class NofspDeserializer {
         return result;
     }
 
-    private static <T extends ByteSerializable> ByteSerializableList<T> getList(byte[] bytes, Class<T> typeClass) {
+    /**
+     * Deserializes an array of bytes into a {@code ByteSerializableList}, with a predefined class for its elements.
+     * Only elements with this given class will be added to the resulting list.
+     *
+     * @param bytes bytes to deserialize
+     * @param typeClass the class of elements in the list to accept
+     * @return the list containing all valid elements
+     * @param <T> class of elements in the list, which implements the {@code ByteSerializable} interface
+     * @throws IOException thrown if an I/O exception occurs
+     */
+    private static <T extends ByteSerializable> ByteSerializableList<T> getList(byte[] bytes, Class<T> typeClass) throws IOException {
         ByteSerializableList<T> list = new ByteSerializableList<>();
 
         TlvReader tlvReader = new TlvReader(bytes, TLV_FRAME);
@@ -188,7 +229,14 @@ public class NofspDeserializer {
         return list;
     }
 
-    private static Class<? extends ByteSerializable> getListElementClass(byte[] bytes) throws SerializationException {
+    /**
+     * Identifies the corresponding class for a given serialized TLV.
+     *
+     * @param bytes bytes to inspect
+     * @return the class of object
+     * @throws IOException thrown if an I/O exception occurs
+     */
+    private static Class<? extends ByteSerializable> getListElementClass(byte[] bytes) throws IOException {
         Class<? extends ByteSerializable> typeClass = null;
 
         TlvReader tlvReader = new TlvReader(bytes, TLV_FRAME);
@@ -204,7 +252,19 @@ public class NofspDeserializer {
         return typeClass;
     }
 
-    private static <K extends ByteSerializable, V extends ByteSerializable> ByteSerializableMap<K, V> getMap(byte[] bytes, Class<K> mapKeyTypeClass, Class<V> mapValueTypeClass) throws SerializationException {
+    /**
+     * Deserializes an array of bytes to a {@code ByteSerializableMap}, with given classes for key and value elements
+     * for the entries. Only key-value pairs of these classes will be deserialized and added to the result.
+     *
+     * @param bytes bytes to deserialize
+     * @param mapKeyTypeClass the class for key elements
+     * @param mapValueTypeClass the class for value elements
+     * @return the deserialized map containing all valid entries
+     * @param <K> class of key elements in the entries, implementing the {@code ByteSerializable} interface
+     * @param <V> class of value elements in the entries, implementing the {@code ByteSerializable} interface
+     * @throws IOException thrown if an I/O exception occurs
+     */
+    private static <K extends ByteSerializable, V extends ByteSerializable> ByteSerializableMap<K, V> getMap(byte[] bytes, Class<K> mapKeyTypeClass, Class<V> mapValueTypeClass) throws IOException {
         ByteSerializableMap<K, V> map = new ByteSerializableMap<>();
 
         TlvReader tlvReader = new TlvReader(bytes, TLV_FRAME);
@@ -214,56 +274,35 @@ public class NofspDeserializer {
             K key = null;
             V value = null;
 
-            byte[] entry = getMapEntry(tlvReader);
-        if (entry != null) {
-            TlvReader entryReader = new TlvReader(entry, TLV_FRAME);
+            byte[] entry = getNextMapEntry(tlvReader);
+            if (entry != null) {
+                TlvReader entryReader = new TlvReader(entry, TLV_FRAME);
 
-            key = deserializeEntryKey(mapKeyTypeClass, entryReader);
-            value = deserializeEntryValue(mapValueTypeClass, entryReader);
+                key = deserializeOfTypeClass(mapKeyTypeClass, entryReader.readNextTlv());
+                value = deserializeOfTypeClass(mapValueTypeClass, entryReader.readNextTlv());
 
-            if (key != null) {
-                map.put(key, value);
-            } else {
-                throw new SerializationException("Cannot create map key with null value.");
-            }
+                if (key != null) {
+                    map.put(key, value);
+                } else {
+                    throw new SerializationException("Cannot create map key with null value.");
+                }
 
         } else {
             readerEmpty = true;
         }
-    }
+        }
 
         return map;
-}
-
-    private static <V extends ByteSerializable> V deserializeEntryValue(Class<V> mapValueTypeClass, TlvReader entryReader) throws SerializationException {
-        V value = null;
-
-        byte[] valueBytes = entryReader.readNextTlv();
-        ByteSerializable valueSerializable = deserialize(valueBytes);
-        if (mapValueTypeClass.isInstance(valueSerializable)) {
-            value = mapValueTypeClass.cast(valueSerializable);
-        } else {
-            throw new SerializationException("Invalid map value type: " + ByteHandler.bytesToString(valueBytes));
-        }
-
-        return value;
     }
 
-    private static <K extends ByteSerializable> K deserializeEntryKey(Class<K> mapKeyTypeClass, TlvReader entryReader) throws SerializationException {
-        K key = null;
-
-        byte[] keyBytes = entryReader.readNextTlv();
-        ByteSerializable keySerializable = deserialize(keyBytes);
-        if (mapKeyTypeClass.isInstance(keySerializable)) {
-            key = mapKeyTypeClass.cast(keySerializable);
-        } else {
-            throw new SerializationException("Invalid map key type: " + ByteHandler.bytesToString(keyBytes));
-        }
-
-        return key;
-    }
-
-    private static byte[] getMapEntry(TlvReader tlvReader) {
+    /**
+     * Returns the next entry for a serialized map.
+     *
+     * @param tlvReader the TlvReader holding the map entries
+     * @return the next map entry, null if no more entries exists
+     * @throws IOException thrown if an I/O exception occurs
+     */
+    private static byte[] getNextMapEntry(TlvReader tlvReader) throws IOException {
         byte[] entry = null;
 
         // read key and value
@@ -280,10 +319,40 @@ public class NofspDeserializer {
         return entry;
     }
 
-    private static Class<? extends ByteSerializable> getMapValueClass(byte[] bytes) {
+    /**
+     * Identifies the corresponding entry key class for a given serialized map.
+     *
+     * @param bytes the bytes of the TLV value field for the map
+     * @return the corresponding class
+     * @throws IOException thrown if an I/O exception occurs
+     */
+    private static Class<? extends ByteSerializable> getMapKeyClass(byte[] bytes) throws IOException {
+        Class<? extends ByteSerializable> keyClass = null;
+
+        TlvReader tlvReader = new TlvReader(bytes, NofspSerializationConstants.TLV_FRAME);
+
+        byte[] firstElement = tlvReader.readNextTlv();
+        ByteSerializable serializable = deserialize(firstElement);
+        if (serializable != null) {
+            keyClass = serializable.getClass();
+        } else {
+            throw new SerializationException("Cannot identify key-type for map: " + ByteHandler.bytesToString(bytes));
+        }
+
+        return keyClass;
+    }
+
+    /**
+     * Identifies the corresponding entry value class for a given serialized map.
+     *
+     * @param bytes the bytes of the TLV value field for the map
+     * @return the corresponding class
+     * @throws IOException thrown if an I/O exception is thrown
+     */
+    private static Class<? extends ByteSerializable> getMapValueClass(byte[] bytes) throws IOException {
         Class<? extends ByteSerializable> valueClass = null;
 
-        TlvReader tlvReader = new TlvReader(bytes, NofspSerializationConstants.tlvFrame);
+        TlvReader tlvReader = new TlvReader(bytes, NofspSerializationConstants.TLV_FRAME);
 
         tlvReader.readNextTlv();
         byte[] secondElement = tlvReader.readNextTlv();
@@ -297,19 +366,24 @@ public class NofspDeserializer {
         return valueClass;
     }
 
-    private static Class<? extends ByteSerializable> getMapKeyClass(byte[] bytes) throws SerializationException {
-        Class<? extends ByteSerializable> keyClass = null;
+    /**
+     * Deserializes an array of bytes to an object of a predefined class.
+     * This is a useful mechanism for safe casting deserialized objects to any given class.
+     *
+     * @param elementTypeClass the predefined class of object
+     * @param bytes bytes to deserialize
+     * @return deserialized object of predefined class, null if object is not of that class
+     * @param <E> class of object, implementing the {@code ByteSerializable} interface
+     * @throws IOException thrown if an I/O exception occurs
+     */
+    private static <E extends ByteSerializable> E deserializeOfTypeClass(Class<E> elementTypeClass, byte[] bytes) throws IOException {
+        E element = null;
 
-        TlvReader tlvReader = new TlvReader(bytes, NofspSerializationConstants.tlvFrame);
-
-        byte[] firstElement = tlvReader.readNextTlv();
-        ByteSerializable serializable = deserialize(firstElement);
-        if (serializable != null) {
-            keyClass = serializable.getClass();
-        } else {
-            throw new SerializationException("Cannot identify key-type for map: " + ByteHandler.bytesToString(bytes));
+        ByteSerializable serializable = deserialize(bytes);
+        if (elementTypeClass.isInstance(serializable)) {
+            element = elementTypeClass.cast(serializable);
         }
 
-        return keyClass;
+        return element;
     }
 }

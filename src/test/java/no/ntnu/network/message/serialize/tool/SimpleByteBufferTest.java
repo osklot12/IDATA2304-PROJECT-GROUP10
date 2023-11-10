@@ -1,8 +1,10 @@
-package no.ntnu.network.message.serialize;
+package no.ntnu.network.message.serialize.tool;
 
-import no.ntnu.network.message.serialize.tool.SimpleByteBuffer;
+import no.ntnu.tools.Logger;
 import org.junit.Before;
 import org.junit.Test;
+
+import java.io.IOException;
 
 import static org.junit.Assert.*;
 
@@ -17,7 +19,7 @@ public class SimpleByteBufferTest {
      */
     @Before
     public void setup() {
-        buffer = new SimpleByteBuffer();
+        buffer = new SimpleByteBuffer(32);
     }
 
     /**
@@ -25,11 +27,11 @@ public class SimpleByteBufferTest {
      */
     @Test
     public void testDynamicExpansion() {
-        for (int i = 0; i < 18; i++) {
-            buffer.addByte((byte) 100);
+        for (int i = 0; i < 40; i++) {
+            buffer.addByte((byte) 1);
         }
 
-        assertEquals(64, buffer.getCapacity());
+        assertTrue(buffer.size() > 32);
     }
 
     /**
@@ -49,13 +51,28 @@ public class SimpleByteBufferTest {
      */
     @Test
     public void testInsertingArray() {
-        byte[] byteArray = new byte[3];
-        byteArray[0] = 1;
-        byteArray[1] = 60;
-        byteArray[2] = 13;
+        byte[] byteArray = new byte[] {14, 6, 30};
 
         buffer.addBytes(byteArray);
 
         assertArrayEquals(byteArray, buffer.toArray());
+    }
+
+    /**
+     * Tests that reading a byte from the buffer will then remove it from the buffer.
+     */
+    @Test
+    public void testRead() {
+        byte[] byteArray = new byte[] {14, 6, 30};
+
+        buffer.addBytes(byteArray);
+
+        try {
+            assertEquals(14, buffer.read());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        assertArrayEquals(new byte[]{6, 30}, buffer.toArray());
     }
 }

@@ -1,20 +1,33 @@
 package no.ntnu.network.message.serialize.tool;
 
-import java.io.InputStream;
+import java.io.IOException;
 
 /**
- * A buffer for holding bytes.
- * The buffer automatically increases when bytes are added, and automatically shrinks when bytes are removed.
+ * A buffer for handling bytes. The {@code SimpleByteBuffer} provides efficient operations on the buffer,
+ * having adding and removing bytes run in O(n) time.
  */
-public class SimpleByteBuffer {
+public class SimpleByteBuffer implements ByteSource {
+    private static final int DEFAULT_INITIAL_CAPACITY = 32;
     private byte[] buffer;
+    private int head;
     private int tail;
 
     /**
      * Creates a new SimpleByteBuffer.
      */
     public SimpleByteBuffer() {
-        this.buffer = new byte[32];
+        this(DEFAULT_INITIAL_CAPACITY);
+    }
+
+    /**
+     * Creates a new SimpleByteBuffer with a predefined initial capacity.
+     *
+     * @param initialCapacity initial buffer capacity
+     */
+    public SimpleByteBuffer(int initialCapacity) {
+        this.buffer = new byte[initialCapacity];
+
+        this.head = 0;
         this.tail = 0;
     }
 
@@ -24,19 +37,9 @@ public class SimpleByteBuffer {
      * @param bytes bytes to add to buffer
      */
     public SimpleByteBuffer(byte[] bytes) {
-        this();
+        this(bytes.length);
 
         addBytes(bytes);
-    }
-
-    /**
-     * Creates a new SimpleByteBuffer.
-     *
-     * @param inputStream input stream to buffer bytes for
-     */
-    public SimpleByteBuffer(InputStream inputStream) {
-        this();
-
     }
 
     /**
@@ -45,15 +48,9 @@ public class SimpleByteBuffer {
      * @param aByte byte to add
      */
     public void addByte(byte aByte) {
-            handleBufferExpansion();
-            buffer[tail] = aByte;
-            tail++;
-    }
-
-    private void handleBufferExpansion() {
-        if (tail == buffer.length) {
-            buffer = migrateBytes(buffer, buffer.length + 32);
-        }
+        handleBufferExpansion();
+        buffer[tail] = aByte;
+        tail++;
     }
 
     /**
@@ -69,29 +66,53 @@ public class SimpleByteBuffer {
         }
     }
 
-    private byte[] migrateBytes(byte[] oldBytes, int newSize) {
-        byte[] newBytes = oldBytes;
-
-        if (newSize > oldBytes.length) {
-            newBytes = new byte[newSize];
-            System.arraycopy(oldBytes, 0, newBytes, 0, oldBytes.length);
-
-        } else if (newSize < oldBytes.length) {
-            newBytes = new byte[newSize];
-            System.arraycopy(oldBytes, 0, newBytes, 0, newBytes.length);
-
+    /**
+     * Expands the underlying array size if necessary.
+     */
+    private void handleBufferExpansion() {
+        if (tail == buffer.length) {
+            buffer = migrateBytes(buffer.length * 2);
         }
+    }
+
+    /**
+     * Reduces the underlying array size if necessary.
+     */
+    private void handleBufferReduction() {
+        int currentSize = size();
+        if (currentSize <= buffer.length / 4 && buffer.length > 32) {
+            buffer = migrateBytes(Math.max(currentSize * 2, 32));
+            head = 0;
+            tail = currentSize;
+        }
+    }
+
+    /**
+     * Migrates the bytes in the underlying array to a new array of a new size.
+     *
+     * @param newSize the size of the new array
+     * @return the new array
+     */
+    private byte[] migrateBytes(int newSize) {
+        byte[] newBytes = new byte[newSize];
+        System.arraycopy(buffer, head, newBytes, 0, size());
 
         return newBytes;
     }
 
+    public void reset() {
+        this.buffer = new byte[DEFAULT_INITIAL_CAPACITY];
+        head = 0;
+        tail = 0;
+    }
+
     /**
-     * Returns the capacity of the buffer.
+     * Returns the size of the buffer.
      *
-     * @return capacity of buffer
+     * @return buffer size
      */
-    public int getCapacity() {
-        return buffer.length;
+    public int size() {
+        return tail - head;
     }
 
     /**
@@ -100,6 +121,23 @@ public class SimpleByteBuffer {
      * @return buffer as array
      */
     public byte[] toArray() {
-        return migrateBytes(buffer, tail);
+        return migrateBytes(size());
+    }
+
+    @Override
+    public int read() throws IOException {
+        int readByte = -1;
+
+        if (head < tail) {
+            readByte = buffer[head++] & 0xFF;
+            handleBufferReduction();
+        }
+
+        return readByte;
+    }
+
+    @Override
+    public String toString() {
+        return ByteHandler.bytesToString(toArray());
     }
 }

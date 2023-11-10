@@ -1,5 +1,6 @@
 package no.ntnu.network.message.serialize.composite;
 
+import no.ntnu.exception.SerializationException;
 import no.ntnu.network.message.serialize.visitor.ByteSerializerVisitor;
 
 /**
@@ -14,5 +15,5 @@ public interface ByteSerializable {
      * @param visitor the visitor to accept
      * @return the serialized bytes for the object
      */
-    byte[] accept(ByteSerializerVisitor visitor);
+    byte[] accept(ByteSerializerVisitor visitor) throws SerializationException;
 }

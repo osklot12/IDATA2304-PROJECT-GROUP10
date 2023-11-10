@@ -1,5 +1,6 @@
 package no.ntnu.network.message.common;
 
+import no.ntnu.exception.SerializationException;
 import no.ntnu.network.message.serialize.composite.ByteSerializable;
 import no.ntnu.network.message.serialize.visitor.ByteSerializerVisitor;
 
@@ -20,7 +21,7 @@ public class ByteSerializableList<T extends ByteSerializable> extends ArrayList<
     }
 
     @Override
-    public byte[] accept(ByteSerializerVisitor visitor) {
+    public byte[] accept(ByteSerializerVisitor visitor) throws SerializationException {
         return visitor.visitList(this);
     }
 

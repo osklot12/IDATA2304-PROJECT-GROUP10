@@ -80,9 +80,8 @@ public class ByteHandler {
      *
      * @param bytes bytes to translate
      * @return translated integer
-     * @throws SerializationException thrown when bytes cannot be converted into integer
      */
-    public static int bytesToInt(byte[] bytes) throws SerializationException {
+    public static int bytesToInt(byte[] bytes) {
         // removes any leading padding for the bytes
         bytes = ByteHandler.dynamicLengthBytes(bytes);
 
@@ -90,7 +89,7 @@ public class ByteHandler {
             try {
                 bytes = ByteHandler.addLeadingPadding(bytes, Integer.BYTES);
             } catch (IllegalArgumentException e) {
-                throw new SerializationException("Cannot convert bytes to integer: " + e.getMessage());
+                throw new IllegalArgumentException("Cannot convert bytes to integer: " + e.getMessage());
             }
         }
 
@@ -121,5 +120,23 @@ public class ByteHandler {
         }
 
         return sb.toString().trim();
+    }
+
+    /**
+     * Combines multiple arrays of bytes into one array of bytes.
+     * The arrays are inserted into a single array in the same order they are given.
+     *
+     * @param byteArrays arrays to combine
+     * @return all given arrays in one array
+     */
+    public static byte[] combineBytes(byte[]... byteArrays) {
+        byte[] result = new byte[0];
+
+        for (byte[] bytes : byteArrays) {
+            result = Arrays.copyOf(result, result.length + bytes.length);
+            System.arraycopy(bytes, 0, result, result.length - bytes.length, bytes.length);
+        }
+
+        return result;
     }
 }
