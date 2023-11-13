@@ -8,6 +8,7 @@ import no.ntnu.tools.Logger;
 
 import java.io.IOException;
 import java.net.Socket;
+import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
@@ -16,7 +17,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 public class TCPMessageReceiver {
     private final Socket socket;
     private final TlvReader socketReader;
-    private final ConcurrentLinkedQueue<Message> queue;
+    private final Queue<Message> queue;
     private final ByteDeserializer deserializer;
 
     /**

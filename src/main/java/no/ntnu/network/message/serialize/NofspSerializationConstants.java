@@ -3,7 +3,7 @@ package no.ntnu.network.message.serialize;
 import no.ntnu.network.message.serialize.tool.TlvFrame;
 
 /**
- * A class holding constants for serialization using the technique described by NOFSP.
+ * A class holding shared constants for serialization using the technique described by NOFSP.
  */
 public class NofspSerializationConstants {
     // version of protocol
@@ -15,9 +15,10 @@ public class NofspSerializationConstants {
     // TLV type-fields (bytes)
     public static final byte[] INTEGER_BYTES = new byte[] {0, 0};
     public static final byte[] STRING_BYTES = new byte[] {0, 1};
-    public static final byte[] LIST_BYTES = new byte[] {0, 2};
-    public static final byte[] MAP_BYTES = new byte[] {0, 3};
     public static final byte[] NULL_BYTES = new byte[] {0, 4};
+    public static final byte[] SET_BYTES = new byte[] {0, 10};
+    public static final byte[] LIST_BYTES = new byte[] {0, 11};
+    public static final byte[] MAP_BYTES = new byte[] {0, 12};
     public static final byte[] REQUEST_BYTES = new byte[] {1, 0};
 
     // request commands (UTF8 String)

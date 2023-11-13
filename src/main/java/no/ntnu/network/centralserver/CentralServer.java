@@ -9,9 +9,6 @@ import no.ntnu.tools.Logger;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.Map;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 /**
  * The CentralServer serves as a hub for managing and routing communication between various field nodes and
@@ -40,8 +37,6 @@ public class CentralServer {
     private final ByteDeserializer deserializer;
     private volatile boolean running;
     private ServerSocket serverSocket;
-
-
 
     /**
      * Creates a new CentralServer.
@@ -104,6 +99,11 @@ public class CentralServer {
         running = false;
     }
 
+    /**
+     * Accepts the next incoming client connection, and returns the associated socket.
+     *
+     * @return the client socket
+     */
     private Socket acceptNextClient() {
         Socket clientSocket = null;
 
@@ -117,6 +117,11 @@ public class CentralServer {
         return clientSocket;
     }
 
+    /**
+     * Establishes the listening server socket and returns it.
+     *
+     * @return the server socket
+     */
     private ServerSocket openListeningSocket() {
         ServerSocket socket = null;
 

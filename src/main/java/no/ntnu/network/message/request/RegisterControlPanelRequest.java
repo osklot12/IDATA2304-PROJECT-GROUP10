@@ -2,32 +2,32 @@ package no.ntnu.network.message.request;
 
 import no.ntnu.exception.SerializationException;
 import no.ntnu.fieldnode.device.DeviceClass;
-import no.ntnu.network.message.common.ByteSerializableList;
+import no.ntnu.network.message.common.ByteSerializableSet;
 import no.ntnu.network.message.common.ByteSerializableString;
+import no.ntnu.network.message.serialize.NofspSerializationConstants;
 import no.ntnu.network.message.serialize.visitor.ByteSerializerVisitor;
 
-import java.util.Arrays;
-import java.util.List;
 import java.util.Set;
 
 /**
  * A request to register a {@code Control Panel} at the central server.
  */
-public class RegisterControlPanelRequest implements Request {
-    private static final String COMMAND = "REGCP";
-    private final Set<DeviceClass> compatibilityList;
+public class RegisterControlPanelRequest extends RequestMessage {
+    private final ByteSerializableSet<ByteSerializableString> compatibilityList;
 
     /**
      * Creates a new RegisterControlPanelRequest.
      *
+     * @param messageId the message ID
      * @param compatibilityList the compatibility list for the control panel
      */
-    public RegisterControlPanelRequest(Set<DeviceClass> compatibilityList) {
+    public RegisterControlPanelRequest(int messageId, Set<DeviceClass> compatibilityList) {
+        super(messageId, NofspSerializationConstants.REGISTER_CONTROL_PANEL_COMMAND);
         if (compatibilityList == null) {
             throw new IllegalArgumentException("Cannot create RegisterControlPanelRequest, because compatibility list is null");
         }
 
-        this.compatibilityList = compatibilityList;
+        this.compatibilityList = makeSetSerializable(compatibilityList);
     }
 
     /**
@@ -35,32 +35,18 @@ public class RegisterControlPanelRequest implements Request {
      *
      * @return the compatibility list
      */
-    public Set<DeviceClass> getCompatibilityList() {
+    public ByteSerializableSet<ByteSerializableString> getCompatibilityList() {
         return compatibilityList;
     }
 
-    /**
-     * Returns a serializable compatibility list.
-     *
-     * @return serializable compatibility list
-     */
-    public ByteSerializableList<ByteSerializableString> getSerializableCompatibilityList() {
-        return makeSetSerializable(compatibilityList);
-    }
-
-    private ByteSerializableList<ByteSerializableString> makeSetSerializable(Set<DeviceClass> compatibilityList) {
-        ByteSerializableList<ByteSerializableString> serializableList = new ByteSerializableList<>();
+    private ByteSerializableSet<ByteSerializableString> makeSetSerializable(Set<DeviceClass> compatibilityList) {
+        ByteSerializableSet<ByteSerializableString> serializableList = new ByteSerializableSet<>();
 
         compatibilityList.forEach(
                 item -> serializableList.add(new ByteSerializableString(item.toString()))
         );
 
         return serializableList;
-    }
-
-    @Override
-    public String getCommand() {
-        return COMMAND;
     }
 
     @Override
@@ -78,7 +64,7 @@ public class RegisterControlPanelRequest implements Request {
             return false;
         }
 
-        return r.getCommand().equals(COMMAND) && Arrays.equals(compatibilityList.toArray(), r.getCompatibilityList().toArray());
+        return super.equals(r) && compatibilityList.equals(r.getCompatibilityList());
     }
 
     @Override

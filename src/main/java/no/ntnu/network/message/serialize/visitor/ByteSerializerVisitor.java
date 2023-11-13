@@ -1,10 +1,7 @@
 package no.ntnu.network.message.serialize.visitor;
 
 import no.ntnu.exception.SerializationException;
-import no.ntnu.network.message.common.ByteSerializableInteger;
-import no.ntnu.network.message.common.ByteSerializableList;
-import no.ntnu.network.message.common.ByteSerializableMap;
-import no.ntnu.network.message.common.ByteSerializableString;
+import no.ntnu.network.message.common.*;
 import no.ntnu.network.message.request.RegisterControlPanelRequest;
 import no.ntnu.network.message.serialize.composite.ByteSerializable;
 
@@ -49,9 +46,20 @@ public interface ByteSerializerVisitor {
      *
      * @param list list to serialize
      * @return the serialized list
+     * @param <T> any class implementing the {@code ByteSerializable} interface
      * @throws SerializationException thrown if serialization fails
      */
     <T extends ByteSerializable> byte[] visitList(ByteSerializableList<T> list) throws SerializationException;
+
+    /**
+     * Serializes a {@code ByteSerializableSet} object.
+     *
+     * @param set set to serialize
+     * @return the serialized set
+     * @param <T> any class implementing the {@code ByteSerializable} interface
+     * @throws SerializationException thrown if serialization fails
+     */
+    <T extends ByteSerializable> byte[] visitSet(ByteSerializableSet<T> set) throws SerializationException;
 
     /**
      * Serializes a {@code ByteSerializableMap} object.

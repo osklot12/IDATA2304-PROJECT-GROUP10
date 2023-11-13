@@ -174,7 +174,7 @@ public class NofspSerializerTest {
         Set<DeviceClass> compatibilityList = new HashSet<>();
         compatibilityList.add(DeviceClass.A1);
         compatibilityList.add(DeviceClass.S3);
-        RegisterControlPanelRequest request = new RegisterControlPanelRequest(compatibilityList);
+        RegisterControlPanelRequest request = new RegisterControlPanelRequest(0, compatibilityList);
 
         byte[] bytes = serializer.serialize(request);
         ByteSerializable reconstructedRequest = deserializer.deserialize(bytes);

@@ -1,18 +1,12 @@
 package no.ntnu.network.centralserver;
 
-import no.ntnu.network.message.Message;
 import no.ntnu.network.message.TCPMessageReceiver;
 import no.ntnu.network.message.TCPMessageSender;
 import no.ntnu.network.message.deserialize.ByteDeserializer;
-import no.ntnu.network.message.serialize.NofspSerializationConstants;
-import no.ntnu.network.message.serialize.tool.InputStreamByteSource;
-import no.ntnu.network.message.serialize.tool.TlvReader;
 import no.ntnu.network.message.serialize.visitor.ByteSerializerVisitor;
 import no.ntnu.tools.Logger;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.Socket;
 
 /**
@@ -51,9 +45,7 @@ public class ClientHandler implements Runnable {
         this.deserializer = deserializer;
     }
 
-    /**
-     * Runs the ClientHandler.
-     */
+    @Override
     public void run() {
         if (establishControlProcess()) {
 

@@ -1,17 +1,16 @@
 package no.ntnu.network.message.serialize.visitor;
 
 import no.ntnu.exception.SerializationException;
-import no.ntnu.network.message.common.ByteSerializableInteger;
-import no.ntnu.network.message.common.ByteSerializableList;
-import no.ntnu.network.message.common.ByteSerializableMap;
-import no.ntnu.network.message.common.ByteSerializableString;
+import no.ntnu.network.message.common.*;
 import no.ntnu.network.message.request.RegisterControlPanelRequest;
+import no.ntnu.network.message.request.RequestMessage;
 import no.ntnu.network.message.serialize.NofspSerializationConstants;
 import no.ntnu.network.message.serialize.composite.ByteSerializable;
 import no.ntnu.network.message.serialize.tool.SimpleByteBuffer;
 import no.ntnu.network.message.serialize.tool.ByteHandler;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Collection;
 import java.util.Map;
 
 /**
@@ -24,9 +23,7 @@ public class NofspSerializer implements ByteSerializerVisitor {
     /**
      * Creates a new NofspSerializer.
      */
-    private NofspSerializer() {
-
-    }
+    private NofspSerializer() {}
 
     /**
      * Returns an instance of the class using the singleton pattern.
@@ -70,10 +67,6 @@ public class NofspSerializer implements ByteSerializerVisitor {
 
     @Override
     public <T extends ByteSerializable> byte[] visitList(ByteSerializableList<T> list) throws SerializationException {
-        if (list.isEmpty()) {
-            throw new SerializationException("Cannot serialize list, because list is empty.");
-        }
-
         byte[] typeField = NofspSerializationConstants.LIST_BYTES;
         byte[] lengthField = null;
         byte[] valueField = null;
@@ -90,11 +83,24 @@ public class NofspSerializer implements ByteSerializerVisitor {
     }
 
     @Override
-    public <K extends ByteSerializable, V extends ByteSerializable> byte[] visitMap(ByteSerializableMap<K, V> map) throws SerializationException {
-        if (map.isEmpty()) {
-            throw new SerializationException("Cannot serialize map, because map is empty");
+    public <T extends ByteSerializable> byte[] visitSet(ByteSerializableSet<T> set) throws SerializationException {
+        byte[] typeField = NofspSerializationConstants.SET_BYTES;
+        byte[] lengthField = null;
+        byte[] valueField = null;
+
+        SimpleByteBuffer valueBuffer = new SimpleByteBuffer();
+        for (ByteSerializable item : set) {
+            valueBuffer.addBytes(item.accept(this));
         }
 
+        valueField = valueBuffer.toArray();
+        lengthField = createLengthField(valueField.length);
+
+        return createTlv(typeField, lengthField, valueField);
+    }
+
+    @Override
+    public <K extends ByteSerializable, V extends ByteSerializable> byte[] visitMap(ByteSerializableMap<K, V> map) throws SerializationException {
         byte[] typeField = NofspSerializationConstants.MAP_BYTES;
         byte[] lengthField = null;
         byte[] valueField = null;
@@ -120,30 +126,56 @@ public class NofspSerializer implements ByteSerializerVisitor {
 
     @Override
     public byte[] visitRegisterControlPanelRequest(RegisterControlPanelRequest request) throws SerializationException {
-        byte[] commandTlv = serialize(new ByteSerializableString(request.getCommand()));
-        byte[] dataTlv = request.getSerializableCompatibilityList().accept(this);
+        byte[] commonRequestMessageBytes = getCommonRequestMessageBytes(request);
+        byte[] parametersTlv = request.getSerializableCompatibilityList().accept(this);
 
-        return packInRequestFrame(commandTlv, dataTlv);
+        return packInRequestFrame(ByteHandler.combineBytes(commonRequestMessageBytes, parametersTlv));
+    }
+
+    /**
+     * Returns the common TLVs for all {@code RequestMessage} objects in bytes.
+     *
+     * @param request the request message
+     * @return the serialized bytes
+     */
+    private byte[] getCommonRequestMessageBytes(RequestMessage request) throws SerializationException {
+        byte[] commonControlMessageBytes = getCommonControlMessageBytes(request);
+        byte[] commandTlv = getCommandTlv(request);
+
+        return ByteHandler.combineBytes(commonControlMessageBytes, commandTlv);
+    }
+
+    /**
+     * Returns the common TLVs for all {@code ControlMessage} objects in bytes.
+     *
+     * @param controlMessage the control message
+     * @return the serialized bytes
+     */
+    private byte[] getCommonControlMessageBytes(ControlMessage controlMessage) throws SerializationException {
+        return controlMessage.getId().accept(this);
+    }
+
+    /**
+     * Returns the command TLV for any {@code RequestMessage} in bytes.
+     *
+     * @param request the request message
+     * @return the serialized bytes
+     */
+    private byte[] getCommandTlv(RequestMessage request) throws SerializationException {
+        return request.getCommand().accept(this);
     }
 
     /**
      * Packs the content of a request message into a standard message frame for NOFSP, serializes it returns it
      * in bytes.
      *
-     * @param commandTlv the TLV containing the request command
-     * @param dataTlv the TLV containing the request data (command parameters)
+     * @param valueField the value field of the frame - containing all fields for the request message
      * @return a serialized request frame
      * @throws SerializationException thrown if serialization fails
      */
-    private byte[] packInRequestFrame(byte[] commandTlv, byte[] dataTlv) throws SerializationException {
+    private static byte[] packInRequestFrame(byte[] valueField) throws SerializationException {
         byte[] typeField = NofspSerializationConstants.REQUEST_BYTES;
-        byte[] lengthField = null;
-        byte[] valueField = null;
-
-        SimpleByteBuffer valueBuffer = new SimpleByteBuffer();
-        valueBuffer.addBytes(commandTlv, dataTlv);
-        valueField = valueBuffer.toArray();
-        lengthField = createLengthField(valueField.length);
+        byte[] lengthField = createLengthField(valueField.length);
 
         return createTlv(typeField, lengthField, valueField);
     }
@@ -158,7 +190,7 @@ public class NofspSerializer implements ByteSerializerVisitor {
         String versionString = NofspSerializationConstants.VERSION;
         ByteSerializableString serializableString = new ByteSerializableString(versionString);
 
-        return serialize(serializableString);
+        return serializableString.accept(this);
     }
 
     /**

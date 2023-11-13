@@ -25,7 +25,8 @@ public abstract class Client {
      * @param serializer the serializer to use for sending messages
      * @param deserializer the deserializer to use for receiving messages
      */
-    protected boolean establishConnectionToServer(String serverAddress, int portNumber, ByteSerializerVisitor serializer, ByteDeserializer deserializer) {
+    protected boolean establishConnectionToServer(String serverAddress, int portNumber,
+                                                  ByteSerializerVisitor serializer, ByteDeserializer deserializer) {
         if (serializer == null) {
             throw new IllegalArgumentException("Cannot establish connection, because serializer is null.");
         }

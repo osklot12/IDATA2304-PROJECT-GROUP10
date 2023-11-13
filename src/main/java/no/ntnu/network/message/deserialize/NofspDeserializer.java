@@ -2,12 +2,9 @@ package no.ntnu.network.message.deserialize;
 
 import no.ntnu.exception.SerializationException;
 import no.ntnu.fieldnode.device.DeviceClass;
-import no.ntnu.network.message.common.ByteSerializableInteger;
-import no.ntnu.network.message.common.ByteSerializableList;
-import no.ntnu.network.message.common.ByteSerializableMap;
-import no.ntnu.network.message.common.ByteSerializableString;
+import no.ntnu.network.message.common.*;
 import no.ntnu.network.message.request.RegisterControlPanelRequest;
-import no.ntnu.network.message.request.Request;
+import no.ntnu.network.message.request.RequestMessage;
 import no.ntnu.network.message.serialize.NofspSerializationConstants;
 import no.ntnu.network.message.serialize.composite.ByteSerializable;
 import no.ntnu.network.message.serialize.tool.ByteHandler;
@@ -16,6 +13,7 @@ import no.ntnu.network.message.serialize.tool.TlvFrame;
 import no.ntnu.network.message.serialize.tool.TlvReader;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
@@ -30,8 +28,7 @@ public class NofspDeserializer implements ByteDeserializer {
     /**
      * Creates a new NofspDeserializer.
      */
-    private NofspDeserializer() {
-    }
+    private NofspDeserializer() {}
 
     public static NofspDeserializer getInstance() {
         if (instance == null) {
@@ -59,17 +56,17 @@ public class NofspDeserializer implements ByteDeserializer {
         ByteSerializable serializable = null;
 
         // type field: integer
-        if (Arrays.equals(typeField, NofspSerializationConstants.INTEGER_BYTES)) {
+        if (tlvOfType(bytes, NofspSerializationConstants.INTEGER_BYTES)) {
             serializable = getInteger(valueField);
         }
 
         // type field: string
-        if (Arrays.equals(typeField, NofspSerializationConstants.STRING_BYTES)) {
+        if (tlvOfType(bytes, NofspSerializationConstants.STRING_BYTES)) {
             serializable = getString(valueField);
         }
 
         // type field: list
-        if (Arrays.equals(typeField, NofspSerializationConstants.LIST_BYTES)) {
+        if (tlvOfType(bytes, NofspSerializationConstants.LIST_BYTES)) {
             Class<? extends ByteSerializable> listElementTypeClass = getListElementClass(valueField);
 
             if (listElementTypeClass != null) {
@@ -78,7 +75,7 @@ public class NofspDeserializer implements ByteDeserializer {
         }
 
         // type field: map
-        if (Arrays.equals(typeField, NofspSerializationConstants.MAP_BYTES)) {
+        if (tlvOfType(bytes, NofspSerializationConstants.MAP_BYTES)) {
             Class<? extends ByteSerializable> mapKeyTypeClass = getMapKeyClass(valueField);
             Class<? extends ByteSerializable> mapValueTypeClass = getMapValueClass(valueField);
 
@@ -86,7 +83,7 @@ public class NofspDeserializer implements ByteDeserializer {
         }
 
         // type field: request message
-        if (Arrays.equals(typeField, NofspSerializationConstants.REQUEST_BYTES)) {
+        if (tlvOfType(bytes, NofspSerializationConstants.REQUEST_BYTES)) {
             serializable = getRequestMessage(valueField);
         }
 
@@ -100,38 +97,84 @@ public class NofspDeserializer implements ByteDeserializer {
      * @return the request object
      * @throws IOException thrown if an I/O exception occurs
      */
-    private Request getRequestMessage(byte[] bytes) throws IOException {
-        Request request = null;
+    private RequestMessage getRequestMessage(byte[] bytes) throws IOException {
+        RequestMessage request = null;
 
         TlvReader tlvReader = new TlvReader(bytes, TLV_FRAME);
 
-        // first TLV holds the command
-        byte[] commandTlv = tlvReader.readNextTlv();
-        ByteSerializable firstSerializable = deserialize(commandTlv);
+        // first TLV holds the message ID
+        ByteSerializableInteger messageId = getMessageId(tlvReader);
 
-        if (firstSerializable instanceof ByteSerializableString string) {
-            String command = string.getString();
+        // second TLV holds the command
+        ByteSerializableString command = getRequestMessageCommand(tlvReader);
 
-            // second TLV holds the data
-            byte[] data = tlvReader.readNextTlv();
+        // third TLV holds the request parameters, which are also TLVs
+        TlvReader parameterReader = new TlvReader(tlvReader.readNextTlv(), TLV_FRAME);
 
-            // REGCP: register control panel request
-            if (command.equals(NofspSerializationConstants.REGISTER_CONTROL_PANEL_COMMAND)) {
-                request = getRegisterControlPanelRequest(data);
-            }
+        if (stringEquals(command, NofspSerializationConstants.REGISTER_CONTROL_PANEL_COMMAND)) {
+            // register control panel request
+            byte[] compatibilityListTlv = tlvReader.readNextTlv();
+            ByteSerializableSet<ByteSerializableString> compatibilityList = getSet(compatibilityListTlv, ByteSerializableString.class);
 
-
-        } else {
-            throw new SerializationException("Cannot recognize request command: " + ByteHandler.bytesToString(commandTlv));
+            request = new RegisterControlPanelRequest(messageId, compatibilityList);
         }
 
         return request;
     }
 
     /**
+     * Returns whether a {@code ByteSerializableString} equals to an actual String.
+     *
+     * @param serializableString the serializable string
+     * @param string the actual string
+     * @return true if the strings equals, false otherwise
+     */
+    private static boolean stringEquals(ByteSerializableString serializableString, String string) {
+        return serializableString.getString().equals(string);
+    }
+
+    /**
+     * Returns the message ID for a message TLV wrapped in a TLV reader.
+     *
+     * @param tlvReader the tlv reader holding the message tlv
+     * @return the corresponding message id
+     * @throws IOException thrown if an I/O error occurs
+     */
+    private static ByteSerializableInteger getMessageId(TlvReader tlvReader) throws IOException {
+        byte[] messageIdTlv = tlvReader.readNextTlv();
+
+        // checks if tlv is not of type integer
+        if (!tlvOfType(messageIdTlv, NofspSerializationConstants.INTEGER_BYTES)) {
+            throw new IOException("Cannot deserialize message, because message-ID TLV was not recognized: "
+            + ByteHandler.bytesToString(messageIdTlv));
+        }
+
+        return getInteger(TlvReader.getValueField(messageIdTlv, TLV_FRAME));
+    }
+
+    /**
+     * Returns the command for a request message TLV wrapped in a TLV reader.
+     *
+     * @param tlvReader the tlv reader holding the command tlv
+     * @return the corresponding command
+     * @throws IOException thrown if an I/O error occurs
+     */
+    private static ByteSerializableString getRequestMessageCommand(TlvReader tlvReader) throws IOException {
+        byte[] commandTlv = tlvReader.readNextTlv();
+
+        // checks if tlv is not of type string
+        if (!tlvOfType(commandTlv, NofspSerializationConstants.STRING_BYTES)) {
+            throw new IOException("Cannot deserialize message, because command TLV was not recognized: "
+            + ByteHandler.bytesToString(commandTlv));
+        }
+
+        return getString(TlvReader.getValueField(commandTlv, TLV_FRAME));
+    }
+
+    /**
      * Deserializes an array of bytes into a {@code RegisterControlPanelRequest}.
      *
-     * @param bytes bytes to deserialize
+     * @param bytes bytes to deserialize - the parameters for the command
      * @return the request object
      * @throws IOException thrown if an I/O exception occurs
      */
@@ -177,6 +220,17 @@ public class NofspDeserializer implements ByteDeserializer {
     }
 
     /**
+     * Checks whether a given TLV is of a particular type.
+     *
+     * @param tlv tlv to check
+     * @param typeBytes bytes representing a particular data type
+     * @return true if tlv represents the given type, false otherwise
+     */
+    private static boolean tlvOfType(byte[] tlv, byte[] typeBytes) {
+        return Arrays.equals(TlvReader.getTypeField(tlv, TLV_FRAME), NofspSerializationConstants.INTEGER_BYTES);
+    }
+
+    /**
      * Deserializes an array of bytes into a {@code ByteSerializableString}, using UTF-8 decoding.
      *
      * @param bytes bytes to deserialize
@@ -204,6 +258,39 @@ public class NofspDeserializer implements ByteDeserializer {
         result = new ByteSerializableInteger(deserializedInt);
 
         return result;
+    }
+
+    /**
+     * Deserializes an array of bytes into a {@code ByteSerializableSet}, with a predefined class for its elements.
+     * Only elements with this given class will be added to the resulting set.
+     *
+     * @param bytes bytes representing the content of the set
+     * @param typeClass the class of elements in the set to accept
+     * @return the set containing all valid elements
+     * @param <T> class of elements in the set, which implements the {@code ByteSerializable} interface
+     * @throws IOException thrown if an I/O exception occurs
+     */
+    private <T extends ByteSerializable> ByteSerializableSet<T> getSet(byte[] bytes, Class<T> typeClass) throws IOException {
+       ByteSerializableSet<T> set = new ByteSerializableSet<>();
+
+       TlvReader tlvReader = new TlvReader(bytes, TLV_FRAME);
+
+       boolean readerEmpty = false;
+       while (!readerEmpty) {
+           byte[] tlv = tlvReader.readNextTlv();
+
+           if (tlv != null) {
+               ByteSerializable serializable = deserialize(tlv);
+               if (typeClass.isInstance(serializable)) {
+                   set.add(typeClass.cast(serializable));
+               }
+
+           } else {
+               readerEmpty = true;
+           }
+       }
+
+       return set;
     }
 
     /**
