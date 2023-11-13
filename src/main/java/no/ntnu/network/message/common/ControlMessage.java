@@ -10,19 +10,13 @@ import no.ntnu.network.message.Message;
  * connection, as different connections can use the same IDs.
  */
 public abstract class ControlMessage implements Message {
-    private final ByteSerializableInteger id;
+    private ByteSerializableInteger id;
 
     /**
      * Creates a new ControlMessage.
-     *
-     * @param id the id for the message. Must be a non-negative integer
      */
-    protected ControlMessage(int id) {
-        if (id < 0) {
-            throw new IllegalArgumentException("Cannot create ControlMessage, because message ID is negative");
-        }
-
-        this.id = new ByteSerializableInteger(id);
+    protected ControlMessage() {
+        this.id = new ByteSerializableInteger(0);
     }
 
     /**
@@ -32,6 +26,19 @@ public abstract class ControlMessage implements Message {
      */
     public ByteSerializableInteger getId() {
         return id;
+    }
+
+    /**
+     * Sets the ID for the control message.
+     *
+     * @param id the message ID
+     */
+    public void setId(int id) {
+        if (id < 0) {
+            throw new IllegalArgumentException("Cannot set ID, because it is negative.");
+        }
+
+        this.id = new ByteSerializableInteger(id);
     }
 
     @Override

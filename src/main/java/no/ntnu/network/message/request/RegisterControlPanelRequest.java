@@ -13,21 +13,31 @@ import java.util.Set;
  * A request to register a {@code Control Panel} at the central server.
  */
 public class RegisterControlPanelRequest extends RequestMessage {
-    private final ByteSerializableSet<ByteSerializableString> compatibilityList;
+    private final Set<DeviceClass> compatibilityList;
 
     /**
      * Creates a new RegisterControlPanelRequest.
      *
-     * @param messageId the message ID
      * @param compatibilityList the compatibility list for the control panel
      */
-    public RegisterControlPanelRequest(int messageId, Set<DeviceClass> compatibilityList) {
-        super(messageId, NofspSerializationConstants.REGISTER_CONTROL_PANEL_COMMAND);
+    public RegisterControlPanelRequest(Set<DeviceClass> compatibilityList) {
+        super(NofspSerializationConstants.REGISTER_CONTROL_PANEL_COMMAND);
         if (compatibilityList == null) {
             throw new IllegalArgumentException("Cannot create RegisterControlPanelRequest, because compatibility list is null");
         }
 
-        this.compatibilityList = makeSetSerializable(compatibilityList);
+        this.compatibilityList = compatibilityList;
+    }
+
+    /**
+     * Creates a new RegisterControlPanelRequest.
+     *
+     * @param messageId the message id
+     * @param compatibilityList the compatibility list for the control panel
+     */
+    public RegisterControlPanelRequest(int messageId, Set<DeviceClass> compatibilityList) {
+        this(compatibilityList);
+        setId(messageId);
     }
 
     /**
@@ -35,10 +45,25 @@ public class RegisterControlPanelRequest extends RequestMessage {
      *
      * @return the compatibility list
      */
-    public ByteSerializableSet<ByteSerializableString> getCompatibilityList() {
+    public Set<DeviceClass> getCompatibilityList() {
         return compatibilityList;
     }
 
+    /**
+     * Returns the compatibility list, in a serializable format.
+     *
+     * @return the compatibility list
+     */
+    public ByteSerializableSet<ByteSerializableString> getSerializableCompatibilityList() {
+        return makeSetSerializable(compatibilityList);
+    }
+
+    /**
+     * Creates a {@code ByteSerializableSet} out of a regular {@code Set} of DeviceClass constants.
+     *
+     * @param compatibilityList the compatibility list to convert
+     * @return serializable compatibility list
+     */
     private ByteSerializableSet<ByteSerializableString> makeSetSerializable(Set<DeviceClass> compatibilityList) {
         ByteSerializableSet<ByteSerializableString> serializableList = new ByteSerializableSet<>();
 
@@ -74,5 +99,10 @@ public class RegisterControlPanelRequest extends RequestMessage {
         result = result * 31 + compatibilityList.hashCode();
 
         return result;
+    }
+
+    @Override
+    public String toString() {
+        return "REQUEST: " + getCommand().getString();
     }
 }

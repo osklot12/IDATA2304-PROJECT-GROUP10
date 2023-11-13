@@ -1,5 +1,6 @@
-package no.ntnu.network.message;
+package no.ntnu.network.controlprocess;
 
+import no.ntnu.network.message.Message;
 import no.ntnu.network.message.deserialize.ByteDeserializer;
 import no.ntnu.network.message.serialize.composite.ByteSerializable;
 import no.ntnu.network.message.serialize.tool.InputStreamByteSource;

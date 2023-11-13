@@ -2,7 +2,11 @@ package no.ntnu.network.client;
 
 import no.ntnu.controlpanel.ControlPanel;
 import no.ntnu.network.centralserver.CentralServer;
+import no.ntnu.network.message.Message;
+import no.ntnu.network.message.deserialize.ByteDeserializer;
 import no.ntnu.network.message.deserialize.NofspDeserializer;
+import no.ntnu.network.message.request.RegisterControlPanelRequest;
+import no.ntnu.network.message.serialize.visitor.ByteSerializerVisitor;
 import no.ntnu.network.message.serialize.visitor.NofspSerializer;
 
 /**
@@ -10,6 +14,8 @@ import no.ntnu.network.message.serialize.visitor.NofspSerializer;
  * The class is necessary for a control panel to be able to monitor and control field nodes in the network.
  */
 public class ControlPanelClient extends Client {
+    private static final ByteSerializerVisitor SERIALIZER = NofspSerializer.getInstance();
+    private static final ByteDeserializer DESERIALIZER = NofspDeserializer.getInstance();
     private final ControlPanel controlPanel;
 
     /**
@@ -23,22 +29,34 @@ public class ControlPanelClient extends Client {
         }
 
         this.controlPanel = controlPanel;
+
     }
 
     @Override
     public void connect(String serverAddress) {
-        if (connectToServer(serverAddress)) {
+        if (connected()) {
+            throw new IllegalStateException("Cannot connect control panel, because it is already connected.");
+        }
 
+        if (connectToServer(serverAddress, CentralServer.PORT_NUMBER, SERIALIZER, DESERIALIZER)) {
+            registerControlPanel();
         }
     }
 
-    private boolean connectToServer(String serverAddress) {
-        return establishConnectionToServer(serverAddress, CentralServer.PORT_NUMBER,
-                NofspSerializer.getInstance(), NofspDeserializer.getInstance());
+    /**
+     * Registers the control panel at the server.
+     */
+    private void registerControlPanel() {
+        sendControlMessage(new RegisterControlPanelRequest(controlPanel.getCompatibilityList()));
     }
 
     @Override
     public void disconnect() {
+
+    }
+
+    @Override
+    protected void processReceivedMessage(Message message) {
 
     }
 }

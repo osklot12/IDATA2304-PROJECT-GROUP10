@@ -39,7 +39,7 @@ public class NofspDeserializer implements ByteDeserializer {
     }
 
     /**
-     * Deserializes an array of bytes.
+     * Deserializes a TLV of bytes into a {@code ByteSerializable} object.
      *
      * @param bytes bytes to deserialize
      * @return a {@code ByteSerializable} object
@@ -50,41 +50,37 @@ public class NofspDeserializer implements ByteDeserializer {
             throw new SerializationException("Cannot identify type field, because bytes is null.");
         }
 
-        byte[] typeField = TlvReader.getTypeField(bytes, TLV_FRAME);
         byte[] valueField = TlvReader.getValueField(bytes, TLV_FRAME);
 
         ByteSerializable serializable = null;
 
-        // type field: integer
         if (tlvOfType(bytes, NofspSerializationConstants.INTEGER_BYTES)) {
+            // type field: integer
             serializable = getInteger(valueField);
-        }
 
-        // type field: string
-        if (tlvOfType(bytes, NofspSerializationConstants.STRING_BYTES)) {
+        } else if (tlvOfType(bytes, NofspSerializationConstants.STRING_BYTES)) {
+            // type field: string
             serializable = getString(valueField);
-        }
 
-        // type field: list
-        if (tlvOfType(bytes, NofspSerializationConstants.LIST_BYTES)) {
+        } else if (tlvOfType(bytes, NofspSerializationConstants.LIST_BYTES)) {
+            // type field: list
             Class<? extends ByteSerializable> listElementTypeClass = getListElementClass(valueField);
 
             if (listElementTypeClass != null) {
                 serializable = getList(valueField, listElementTypeClass);
             }
-        }
 
-        // type field: map
-        if (tlvOfType(bytes, NofspSerializationConstants.MAP_BYTES)) {
+        } else if (tlvOfType(bytes, NofspSerializationConstants.MAP_BYTES)) {
+            // type field: map
             Class<? extends ByteSerializable> mapKeyTypeClass = getMapKeyClass(valueField);
             Class<? extends ByteSerializable> mapValueTypeClass = getMapValueClass(valueField);
 
             serializable = getMap(valueField, mapKeyTypeClass, mapValueTypeClass);
-        }
 
-        // type field: request message
-        if (tlvOfType(bytes, NofspSerializationConstants.REQUEST_BYTES)) {
+        } else if (tlvOfType(bytes, NofspSerializationConstants.REQUEST_BYTES)) {
+            // type field: request message
             serializable = getRequestMessage(valueField);
+
         }
 
         return serializable;
@@ -113,13 +109,52 @@ public class NofspDeserializer implements ByteDeserializer {
 
         if (stringEquals(command, NofspSerializationConstants.REGISTER_CONTROL_PANEL_COMMAND)) {
             // register control panel request
-            byte[] compatibilityListTlv = tlvReader.readNextTlv();
-            ByteSerializableSet<ByteSerializableString> compatibilityList = getSet(compatibilityListTlv, ByteSerializableString.class);
+            request = getRegisterControlPanelRequest(messageId, parameterReader);
 
-            request = new RegisterControlPanelRequest(messageId, compatibilityList);
         }
 
         return request;
+    }
+
+    /**
+     * Deserializes a {@code RegisterControlPanelRequest}.
+     *
+     * @param messageId the message ID
+     * @param parameterReader a TlvReader holding the request parameters
+     * @return the deserialized request
+     * @throws IOException thrown if an I/O exception occurs
+     */
+    private RegisterControlPanelRequest getRegisterControlPanelRequest(ByteSerializableInteger messageId, TlvReader parameterReader) throws IOException {
+        RegisterControlPanelRequest request = null;
+
+        // deserializes compatibility list
+        byte[] compatibilityListTlv = parameterReader.readNextTlv();
+        byte[] compatibilityListValueField = TlvReader.getValueField(compatibilityListTlv, TLV_FRAME);
+        ByteSerializableSet<ByteSerializableString> compatibilityList = getSet(compatibilityListValueField, ByteSerializableString.class);
+        request = new RegisterControlPanelRequest(messageId.getInteger(), makeDeviceClassSet(compatibilityList));
+
+        return request;
+    }
+
+    /**
+     * Creates a {@code Set} of DeviceClass constants out of a {@code ByteSerializableSet} of strings.
+     *
+     * @param serializableSet the set to extract strings from
+     * @return a set with device class constants
+     */
+    private Set<DeviceClass> makeDeviceClassSet(ByteSerializableSet<ByteSerializableString> serializableSet) {
+        Set<DeviceClass> deviceClassSet = new HashSet<>();
+
+        serializableSet.forEach(
+                item -> {
+                    DeviceClass deviceClass = DeviceClass.getDeviceClass(item.getString());
+                    if (deviceClass != null) {
+                        deviceClassSet.add(deviceClass);
+                    }
+                }
+        );
+
+        return deviceClassSet;
     }
 
     /**
@@ -172,54 +207,6 @@ public class NofspDeserializer implements ByteDeserializer {
     }
 
     /**
-     * Deserializes an array of bytes into a {@code RegisterControlPanelRequest}.
-     *
-     * @param bytes bytes to deserialize - the parameters for the command
-     * @return the request object
-     * @throws IOException thrown if an I/O exception occurs
-     */
-    private  RegisterControlPanelRequest getRegisterControlPanelRequest(byte[] bytes) throws IOException {
-        RegisterControlPanelRequest request = null;
-
-        ByteSerializable serializable = deserialize(bytes);
-        if (serializable instanceof ByteSerializableList<?> serializableList) {
-            Set<DeviceClass> compatibilityList = getCompatibilityList(serializableList);
-
-            request = new RegisterControlPanelRequest(compatibilityList);
-        } else {
-            throw new SerializationException("Cannot create RegisterControlPanelRequest, because compatibility list is not recognized.");
-        }
-
-        return request;
-    }
-
-    /**
-     * Converts a {@code ByteSerializableList} into a compatibility list.
-     * A compatibility list consists of {@code ByteSerializableString} elements representing {@code DeviceClass}
-     * constants. Only elements matching the constant names will be valid.
-     *
-     * @param serializableList the serializable list to convert
-     * @return the compatibility list as a set of {@code DeviceClass} constants
-     */
-    private static Set<DeviceClass> getCompatibilityList(ByteSerializableList<?> serializableList) {
-        Set<DeviceClass> compatibilityList = new HashSet<>();
-
-        serializableList.forEach(
-                item -> {
-                    if (item instanceof ByteSerializableString string) {
-                        DeviceClass deviceClass = DeviceClass.getDeviceClass(string.getString());
-
-                        if (deviceClass != null) {
-                            compatibilityList.add(deviceClass);
-                        }
-                    }
-                }
-        );
-
-        return compatibilityList;
-    }
-
-    /**
      * Checks whether a given TLV is of a particular type.
      *
      * @param tlv tlv to check
@@ -227,7 +214,7 @@ public class NofspDeserializer implements ByteDeserializer {
      * @return true if tlv represents the given type, false otherwise
      */
     private static boolean tlvOfType(byte[] tlv, byte[] typeBytes) {
-        return Arrays.equals(TlvReader.getTypeField(tlv, TLV_FRAME), NofspSerializationConstants.INTEGER_BYTES);
+        return Arrays.equals(TlvReader.getTypeField(tlv, TLV_FRAME), typeBytes);
     }
 
     /**
@@ -273,11 +260,11 @@ public class NofspDeserializer implements ByteDeserializer {
     private <T extends ByteSerializable> ByteSerializableSet<T> getSet(byte[] bytes, Class<T> typeClass) throws IOException {
        ByteSerializableSet<T> set = new ByteSerializableSet<>();
 
-       TlvReader tlvReader = new TlvReader(bytes, TLV_FRAME);
+       TlvReader elementReader = new TlvReader(bytes, TLV_FRAME);
 
        boolean readerEmpty = false;
        while (!readerEmpty) {
-           byte[] tlv = tlvReader.readNextTlv();
+           byte[] tlv = elementReader.readNextTlv();
 
            if (tlv != null) {
                ByteSerializable serializable = deserialize(tlv);

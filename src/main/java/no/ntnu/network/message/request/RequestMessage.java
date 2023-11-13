@@ -12,11 +12,10 @@ public abstract class RequestMessage extends ControlMessage {
     /**
      * Creates a new RequestMessage.
      *
-     * @param messageId the message ID
      * @param command the command for the request
      */
-    protected RequestMessage(int messageId, String command) {
-        super(messageId);
+    protected RequestMessage(String command) {
+        super();
         this.command = new ByteSerializableString(command);
     }
 

@@ -1,5 +1,6 @@
-package no.ntnu.network.message;
+package no.ntnu.network.controlprocess;
 
+import no.ntnu.network.message.Message;
 import no.ntnu.network.message.serialize.visitor.ByteSerializerVisitor;
 import no.ntnu.tools.Logger;
 

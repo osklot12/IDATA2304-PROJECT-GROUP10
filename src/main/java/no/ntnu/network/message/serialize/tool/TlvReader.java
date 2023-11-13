@@ -6,7 +6,7 @@ import java.io.IOException;
 import java.util.Arrays;
 
 /**
- * Reads Type-Length-Value (TLV) structures from a {@code SimpleByteBuffer}.
+ * Reads Type-Length-Value (TLV) structures from a {@code ByteSource}.
  */
 public class TlvReader {
     private final ByteSource byteSource;

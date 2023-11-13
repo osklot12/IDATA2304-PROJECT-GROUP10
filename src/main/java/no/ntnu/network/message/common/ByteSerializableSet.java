@@ -21,7 +21,7 @@ public class ByteSerializableSet<T extends ByteSerializable> extends HashSet<T> 
 
     @Override
     public byte[] accept(ByteSerializerVisitor visitor) throws SerializationException {
-        return new byte[0];
+        return visitor.visitSet(this);
     }
 
     @Override

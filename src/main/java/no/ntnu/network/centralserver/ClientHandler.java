@@ -1,7 +1,8 @@
 package no.ntnu.network.centralserver;
 
-import no.ntnu.network.message.TCPMessageReceiver;
-import no.ntnu.network.message.TCPMessageSender;
+import no.ntnu.network.message.Message;
+import no.ntnu.network.controlprocess.TCPMessageReceiver;
+import no.ntnu.network.controlprocess.TCPMessageSender;
 import no.ntnu.network.message.deserialize.ByteDeserializer;
 import no.ntnu.network.message.serialize.visitor.ByteSerializerVisitor;
 import no.ntnu.tools.Logger;
@@ -48,6 +49,7 @@ public class ClientHandler implements Runnable {
     @Override
     public void run() {
         if (establishControlProcess()) {
+            Message clientMessage = controlMessageReceiver.getNextMessage();
 
         } else {
             Logger.error("Cannot establish streams for client socket.");
