@@ -1,33 +1,55 @@
 package no.ntnu.network.centralserver.clientproxy;
 
-import java.net.Socket;
+import no.ntnu.network.CommunicationAgent;
 
 /**
- * A proxy for a client using the services of the central server, used for storing information about a client and
- * interacting with them.
+ * A proxy for a remote client using the services of the server.
+ * The ClientProxy provides means to communicate with the remote client.
  */
 public abstract class ClientProxy {
-    private final Socket controlSocket;
+    private final CommunicationAgent agent;
 
     /**
      * Creates a new ClientProxy.
      *
-     * @param controlSocket client socket
+     * @param agent the communication agent for the remote client
      */
-    protected ClientProxy(Socket controlSocket) {
-        if (controlSocket == null) {
-            throw new IllegalArgumentException("Cannot create Client, because client socket is null.");
+    protected ClientProxy(CommunicationAgent agent) {
+        if (agent == null) {
+            throw new IllegalArgumentException("Cannot create ClientProxy, because communication agent is null.");
         }
 
-        this.controlSocket = controlSocket;
+        this.agent = agent;
     }
 
     /**
-     * Returns the control socket of the client.
+     * Returns the communication agent.
      *
-     * @return control socket
+     * @return the communication agent
      */
-    public Socket getControlSocket() {
-        return controlSocket;
+    public CommunicationAgent getAgent() {
+        return agent;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == this) {
+            return true;
+        }
+
+        if (!(o instanceof ClientProxy c)) {
+            return false;
+        }
+
+        return c.getAgent().equals(agent);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = 17;
+
+        result = result * 31 + agent.hashCode();
+
+        return result;
     }
 }

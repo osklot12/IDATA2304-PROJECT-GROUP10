@@ -20,7 +20,11 @@ public class NofspSerializationConstants {
     public static final byte[] LIST_BYTES = new byte[] {0, 11};
     public static final byte[] MAP_BYTES = new byte[] {0, 12};
     public static final byte[] REQUEST_BYTES = new byte[] {1, 0};
+    public static final byte[] RESPONSE_BYTES = new byte[] {1, 1};
 
-    // request commands (UTF8 String)
+    // request commands (UTF-8 String)
     public static final String REGISTER_CONTROL_PANEL_COMMAND = "REGCP";
+
+    // status codes
+    public static final int NODE_REGISTRATION_CONFIRMED_CODE = 1;
 }

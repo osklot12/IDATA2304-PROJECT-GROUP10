@@ -3,6 +3,7 @@ package no.ntnu.network.message.serialize.visitor;
 import no.ntnu.exception.SerializationException;
 import no.ntnu.network.message.common.*;
 import no.ntnu.network.message.request.RegisterControlPanelRequest;
+import no.ntnu.network.message.response.RegistrationConfirmationResponse;
 import no.ntnu.network.message.serialize.composite.ByteSerializable;
 
 /**
@@ -76,8 +77,17 @@ public interface ByteSerializerVisitor {
      * Serializes a {@code RegisterControlPanelRequest} object.
      *
      * @param request the request to serialize
-     * @return serialized request
+     * @return the serialized request
      * @throws SerializationException thrown if serialization fails
      */
     byte[] visitRegisterControlPanelRequest(RegisterControlPanelRequest request) throws SerializationException;
+
+    /**
+     * Serializes a {@code RegistrationConfirmationResponse} object.
+     *
+     * @param response the response to serialize
+     * @return the serialized response
+     * @throws SerializationException thrown if serialization fails
+     */
+    byte[] visitRegistrationConfirmationResponse(RegistrationConfirmationResponse response) throws SerializationException;
 }

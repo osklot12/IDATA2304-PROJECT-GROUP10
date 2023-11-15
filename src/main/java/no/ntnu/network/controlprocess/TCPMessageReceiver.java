@@ -1,8 +1,7 @@
 package no.ntnu.network.controlprocess;
 
 import no.ntnu.network.message.Message;
-import no.ntnu.network.message.deserialize.ByteDeserializer;
-import no.ntnu.network.message.serialize.composite.ByteSerializable;
+import no.ntnu.network.message.deserialize.MessageDeserializer;
 import no.ntnu.network.message.serialize.tool.InputStreamByteSource;
 import no.ntnu.network.message.serialize.tool.TlvReader;
 import no.ntnu.tools.Logger;
@@ -15,11 +14,11 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 /**
  * Receives TCP (control) messages from another node in the network.
  */
-public class TCPMessageReceiver {
+public class TCPMessageReceiver<M extends Message<?>> {
     private final Socket socket;
     private final TlvReader socketReader;
-    private final Queue<Message> queue;
-    private final ByteDeserializer deserializer;
+    private final Queue<M> queue;
+    private final MessageDeserializer<M> deserializer;
 
     /**
      * Creates a new TCPMessageReceiver.
@@ -27,7 +26,7 @@ public class TCPMessageReceiver {
      * @param socket the socket to receive messages from
      * @param deserializer the deserializer used to deserialize messages
      */
-    public TCPMessageReceiver(Socket socket, ByteDeserializer deserializer) throws IOException {
+    public TCPMessageReceiver(Socket socket, MessageDeserializer<M> deserializer) throws IOException {
         if (socket == null) {
             throw new IllegalArgumentException("Cannot create TCPMessageReceiver, because socket is null");
         }
@@ -48,7 +47,7 @@ public class TCPMessageReceiver {
      *
      * @return next message, null if no more messages are received
      */
-    public Message getNextMessage() {
+    public M getNextMessage() {
         return queue.poll();
     }
 
@@ -68,14 +67,11 @@ public class TCPMessageReceiver {
     /**
      * Receives a message from the socket.
      */
-    private Message receiveMessage() {
-        Message receivedMessage = null;
+    private M receiveMessage() {
+        M receivedMessage = null;
 
         try {
-            ByteSerializable serializable = deserializer.deserialize(socketReader.readNextTlv());
-            if (serializable instanceof Message message) {
-                receivedMessage = message;
-            }
+            receivedMessage = deserializer.deserializeMessage(socketReader.readNextTlv());
         } catch (IOException e) {
             Logger.error("Cannot receive message: " + e.getMessage());
         }

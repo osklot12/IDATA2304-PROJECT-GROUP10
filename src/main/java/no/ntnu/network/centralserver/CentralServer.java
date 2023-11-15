@@ -1,9 +1,5 @@
 package no.ntnu.network.centralserver;
 
-import no.ntnu.network.message.deserialize.ByteDeserializer;
-import no.ntnu.network.message.deserialize.NofspDeserializer;
-import no.ntnu.network.message.serialize.visitor.ByteSerializerVisitor;
-import no.ntnu.network.message.serialize.visitor.NofspSerializer;
 import no.ntnu.tools.Logger;
 
 import java.io.IOException;
@@ -32,9 +28,7 @@ import java.net.Socket;
  */
 public class CentralServer {
     public static final int PORT_NUMBER = 60005;
-    private final CentralCore centralCore;
-    private final ByteSerializerVisitor serializer;
-    private final ByteDeserializer deserializer;
+    private final CentralHub centralHub;
     private volatile boolean running;
     private ServerSocket serverSocket;
 
@@ -42,9 +36,7 @@ public class CentralServer {
      * Creates a new CentralServer.
      */
     public CentralServer() {
-        this.centralCore = new CentralCore();
-        serializer = NofspSerializer.getInstance();
-        deserializer = NofspDeserializer.getInstance();
+        this.centralHub = new CentralHub();
         this.running = false;
     }
 
@@ -66,7 +58,7 @@ public class CentralServer {
                     Socket clientSocket = acceptNextClient();
 
                     if (clientSocket != null) {
-                        ClientHandler clientHandler = new ClientHandler(clientSocket, serializer, deserializer);
+                        ClientHandler clientHandler = new ClientHandler(clientSocket, centralHub);
                         clientHandler.run();
                     }
                 }
@@ -109,7 +101,7 @@ public class CentralServer {
 
         try {
             clientSocket = serverSocket.accept();
-            Logger.info("Client " + clientSocket.getRemoteSocketAddress() + " has connected to the server.");
+            Logger.info("Client " + clientSocket.getRemoteSocketAddress() + " has requested to connect to the server.");
         } catch (IOException e) {
             Logger.error("Cannot accept next client: " + e.getMessage());
         }

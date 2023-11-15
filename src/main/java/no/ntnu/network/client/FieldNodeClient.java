@@ -2,19 +2,16 @@ package no.ntnu.network.client;
 
 import no.ntnu.fieldnode.FieldNode;
 import no.ntnu.network.centralserver.CentralServer;
-import no.ntnu.network.message.Message;
-import no.ntnu.network.message.deserialize.ByteDeserializer;
-import no.ntnu.network.message.deserialize.NofspDeserializer;
+import no.ntnu.network.message.FieldNodeMessage;
+import no.ntnu.network.message.deserialize.MessageDeserializer;
+import no.ntnu.network.message.deserialize.NofspFieldNodeDeserializer;
 import no.ntnu.network.message.serialize.visitor.ByteSerializerVisitor;
 import no.ntnu.network.message.serialize.visitor.NofspSerializer;
-import no.ntnu.tools.Logger;
 
-import java.io.*;
-
-public class FieldNodeClient extends Client {
+public class FieldNodeClient extends Client<FieldNodeMessage> {
 
     private static final ByteSerializerVisitor SERIALIZER = NofspSerializer.getInstance();
-    private static final ByteDeserializer DESERIALIZER = NofspDeserializer.getInstance();
+    private static final MessageDeserializer<FieldNodeMessage> DESERIALIZER = new NofspFieldNodeDeserializer();
 
     private final FieldNode fieldNode;
 
@@ -26,16 +23,6 @@ public class FieldNodeClient extends Client {
     public FieldNodeClient(FieldNode fieldNode) {
         super();
         this.fieldNode = fieldNode;
-    }
-
-
-
-
-    @Override
-    protected void processReceivedMessage(Message message) {
-        // Handle received messages specific to FieldNodeClient
-        // Implement this method based on your requirements
-
     }
 
     @Override
@@ -59,6 +46,10 @@ public class FieldNodeClient extends Client {
     public void disconnect() {
     }
 
+    @Override
+    protected void processReceivedMessage(FieldNodeMessage message) {
+
+    }
 
 
 //    /**

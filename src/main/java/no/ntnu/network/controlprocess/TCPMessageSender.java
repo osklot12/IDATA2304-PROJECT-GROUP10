@@ -1,6 +1,6 @@
 package no.ntnu.network.controlprocess;
 
-import no.ntnu.network.message.Message;
+import no.ntnu.network.message.common.ControlMessage;
 import no.ntnu.network.message.serialize.visitor.ByteSerializerVisitor;
 import no.ntnu.tools.Logger;
 
@@ -14,7 +14,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
  */
 public class TCPMessageSender {
     private final Socket socket;
-    private final ConcurrentLinkedQueue<Message> queue;
+    private final ConcurrentLinkedQueue<ControlMessage> queue;
     private final ByteSerializerVisitor serializer;
 
     /**
@@ -46,7 +46,7 @@ public class TCPMessageSender {
      * @param message message to enqueue
      * @return true if message is added to the queue
      */
-    public boolean enqueueMessage(Message message) {
+    public boolean enqueueMessage(ControlMessage message) {
         if (message == null) {
             throw new IllegalArgumentException("Cannot enqueue message, because message is null.");
         }
@@ -60,7 +60,7 @@ public class TCPMessageSender {
     private synchronized void run () {
         Thread messageSendingThread = new Thread(() -> {
             while (!socket.isClosed()) {
-                Message messageToSend = queue.poll();
+                ControlMessage messageToSend = queue.poll();
                 if (messageToSend != null) {
                     sendMessage(messageToSend);
                 }
@@ -75,7 +75,7 @@ public class TCPMessageSender {
      *
      * @param messageToSend message to send
      */
-    private void sendMessage(Message messageToSend) {
+    private void sendMessage(ControlMessage messageToSend) {
         try {
             byte[] serializedMessage = serializer.serialize(messageToSend);
             OutputStream outputStream = socket.getOutputStream();

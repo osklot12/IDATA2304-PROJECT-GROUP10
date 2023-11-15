@@ -4,13 +4,13 @@ import no.ntnu.exception.SerializationException;
 import no.ntnu.network.message.common.*;
 import no.ntnu.network.message.request.RegisterControlPanelRequest;
 import no.ntnu.network.message.request.RequestMessage;
+import no.ntnu.network.message.response.RegistrationConfirmationResponse;
 import no.ntnu.network.message.serialize.NofspSerializationConstants;
 import no.ntnu.network.message.serialize.composite.ByteSerializable;
 import no.ntnu.network.message.serialize.tool.SimpleByteBuffer;
 import no.ntnu.network.message.serialize.tool.ByteHandler;
 
 import java.nio.charset.StandardCharsets;
-import java.util.Collection;
 import java.util.Map;
 
 /**
@@ -127,9 +127,17 @@ public class NofspSerializer implements ByteSerializerVisitor {
     @Override
     public byte[] visitRegisterControlPanelRequest(RegisterControlPanelRequest request) throws SerializationException {
         byte[] commonRequestMessageBytes = getCommonRequestMessageBytes(request);
-        byte[] parametersTlv = request.getSerializableCompatibilityList().accept(this);
+        byte[] parametersTlv = serialize(request.getSerializableCompatibilityList());
 
         return packInRequestFrame(ByteHandler.combineBytes(commonRequestMessageBytes, parametersTlv));
+    }
+
+    @Override
+    public byte[] visitRegistrationConfirmationResponse(RegistrationConfirmationResponse response) throws SerializationException {
+        byte[] commonResponseMessageBytes = getCommonResponseMessageBytes(response);
+        byte[] parametersTlv = serialize(response.getNodeAddress());
+
+        return packInResponseFrame(ByteHandler.combineBytes(commonResponseMessageBytes, parametersTlv));
     }
 
     /**
@@ -137,12 +145,33 @@ public class NofspSerializer implements ByteSerializerVisitor {
      *
      * @param request the request message
      * @return the serialized bytes
+     * @throws SerializationException thrown if serialization fails
      */
     private byte[] getCommonRequestMessageBytes(RequestMessage request) throws SerializationException {
+        // first TLV contains common bytes for all control messages
         byte[] commonControlMessageBytes = getCommonControlMessageBytes(request);
+
+        // second TLV contains the command for the request
         byte[] commandTlv = getCommandTlv(request);
 
         return ByteHandler.combineBytes(commonControlMessageBytes, commandTlv);
+    }
+
+    /**
+     * Returns the common TLVs for all {@code ResponseMessage} objects in bytes.
+     *
+     * @param response the response message
+     * @return the serialized bytes
+     * @throws SerializationException thrown if serialization fails
+     */
+    private byte[] getCommonResponseMessageBytes(RegistrationConfirmationResponse response) throws SerializationException {
+        // first TLV contains common bytes for all control messages
+        byte[] commonControlMessageBytes = getCommonControlMessageBytes(response);
+
+        // second TLV contains the status code for the response
+        byte[] statusCodeTlv = serialize(response.getStatusCode());
+
+        return ByteHandler.combineBytes(commonControlMessageBytes, statusCodeTlv);
     }
 
     /**
@@ -166,7 +195,7 @@ public class NofspSerializer implements ByteSerializerVisitor {
     }
 
     /**
-     * Packs the content of a request message into a standard message frame for NOFSP, serializes it returns it
+     * Packs the content of a request message into a standard message frame for NOFSP, serializes it returns and it
      * in bytes.
      *
      * @param valueField the value field of the frame - containing all fields for the request message
@@ -175,6 +204,21 @@ public class NofspSerializer implements ByteSerializerVisitor {
      */
     private static byte[] packInRequestFrame(byte[] valueField) throws SerializationException {
         byte[] typeField = NofspSerializationConstants.REQUEST_BYTES;
+        byte[] lengthField = createLengthField(valueField.length);
+
+        return createTlv(typeField, lengthField, valueField);
+    }
+
+    /**
+     * Packs the content of a response message into a standard message frame for NOFSP, serializes it and returns
+     * it in bytes.
+     *
+     * @param valueField the value field of the frame - containing all fields for the response message
+     * @return a serialized response frame
+     * @throws SerializationException thrown if serialization fails
+     */
+    private static byte[] packInResponseFrame(byte[] valueField) throws SerializationException {
+        byte[] typeField = NofspSerializationConstants.RESPONSE_BYTES;
         byte[] lengthField = createLengthField(valueField.length);
 
         return createTlv(typeField, lengthField, valueField);
