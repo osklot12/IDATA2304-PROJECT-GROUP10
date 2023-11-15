@@ -1,13 +1,13 @@
 package no.ntnu.network.message.deserialize;
 
 import no.ntnu.fieldnode.device.DeviceClass;
-import no.ntnu.network.message.ServerMessage;
+import no.ntnu.network.message.Message;
 import no.ntnu.network.message.common.ByteSerializableInteger;
 import no.ntnu.network.message.common.ByteSerializableSet;
 import no.ntnu.network.message.common.ByteSerializableString;
+import no.ntnu.network.message.context.ServerContext;
 import no.ntnu.network.message.request.RegisterControlPanelRequest;
 import no.ntnu.network.message.serialize.NofspSerializationConstants;
-import no.ntnu.network.message.serialize.tool.TlvFrame;
 import no.ntnu.network.message.serialize.tool.TlvReader;
 
 import java.io.IOException;
@@ -17,16 +17,16 @@ import java.util.Set;
 /**
  * A deserializer for the central server, deserializing server-specific messages.
  */
-public class NofspServerDeserializer extends NofspDeserializer implements MessageDeserializer<ServerMessage> {
+public class NofspServerDeserializer extends NofspDeserializer implements MessageDeserializer<ServerContext> {
     @Override
-    public ServerMessage deserializeMessage(byte[] bytes) throws IOException {
+    public Message<ServerContext> deserializeMessage(byte[] bytes) throws IOException {
         if (bytes == null) {
             throw new IOException("Cannot identify type field, because bytes is null.");
         }
 
         byte[] valueField = TlvReader.getValueField(bytes, TLV_FRAME);
 
-        ServerMessage message = null;
+        Message<ServerContext> message = null;
 
         if (tlvOfType(bytes, NofspSerializationConstants.REQUEST_BYTES)) {
             // type field: request message
@@ -44,8 +44,8 @@ public class NofspServerDeserializer extends NofspDeserializer implements Messag
      * @return the request object
      * @throws IOException thrown if an I/O exception occurs
      */
-    private ServerMessage getRequestMessage(byte[] bytes) throws IOException {
-        ServerMessage request = null;
+    private Message<ServerContext> getRequestMessage(byte[] bytes) throws IOException {
+        Message<ServerContext> request = null;
 
         TlvReader tlvReader = new TlvReader(bytes, TLV_FRAME);
 

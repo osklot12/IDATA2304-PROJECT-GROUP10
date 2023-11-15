@@ -1,12 +1,10 @@
 package no.ntnu.network.message.deserialize;
 
-import no.ntnu.network.message.ControlPanelMessage;
+import no.ntnu.network.message.Message;
 import no.ntnu.network.message.common.ByteSerializableInteger;
 import no.ntnu.network.message.context.ControlPanelContext;
-import no.ntnu.network.message.response.CCRegistrationConfirmationResponse;
 import no.ntnu.network.message.response.RegistrationConfirmationResponse;
 import no.ntnu.network.message.serialize.NofspSerializationConstants;
-import no.ntnu.network.message.serialize.tool.TlvFrame;
 import no.ntnu.network.message.serialize.tool.TlvReader;
 
 import java.io.IOException;
@@ -14,16 +12,16 @@ import java.io.IOException;
 /**
  * A deserializer for deserializing control panel messages.
  */
-public class NofspControlPanelDeserializer extends NofspDeserializer implements MessageDeserializer<ControlPanelMessage> {
+public class NofspControlPanelDeserializer extends NofspDeserializer implements MessageDeserializer<ControlPanelContext> {
     @Override
-    public ControlPanelMessage deserializeMessage(byte[] bytes) throws IOException {
+    public Message<ControlPanelContext> deserializeMessage(byte[] bytes) throws IOException {
         if (bytes == null) {
             throw new IOException("Cannot identify type field, because bytes is null.");
         }
 
         byte[] valueField = TlvReader.getValueField(bytes, TLV_FRAME);
 
-        ControlPanelMessage message = null;
+        Message<ControlPanelContext> message = null;
 
         if (tlvOfType(bytes, NofspSerializationConstants.RESPONSE_BYTES)) {
             // type: response message
@@ -40,8 +38,8 @@ public class NofspControlPanelDeserializer extends NofspDeserializer implements 
      * @return the response object
      * @throws IOException thrown if an I/O exception occurs
      */
-    private ControlPanelMessage getResponseMessage(byte[] bytes) throws IOException {
-        ControlPanelMessage response = null;
+    private Message<ControlPanelContext> getResponseMessage(byte[] bytes) throws IOException {
+        Message<ControlPanelContext> response = null;
 
         TlvReader tlvReader = new TlvReader(bytes, TLV_FRAME);
 
@@ -71,14 +69,14 @@ public class NofspControlPanelDeserializer extends NofspDeserializer implements 
      * @return the deserialized response
      * @throws IOException thrown if an I/O exception occurs
      */
-    private CCRegistrationConfirmationResponse getRegistrationConfirmedResponse(ByteSerializableInteger messageId, TlvReader parameterReader) throws IOException {
-        CCRegistrationConfirmationResponse response = null;
+    private RegistrationConfirmationResponse<ControlPanelContext> getRegistrationConfirmedResponse(ByteSerializableInteger messageId, TlvReader parameterReader) throws IOException {
+        RegistrationConfirmationResponse<ControlPanelContext> response = null;
 
         // deserializes the node address
         byte[] nodeAddressTlv = parameterReader.readNextTlv();
         byte[] nodeAddressValueField = TlvReader.getValueField(nodeAddressTlv, TLV_FRAME);
         ByteSerializableInteger nodeAddress = getInteger(nodeAddressValueField);
-        response = new CCRegistrationConfirmationResponse(messageId.getInteger(), nodeAddress.getInteger());
+        response = new RegistrationConfirmationResponse(messageId.getInteger(), nodeAddress.getInteger());
 
         return response;
     }

@@ -1,14 +1,12 @@
 package no.ntnu.network.message.deserialize;
 
-import no.ntnu.exception.SerializationException;
 import no.ntnu.fieldnode.device.DeviceClass;
-import no.ntnu.network.message.ServerMessage;
+import no.ntnu.network.message.Message;
 import no.ntnu.network.message.common.ControlMessage;
+import no.ntnu.network.message.context.ServerContext;
 import no.ntnu.network.message.request.RegisterControlPanelRequest;
-import no.ntnu.network.message.response.RegistrationConfirmationResponse;
 import no.ntnu.network.message.serialize.visitor.ByteSerializerVisitor;
 import no.ntnu.network.message.serialize.visitor.NofspSerializer;
-import no.ntnu.tools.Logger;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -24,7 +22,7 @@ import static org.junit.Assert.*;
  */
 public class NofspServerDeserializerTest {
     ByteSerializerVisitor serializer;
-    MessageDeserializer<ServerMessage> deserializer;
+    MessageDeserializer<ServerContext> deserializer;
 
     /**
      * Setting up for the following test methods.
@@ -46,13 +44,8 @@ public class NofspServerDeserializerTest {
         ControlMessage request = new RegisterControlPanelRequest(compatibilityList);
 
         byte[] bytes = serializer.serialize(request);
-        ServerMessage reconstructedMessage = deserializer.deserializeMessage(bytes);
+        Message<ServerContext> reconstructedMessage = deserializer.deserializeMessage(bytes);
 
         assertEquals(request, reconstructedMessage);
-    }
-
-    @Test
-    public void testTest() throws SerializationException {
-        Logger.printBytes(serializer.serialize(new RegistrationConfirmationResponse(4)));
     }
 }

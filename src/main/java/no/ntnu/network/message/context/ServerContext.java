@@ -7,6 +7,7 @@ import no.ntnu.network.centralserver.ClientHandler;
 import no.ntnu.network.centralserver.clientproxy.ClientProxy;
 import no.ntnu.network.message.response.ResponseMessage;
 
+import java.io.IOException;
 import java.net.Socket;
 
 /**
@@ -48,8 +49,8 @@ public class ServerContext implements MessageContext {
     }
 
     @Override
-    public void respond(ResponseMessage responseMessage) {
-        agent.sendMessage(responseMessage);
+    public void respond(ResponseMessage responseMessage) throws IOException {
+        agent.sendResponse(responseMessage);
     }
 
     @Override

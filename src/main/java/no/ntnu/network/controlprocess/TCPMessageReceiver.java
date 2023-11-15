@@ -1,6 +1,7 @@
 package no.ntnu.network.controlprocess;
 
 import no.ntnu.network.message.Message;
+import no.ntnu.network.message.context.MessageContext;
 import no.ntnu.network.message.deserialize.MessageDeserializer;
 import no.ntnu.network.message.serialize.tool.InputStreamByteSource;
 import no.ntnu.network.message.serialize.tool.TlvReader;
@@ -14,11 +15,11 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 /**
  * Receives TCP (control) messages from another node in the network.
  */
-public class TCPMessageReceiver<M extends Message<?>> {
+public class TCPMessageReceiver<C extends MessageContext> {
     private final Socket socket;
     private final TlvReader socketReader;
-    private final Queue<M> queue;
-    private final MessageDeserializer<M> deserializer;
+    private final Queue<Message<C>> queue;
+    private final MessageDeserializer<C> deserializer;
 
     /**
      * Creates a new TCPMessageReceiver.
@@ -26,7 +27,7 @@ public class TCPMessageReceiver<M extends Message<?>> {
      * @param socket the socket to receive messages from
      * @param deserializer the deserializer used to deserialize messages
      */
-    public TCPMessageReceiver(Socket socket, MessageDeserializer<M> deserializer) throws IOException {
+    public TCPMessageReceiver(Socket socket, MessageDeserializer<C> deserializer) throws IOException {
         if (socket == null) {
             throw new IllegalArgumentException("Cannot create TCPMessageReceiver, because socket is null");
         }
@@ -47,7 +48,7 @@ public class TCPMessageReceiver<M extends Message<?>> {
      *
      * @return next message, null if no more messages are received
      */
-    public M getNextMessage() {
+    public Message<C> getNextMessage() {
         return queue.poll();
     }
 
@@ -67,8 +68,8 @@ public class TCPMessageReceiver<M extends Message<?>> {
     /**
      * Receives a message from the socket.
      */
-    private M receiveMessage() {
-        M receivedMessage = null;
+    private Message<C> receiveMessage() {
+        Message<C> receivedMessage = null;
 
         try {
             receivedMessage = deserializer.deserializeMessage(socketReader.readNextTlv());

@@ -2,23 +2,24 @@ package no.ntnu.network.client;
 
 import no.ntnu.controlpanel.ControlPanel;
 import no.ntnu.network.centralserver.CentralServer;
-import no.ntnu.network.message.ControlPanelMessage;
+import no.ntnu.network.message.Message;
 import no.ntnu.network.message.context.ControlPanelContext;
-import no.ntnu.network.message.deserialize.ByteDeserializer;
 import no.ntnu.network.message.deserialize.MessageDeserializer;
 import no.ntnu.network.message.deserialize.NofspControlPanelDeserializer;
-import no.ntnu.network.message.deserialize.NofspDeserializer;
 import no.ntnu.network.message.request.RegisterControlPanelRequest;
 import no.ntnu.network.message.serialize.visitor.ByteSerializerVisitor;
 import no.ntnu.network.message.serialize.visitor.NofspSerializer;
+import no.ntnu.tools.Logger;
+
+import java.io.IOException;
 
 /**
  * A client for a control panel, connecting it to a central server using NOFSP.
  * The class is necessary for a control panel to be able to monitor and control field nodes in the network.
  */
-public class ControlPanelClient extends Client<ControlPanelMessage> {
+public class ControlPanelClient extends Client<ControlPanelContext> {
     private static final ByteSerializerVisitor SERIALIZER = NofspSerializer.getInstance();
-    private static final MessageDeserializer<ControlPanelMessage> DESERIALIZER = new NofspControlPanelDeserializer();
+    private static final MessageDeserializer<ControlPanelContext> DESERIALIZER = new NofspControlPanelDeserializer();
     private final ControlPanel controlPanel;
     private ControlPanelContext context;
 
@@ -52,7 +53,11 @@ public class ControlPanelClient extends Client<ControlPanelMessage> {
      * Registers the control panel at the server.
      */
     private void registerControlPanel() {
-        sendMessage(new RegisterControlPanelRequest(controlPanel.getCompatibilityList()));
+        try {
+            sendRequest(new RegisterControlPanelRequest(controlPanel.getCompatibilityList()));
+        } catch (IOException e) {
+            Logger.error("Cannot send registration request: " + e.getMessage());
+        }
     }
 
     @Override
@@ -61,7 +66,11 @@ public class ControlPanelClient extends Client<ControlPanelMessage> {
     }
 
     @Override
-    protected void processReceivedMessage(ControlPanelMessage message) {
-        message.process(context);
+    protected void processReceivedMessage(Message<ControlPanelContext> message) {
+        try {
+            message.process(context);
+        } catch (IOException e) {
+            Logger.error("Cannot process message: " + e.getMessage());
+        }
     }
 }

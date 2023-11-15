@@ -3,6 +3,8 @@ package no.ntnu.network.message.context;
 import no.ntnu.network.ClientCommunicationAgent;
 import no.ntnu.network.message.response.ResponseMessage;
 
+import java.io.IOException;
+
 /**
  * A context for client messages to operate on.
  * The ClientContext provides common functionality shared by all clients.
@@ -33,8 +35,8 @@ public abstract class ClientContext implements MessageContext {
     }
 
     @Override
-    public void respond(ResponseMessage response) {
-        agent.sendMessage(response);
+    public void respond(ResponseMessage response) throws IOException {
+        agent.sendResponse(response);
     }
 
     @Override

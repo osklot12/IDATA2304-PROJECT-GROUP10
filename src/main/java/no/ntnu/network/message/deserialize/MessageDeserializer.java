@@ -1,6 +1,7 @@
 package no.ntnu.network.message.deserialize;
 
 import no.ntnu.network.message.Message;
+import no.ntnu.network.message.context.MessageContext;
 import no.ntnu.network.message.serialize.tool.TlvFrame;
 
 import java.io.IOException;
@@ -10,7 +11,7 @@ import java.io.IOException;
  *
  * @param <M> type of message to deserialize
  */
-public interface MessageDeserializer<M extends Message<?>> {
+public interface MessageDeserializer<C extends MessageContext> {
     /**
      * Deserializes an array of bytes into a message.
      *
@@ -18,7 +19,7 @@ public interface MessageDeserializer<M extends Message<?>> {
      * @return the deserialized message
      * @throws IOException thrown if an I/O exception occurs
      */
-    M deserializeMessage(byte[] bytes) throws IOException;
+    Message<C> deserializeMessage(byte[] bytes) throws IOException;
 
     /**
      * Returns the TlvFrame used for deserialization.

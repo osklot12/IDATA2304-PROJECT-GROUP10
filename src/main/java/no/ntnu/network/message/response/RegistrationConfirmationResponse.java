@@ -1,10 +1,9 @@
 package no.ntnu.network.message.response;
 
 import no.ntnu.exception.SerializationException;
-import no.ntnu.network.message.ClientMessage;
+import no.ntnu.network.message.Message;
 import no.ntnu.network.message.common.ByteSerializableInteger;
 import no.ntnu.network.message.context.ClientContext;
-import no.ntnu.network.message.context.ControlPanelContext;
 import no.ntnu.network.message.serialize.NofspSerializationConstants;
 import no.ntnu.network.message.serialize.visitor.ByteSerializerVisitor;
 
@@ -12,7 +11,7 @@ import no.ntnu.network.message.serialize.visitor.ByteSerializerVisitor;
  * A confirmation response to a node registration request, indicating that the client has been
  * registered successfully.
  */
-public abstract class RegistrationConfirmationResponse extends ResponseMessage {
+public class RegistrationConfirmationResponse<C extends ClientContext> extends ResponseMessage implements Message<C> {
     private final ByteSerializableInteger nodeAddress;
 
     /**
@@ -20,7 +19,7 @@ public abstract class RegistrationConfirmationResponse extends ResponseMessage {
      *
      * @param nodeAddress the address assigned to the node
      */
-    protected RegistrationConfirmationResponse(int nodeAddress) {
+    public RegistrationConfirmationResponse(int nodeAddress) {
         super(NofspSerializationConstants.NODE_REGISTRATION_CONFIRMED_CODE);
 
         this.nodeAddress = new ByteSerializableInteger(nodeAddress);
@@ -32,7 +31,7 @@ public abstract class RegistrationConfirmationResponse extends ResponseMessage {
      * @param messageId the message id
      * @param nodeAddress the address assigned to the node
      */
-    protected RegistrationConfirmationResponse(int messageId, int nodeAddress) {
+    public RegistrationConfirmationResponse(int messageId, int nodeAddress) {
         this(nodeAddress);
 
         setId(messageId);
@@ -75,6 +74,13 @@ public abstract class RegistrationConfirmationResponse extends ResponseMessage {
     }
 
     protected void commonProcess(ClientContext context) {
+        if (context.acceptResponse(this)) {
+            context.setNodeAddress(getNodeAddress().getInteger());
+        }
+    }
+
+    @Override
+    public void process(C context) {
         if (context.acceptResponse(this)) {
             context.setNodeAddress(getNodeAddress().getInteger());
         }

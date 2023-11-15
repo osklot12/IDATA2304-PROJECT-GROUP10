@@ -5,8 +5,8 @@ import no.ntnu.network.controlprocess.PendingRequestMap;
 import no.ntnu.network.controlprocess.TCPMessageReceiver;
 import no.ntnu.network.controlprocess.TCPMessageSender;
 import no.ntnu.network.message.Message;
-import no.ntnu.network.message.common.ByteSerializableInteger;
 import no.ntnu.network.message.common.ControlMessage;
+import no.ntnu.network.message.context.MessageContext;
 import no.ntnu.network.message.deserialize.MessageDeserializer;
 import no.ntnu.network.message.request.RequestMessage;
 import no.ntnu.network.message.response.ResponseMessage;
@@ -20,15 +20,15 @@ import java.net.SocketAddress;
 /**
  * An agent responsible for handling control message communication with another node in the network.
  *
- * @param <M> the type of messages to process
+ * @param <C> the type of message context for the messages
  */
-public abstract class ControlProcessAgent<M extends Message<?>> implements CommunicationAgent {
+public abstract class ControlProcessAgent<C extends MessageContext> implements CommunicationAgent {
     private static final long PENDING_REQUEST_TTL = 3000;
     private static final int MESSAGE_ID_POOL = 1000000;
     private final PendingRequestMap pendingRequests;
     private Socket socket;
-    private TCPMessageReceiver<M> controlMessageReceiver;
-    private TCPMessageSender controlMessageSender;
+    private TCPMessageReceiver<C> messageReceiver;
+    private TCPMessageSender messageSender;
     private int controlMessageIdCounter;
     private volatile boolean connected;
 
@@ -42,26 +42,13 @@ public abstract class ControlProcessAgent<M extends Message<?>> implements Commu
     }
 
     /**
-     * Sets the socket for the agent.
-     *
-     * @param socket the socket
-     */
-    protected void setSocket(Socket socket) {
-        if (socket == null) {
-            throw new IllegalArgumentException("Cannot set socket, because socket is null.");
-        }
-
-        this.socket = socket;
-    }
-
-    /**
      * Establishes connection to a socket.
      *
      * @param serializer the serializer to use for serializing messages
      * @param deserializer the deserializer to use for deserializing messages
      * @return true if connection was successfully established
      */
-    protected boolean establishConnection(ByteSerializerVisitor serializer, MessageDeserializer<M> deserializer) {
+    protected boolean establishConnection(ByteSerializerVisitor serializer, MessageDeserializer<C> deserializer) {
         if (socket == null) {
             throw new IllegalStateException("Please set socket before trying to establish connection.");
         }
@@ -75,11 +62,24 @@ public abstract class ControlProcessAgent<M extends Message<?>> implements Commu
     }
 
     /**
+     * Sets the socket.
+     *
+     * @param socket the socket
+     */
+    protected void setSocket(Socket socket) {
+        if (socket == null) {
+            throw new IllegalArgumentException("Cannot set socket, because it is null");
+        }
+
+        this.socket = socket;
+    }
+
+    /**
      * Establishes the control message process for the client, used to send and receive control messages.
      *
      * @return true if control message process is successfully established
      */
-    private boolean establishControlProcess(ByteSerializerVisitor serializer, MessageDeserializer<M> deserializer) {
+    private boolean establishControlProcess(ByteSerializerVisitor serializer, MessageDeserializer<C> deserializer) {
         boolean success = false;
 
         if (establishTCPSenderAndReceiver(serializer, deserializer)) {
@@ -99,12 +99,12 @@ public abstract class ControlProcessAgent<M extends Message<?>> implements Commu
      * @param deserializer deserializer used for deserialization
      * @return true if successfully established
      */
-    private boolean establishTCPSenderAndReceiver(ByteSerializerVisitor serializer, MessageDeserializer<M> deserializer) {
+    private boolean establishTCPSenderAndReceiver(ByteSerializerVisitor serializer, MessageDeserializer<C> deserializer) {
         boolean success = false;
 
         try {
-            controlMessageReceiver = new TCPMessageReceiver<>(socket, deserializer);
-            controlMessageSender = new TCPMessageSender(socket, serializer);
+            messageReceiver = new TCPMessageReceiver<>(socket, deserializer);
+            messageSender = new TCPMessageSender(socket, serializer);
             success = true;
         } catch (Exception e) {
             Logger.error("Cannot establish control message process: " + e.getMessage());
@@ -119,7 +119,7 @@ public abstract class ControlProcessAgent<M extends Message<?>> implements Commu
     private synchronized void startHandlingReceivedMessages() {
         Thread receivedMessageHandlingThread = new Thread(() -> {
             while (connected) {
-                M receivedMessage = controlMessageReceiver.getNextMessage();
+                Message<C> receivedMessage = messageReceiver.getNextMessage();
                 if (receivedMessage != null) {
                     processReceivedMessage(receivedMessage);
                 }
@@ -137,7 +137,7 @@ public abstract class ControlProcessAgent<M extends Message<?>> implements Commu
      *
      * @param message received message
      */
-    protected abstract void processReceivedMessage(M message);
+    protected abstract void processReceivedMessage(Message<C> message);
 
     /**
      * Handles the sending of a request message.
@@ -200,21 +200,31 @@ public abstract class ControlProcessAgent<M extends Message<?>> implements Commu
     }
 
     @Override
-    public void sendMessage(ControlMessage message) {
-        if (message == null) {
-            throw new IllegalArgumentException("Cannot send message, because message is null");
+    public void sendRequest(RequestMessage request) throws IOException {
+        if (request == null) {
+            throw new IllegalArgumentException("Cannot send request message, because it is null.");
         }
 
-        if (controlMessageSender != null) {
-            if (message instanceof RequestMessage request) {
-                handleRequestMessageDeparture(request);
-            }
-
-            controlMessageSender.enqueueMessage(message);
-            Logger.info("Message '" + message.toString() + "' has been sent with id "  + message.getId().toString());
-        } else {
-            Logger.error("Cannot send message because no connection is established.");
+        if (!connected) {
+            throw new IOException("No connection established.");
         }
+
+        handleRequestMessageDeparture(request);
+        messageSender.enqueueMessage(request);
+    }
+
+    @Override
+    public void sendResponse(ResponseMessage response) throws IOException {
+        if (response == null) {
+            throw new IllegalArgumentException("Cannot send response message, because it is null");
+        }
+
+        if (!connected) {
+            throw new IOException("No connection established.");
+        }
+
+        messageSender.enqueueMessage(response);
+        Logger.info("Response message (id: " + response.getId() + ") has been sent: " + response.toString());
     }
 
     @Override

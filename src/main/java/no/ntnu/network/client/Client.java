@@ -2,8 +2,7 @@ package no.ntnu.network.client;
 
 import no.ntnu.network.ClientCommunicationAgent;
 import no.ntnu.network.ControlProcessAgent;
-import no.ntnu.network.message.ClientMessage;
-import no.ntnu.network.message.Message;
+import no.ntnu.network.message.context.MessageContext;
 import no.ntnu.network.message.deserialize.MessageDeserializer;
 import no.ntnu.network.message.serialize.visitor.ByteSerializerVisitor;
 import no.ntnu.tools.Logger;
@@ -14,7 +13,7 @@ import java.net.Socket;
 /**
  * A client for communicating with a server.
  */
-public abstract class Client<M extends ClientMessage<?>> extends ControlProcessAgent<M> implements ClientCommunicationAgent {
+public abstract class Client<C extends MessageContext> extends ControlProcessAgent<C> implements ClientCommunicationAgent {
     private int nodeAddress;
 
     /**
@@ -35,12 +34,11 @@ public abstract class Client<M extends ClientMessage<?>> extends ControlProcessA
      * @return true if successfully connected to server, false otherwise
      */
     protected boolean connectToServer(String serverAddress, int portNumber,
-                                      ByteSerializerVisitor serializer, MessageDeserializer<M> deserializer) {
+                                      ByteSerializerVisitor serializer, MessageDeserializer<C> deserializer) {
         boolean success = false;
 
         try {
-            Socket socket = new Socket(serverAddress, portNumber);
-            setSocket(socket);
+            setSocket(new Socket(serverAddress, portNumber));
             success = establishConnection(serializer, deserializer);
         } catch (IOException e) {
             Logger.error("Cannot connect to server '" + serverAddress + "' with port number " + portNumber +

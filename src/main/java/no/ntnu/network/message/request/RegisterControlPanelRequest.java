@@ -4,23 +4,23 @@ import no.ntnu.exception.ClientRegistrationException;
 import no.ntnu.exception.SerializationException;
 import no.ntnu.fieldnode.device.DeviceClass;
 import no.ntnu.network.centralserver.clientproxy.ControlPanelClientProxy;
-import no.ntnu.network.message.ServerMessage;
+import no.ntnu.network.message.Message;
 import no.ntnu.network.message.context.ServerContext;
 import no.ntnu.network.message.common.ByteSerializableSet;
 import no.ntnu.network.message.common.ByteSerializableString;
-import no.ntnu.network.message.response.CCRegistrationConfirmationResponse;
+import no.ntnu.network.message.response.RegistrationConfirmationResponse;
 import no.ntnu.network.message.response.ResponseMessage;
 import no.ntnu.network.message.response.error.CCRegistrationDeclinedError;
-import no.ntnu.network.message.response.error.RegistrationDeclinedError;
 import no.ntnu.network.message.serialize.NofspSerializationConstants;
 import no.ntnu.network.message.serialize.visitor.ByteSerializerVisitor;
 
+import java.io.IOException;
 import java.util.Set;
 
 /**
  * A request to register a {@code Control Panel} at the central server.
  */
-public class RegisterControlPanelRequest extends RequestMessage implements ServerMessage {
+public class RegisterControlPanelRequest extends RequestMessage implements Message<ServerContext> {
     private final Set<DeviceClass> compatibilityList;
 
     /**
@@ -115,14 +115,14 @@ public class RegisterControlPanelRequest extends RequestMessage implements Serve
     }
 
     @Override
-    public void process(ServerContext context) {
+    public void process(ServerContext context) throws IOException {
         // creates a new client proxy for the control panel
         ControlPanelClientProxy clientProxy = new ControlPanelClientProxy(context.getAgent(), compatibilityList);
 
         ResponseMessage response = null;
         try {
             int clientAddress = context.registerClient(clientProxy);
-            response = new CCRegistrationConfirmationResponse(clientAddress);
+            response = new RegistrationConfirmationResponse<>(clientAddress);
         } catch (ClientRegistrationException e) {
             response = new CCRegistrationDeclinedError(e.getMessage());
         }

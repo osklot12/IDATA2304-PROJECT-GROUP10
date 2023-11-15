@@ -4,6 +4,8 @@ import no.ntnu.network.message.common.ByteSerializableString;
 import no.ntnu.network.message.common.ControlMessage;
 import no.ntnu.network.message.context.ServerContext;
 
+import java.io.IOException;
+
 /**
  * A message sent from one node to another, requesting a service.
  */
@@ -51,5 +53,5 @@ public abstract class RequestMessage extends ControlMessage {
         return result;
     }
 
-    public abstract void process(ServerContext context);
+    public abstract void process(ServerContext context) throws IOException;
 }
