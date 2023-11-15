@@ -124,6 +124,53 @@ public abstract class ControlProcessAgent<C extends MessageContext> implements C
     protected abstract void processReceivedMessage(Message<C> message);
 
     /**
+     * Returns whether the agent is connected or not.
+     *
+     * @return true if connected, false otherwise
+     */
+    public boolean connected() {
+        return connected;
+    }
+
+    /**
+     * Returns the remote socket address.
+     *
+     * @return the remote socket address
+     */
+    protected SocketAddress getRemoteSocketAddress() {
+        return socket.getRemoteSocketAddress();
+    }
+
+    @Override
+    public void sendRequest(RequestMessage request) throws IOException {
+        if (request == null) {
+            throw new IllegalArgumentException("Cannot send request message, because it is null.");
+        }
+
+        if (!connected) {
+            throw new IOException("No connection established.");
+        }
+
+        handleRequestMessageDeparture(request);
+        controlProcess.sendMessage(request);
+        logSendRequestMessage(request);
+    }
+
+    @Override
+    public void sendResponse(ResponseMessage response) throws IOException {
+        if (response == null) {
+            throw new IllegalArgumentException("Cannot send response message, because it is null");
+        }
+
+        if (!connected) {
+            throw new IOException("No connection established.");
+        }
+
+        controlProcess.sendMessage(response);
+        logSendResponseMessage(response);
+    }
+
+    /**
      * Handles the sending of a request message.
      *
      * @param request the request message to handle
@@ -165,52 +212,6 @@ public abstract class ControlProcessAgent<C extends MessageContext> implements C
         controlMessageIdCounter = ((controlMessageIdCounter + 1) % MESSAGE_ID_POOL);
     }
 
-    /**
-     * Returns whether the agent is connected or not.
-     *
-     * @return true if connected, false otherwise
-     */
-    public boolean connected() {
-        return connected;
-    }
-
-    /**
-     * Returns the remote socket address.
-     *
-     * @return the remote socket address
-     */
-    protected SocketAddress getRemoteSocketAddress() {
-        return socket.getRemoteSocketAddress();
-    }
-
-    @Override
-    public void sendRequest(RequestMessage request) throws IOException {
-        if (request == null) {
-            throw new IllegalArgumentException("Cannot send request message, because it is null.");
-        }
-
-        if (!connected) {
-            throw new IOException("No connection established.");
-        }
-
-        handleRequestMessageDeparture(request);
-        controlProcess.sendMessage(request);
-    }
-
-    @Override
-    public void sendResponse(ResponseMessage response) throws IOException {
-        if (response == null) {
-            throw new IllegalArgumentException("Cannot send response message, because it is null");
-        }
-
-        if (!connected) {
-            throw new IOException("No connection established.");
-        }
-
-        controlProcess.sendMessage(response);
-        Logger.info("Response message (id: " + response.getId() + ") has been sent: " + response.toString());
-    }
-
     @Override
     public boolean acceptResponse(ResponseMessage response) {
         boolean accepted = false;
@@ -219,7 +220,6 @@ public abstract class ControlProcessAgent<C extends MessageContext> implements C
         if (pendingRequests.containsKey(responseId)) {
             pendingRequests.remove(responseId);
             accepted = true;
-            Logger.info("Request with ID " + responseId + " has received a response: " + response.toString());
         }
 
         return accepted;
@@ -238,4 +238,32 @@ public abstract class ControlProcessAgent<C extends MessageContext> implements C
             Logger.error("Cannot close the connection with " + socket.getRemoteSocketAddress() + ": " + e.getMessage());
         }
     }
+
+    /**
+     * Log the sending of a request message.
+     *
+     * @param request the request message sent
+     */
+    protected abstract void logSendRequestMessage(RequestMessage request);
+
+    /**
+     * Log the sending of a response message.
+     *
+     * @param response the response message sent
+     */
+    protected abstract void logSendResponseMessage(ResponseMessage response);
+
+    /**
+     * Log the receiving of a request message.
+     *
+     * @param request the received request message
+     */
+    protected abstract void logReceiveRequestMessage(RequestMessage request);
+
+    /**
+     * Log the receiving of a response message.
+     *
+     * @param response the received response message
+     */
+    protected abstract void logReceiveResponseMessage(ResponseMessage response);
 }

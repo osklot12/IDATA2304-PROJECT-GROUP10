@@ -4,9 +4,12 @@ import no.ntnu.network.ControlProcessAgent;
 import no.ntnu.network.message.Message;
 import no.ntnu.network.message.context.ServerContext;
 import no.ntnu.network.message.deserialize.NofspServerDeserializer;
+import no.ntnu.network.message.request.RequestMessage;
+import no.ntnu.network.message.response.ResponseMessage;
 import no.ntnu.network.message.serialize.visitor.ByteSerializerVisitor;
 import no.ntnu.network.message.serialize.visitor.NofspSerializer;
 import no.ntnu.tools.Logger;
+import no.ntnu.tools.ServerLogger;
 
 import java.io.IOException;
 import java.net.Socket;
@@ -43,11 +46,30 @@ public class ClientHandler extends ControlProcessAgent<ServerContext> implements
 
     @Override
     protected void processReceivedMessage(Message<ServerContext> message) {
-        Logger.info("Received message '" + message.toString() + "' from client "+ getRemoteSocketAddress());
         try {
             message.process(context);
         } catch (IOException e) {
             Logger.error("Cannot process message: " + e.getMessage());
         }
+    }
+
+    @Override
+    protected void logSendRequestMessage(RequestMessage request) {
+        ServerLogger.requestSent(request, getRemoteSocketAddress().toString());
+    }
+
+    @Override
+    protected void logSendResponseMessage(ResponseMessage response) {
+        ServerLogger.responseSent(response, getRemoteSocketAddress().toString());
+    }
+
+    @Override
+    protected void logReceiveRequestMessage(RequestMessage request) {
+        ServerLogger.requestReceived(request, getRemoteSocketAddress().toString());
+    }
+
+    @Override
+    protected void logReceiveResponseMessage(ResponseMessage response) {
+        ServerLogger.responseReceived(response, getRemoteSocketAddress().toString());
     }
 }

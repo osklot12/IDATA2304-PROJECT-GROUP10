@@ -4,8 +4,12 @@ import no.ntnu.network.ClientCommunicationAgent;
 import no.ntnu.network.ControlProcessAgent;
 import no.ntnu.network.message.context.MessageContext;
 import no.ntnu.network.message.deserialize.MessageDeserializer;
+import no.ntnu.network.message.request.RequestMessage;
+import no.ntnu.network.message.response.ResponseMessage;
 import no.ntnu.network.message.serialize.visitor.ByteSerializerVisitor;
+import no.ntnu.tools.ClientLogger;
 import no.ntnu.tools.Logger;
+import no.ntnu.tools.ServerLogger;
 
 import java.io.IOException;
 import java.net.Socket;
@@ -75,5 +79,25 @@ public abstract class Client<C extends MessageContext> extends ControlProcessAge
     @Override
     public void setClientNodeAddress(int address) {
         this.nodeAddress = address;
+    }
+
+    @Override
+    protected void logSendRequestMessage(RequestMessage request) {
+        ClientLogger.requestSent(request);
+    }
+
+    @Override
+    protected void logSendResponseMessage(ResponseMessage response) {
+        ClientLogger.responseSent(response);
+    }
+
+    @Override
+    protected void logReceiveRequestMessage(RequestMessage request) {
+        ClientLogger.requestReceived(request);
+    }
+
+    @Override
+    protected void logReceiveResponseMessage(ResponseMessage response) {
+        ClientLogger.responseReceived(response);
     }
 }
