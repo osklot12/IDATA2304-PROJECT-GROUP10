@@ -28,20 +28,18 @@ public class ClientRegister {
      *
      * @param client client to add
      * @return the address for the client
-     * @throws ClientAlreadyRegisteredException thrown if the client is already registered
      */
-    public int addClient(ClientProxy client) throws ClientAlreadyRegisteredException {
+    public int addClient(ClientProxy client) {
         if (client == null) {
             throw new IllegalArgumentException("Cannot add client to ClientRegister, because client is null.");
         }
 
-        if (register.containsValue(client)) {
-            throw new ClientAlreadyRegisteredException("Cannot add client to ClientRegister, because client is " +
-                    "already registered.");
-        }
+        int clientAddress = -1;
 
-        int clientAddress = generateNewClientAddress();
-        register.put(clientAddress, client);
+        if (!register.containsValue(client)) {
+            clientAddress = generateNewClientAddress();
+            register.put(clientAddress, client);
+        }
 
         return clientAddress;
     }

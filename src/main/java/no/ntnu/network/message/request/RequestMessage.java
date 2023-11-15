@@ -2,9 +2,10 @@ package no.ntnu.network.message.request;
 
 import no.ntnu.network.message.common.ByteSerializableString;
 import no.ntnu.network.message.common.ControlMessage;
+import no.ntnu.network.message.context.ServerContext;
 
 /**
- * A Message used for requesting a service.
+ * A message sent from one node to another, requesting a service.
  */
 public abstract class RequestMessage extends ControlMessage {
     protected final ByteSerializableString command;
@@ -49,4 +50,6 @@ public abstract class RequestMessage extends ControlMessage {
 
         return result;
     }
+
+    public abstract void process(ServerContext context);
 }

@@ -1,7 +1,10 @@
 package no.ntnu.network.client;
 
-import no.ntnu.network.CommunicationAgent;
-import no.ntnu.network.message.deserialize.ByteDeserializer;
+import no.ntnu.network.ClientCommunicationAgent;
+import no.ntnu.network.ControlProcessAgent;
+import no.ntnu.network.message.ClientMessage;
+import no.ntnu.network.message.Message;
+import no.ntnu.network.message.deserialize.MessageDeserializer;
 import no.ntnu.network.message.serialize.visitor.ByteSerializerVisitor;
 import no.ntnu.tools.Logger;
 
@@ -11,7 +14,17 @@ import java.net.Socket;
 /**
  * A client for communicating with a server.
  */
-public abstract class Client extends CommunicationAgent {
+public abstract class Client<M extends ClientMessage<?>> extends ControlProcessAgent<M> implements ClientCommunicationAgent {
+    private int nodeAddress;
+
+    /**
+     * Creates a new Client.
+     */
+    protected Client() {
+        super();
+        nodeAddress = -1;
+    }
+
     /**
      * Connects the client to a server.
      *
@@ -22,12 +35,13 @@ public abstract class Client extends CommunicationAgent {
      * @return true if successfully connected to server, false otherwise
      */
     protected boolean connectToServer(String serverAddress, int portNumber,
-                                      ByteSerializerVisitor serializer, ByteDeserializer deserializer) {
+                                      ByteSerializerVisitor serializer, MessageDeserializer<M> deserializer) {
         boolean success = false;
 
         try {
             Socket socket = new Socket(serverAddress, portNumber);
-            success = establishConnection(socket, serializer, deserializer);
+            setSocket(socket);
+            success = establishConnection(serializer, deserializer);
         } catch (IOException e) {
             Logger.error("Cannot connect to server '" + serverAddress + "' with port number " + portNumber +
                     ": " + e.getMessage());
@@ -47,4 +61,18 @@ public abstract class Client extends CommunicationAgent {
      * Disconnects from the server
      */
     public abstract void disconnect();
+
+    /**
+     * Returns the address for the node.
+     *
+     * @return the node address
+     */
+    public int getNodeAddress() {
+        return nodeAddress;
+    }
+
+    @Override
+    public void setClientNodeAddress(int address) {
+        this.nodeAddress = address;
+    }
 }

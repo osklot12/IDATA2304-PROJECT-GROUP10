@@ -1,6 +1,6 @@
 package no.ntnu.network.message.common;
 
-import no.ntnu.network.message.Message;
+import no.ntnu.network.message.serialize.composite.ByteSerializable;
 
 /**
  * A message sent from one node to another for control purposes. Control messages can be categorized into two categories:
@@ -9,7 +9,7 @@ import no.ntnu.network.message.Message;
  * All control messages are assigned a unique ID used to map requests to responses. These IDs are only unique for that
  * connection, as different connections can use the same IDs.
  */
-public abstract class ControlMessage implements Message {
+public abstract class ControlMessage implements ByteSerializable {
     private ByteSerializableInteger id;
 
     /**
@@ -47,11 +47,11 @@ public abstract class ControlMessage implements Message {
             return true;
         }
 
-        if (!(o instanceof ControlMessage r)) {
+        if (!(o instanceof ControlMessage c)) {
             return false;
         }
 
-        return r.getId().equals(id);
+        return c.getId().equals(id);
     }
 
     @Override

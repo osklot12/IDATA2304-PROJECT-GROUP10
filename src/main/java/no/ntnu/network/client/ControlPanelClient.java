@@ -2,8 +2,11 @@ package no.ntnu.network.client;
 
 import no.ntnu.controlpanel.ControlPanel;
 import no.ntnu.network.centralserver.CentralServer;
-import no.ntnu.network.message.Message;
+import no.ntnu.network.message.ControlPanelMessage;
+import no.ntnu.network.message.context.ControlPanelContext;
 import no.ntnu.network.message.deserialize.ByteDeserializer;
+import no.ntnu.network.message.deserialize.MessageDeserializer;
+import no.ntnu.network.message.deserialize.NofspControlPanelDeserializer;
 import no.ntnu.network.message.deserialize.NofspDeserializer;
 import no.ntnu.network.message.request.RegisterControlPanelRequest;
 import no.ntnu.network.message.serialize.visitor.ByteSerializerVisitor;
@@ -13,10 +16,11 @@ import no.ntnu.network.message.serialize.visitor.NofspSerializer;
  * A client for a control panel, connecting it to a central server using NOFSP.
  * The class is necessary for a control panel to be able to monitor and control field nodes in the network.
  */
-public class ControlPanelClient extends Client {
+public class ControlPanelClient extends Client<ControlPanelMessage> {
     private static final ByteSerializerVisitor SERIALIZER = NofspSerializer.getInstance();
-    private static final ByteDeserializer DESERIALIZER = NofspDeserializer.getInstance();
+    private static final MessageDeserializer<ControlPanelMessage> DESERIALIZER = new NofspControlPanelDeserializer();
     private final ControlPanel controlPanel;
+    private ControlPanelContext context;
 
     /**
      * Creates a new ControlPanelClient.
@@ -24,12 +28,13 @@ public class ControlPanelClient extends Client {
      * @param controlPanel the control panel
      */
     public ControlPanelClient(ControlPanel controlPanel) {
+        super();
         if (controlPanel == null) {
             throw new IllegalArgumentException("Cannot create ControlPanelClient, because control panel is null.");
         }
 
         this.controlPanel = controlPanel;
-
+        this.context = new ControlPanelContext(this, controlPanel);
     }
 
     @Override
@@ -47,7 +52,7 @@ public class ControlPanelClient extends Client {
      * Registers the control panel at the server.
      */
     private void registerControlPanel() {
-        sendControlMessage(new RegisterControlPanelRequest(controlPanel.getCompatibilityList()));
+        sendMessage(new RegisterControlPanelRequest(controlPanel.getCompatibilityList()));
     }
 
     @Override
@@ -56,7 +61,7 @@ public class ControlPanelClient extends Client {
     }
 
     @Override
-    protected void processReceivedMessage(Message message) {
-
+    protected void processReceivedMessage(ControlPanelMessage message) {
+        message.process(context);
     }
 }
