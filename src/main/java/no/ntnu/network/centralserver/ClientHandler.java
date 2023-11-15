@@ -36,7 +36,9 @@ public class ClientHandler extends ControlProcessAgent<ServerContext> implements
 
     @Override
     public void run() {
-        establishConnection(SERIALIZER, DESERIALIZER);
+        if (establishConnection(SERIALIZER, DESERIALIZER)) {
+            Logger.info("Successfully connected to client " + getRemoteSocketAddress());
+        }
     }
 
     @Override

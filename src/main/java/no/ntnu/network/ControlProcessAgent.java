@@ -1,9 +1,6 @@
 package no.ntnu.network;
 
-import no.ntnu.network.controlprocess.PendingRequest;
-import no.ntnu.network.controlprocess.PendingRequestMap;
-import no.ntnu.network.controlprocess.TCPMessageReceiver;
-import no.ntnu.network.controlprocess.TCPMessageSender;
+import no.ntnu.network.controlprocess.*;
 import no.ntnu.network.message.Message;
 import no.ntnu.network.message.common.ControlMessage;
 import no.ntnu.network.message.context.MessageContext;
@@ -27,8 +24,7 @@ public abstract class ControlProcessAgent<C extends MessageContext> implements C
     private static final int MESSAGE_ID_POOL = 1000000;
     private final PendingRequestMap pendingRequests;
     private Socket socket;
-    private TCPMessageReceiver<C> messageReceiver;
-    private TCPMessageSender messageSender;
+    private TCPControlProcess<C> controlProcess;
     private int controlMessageIdCounter;
     private volatile boolean connected;
 
@@ -57,8 +53,16 @@ public abstract class ControlProcessAgent<C extends MessageContext> implements C
             throw new IllegalStateException("Cannot establish connection to socket, because socket is closed.");
         }
 
+        boolean success = false;
+
         Logger.info("Connecting to " + socket.getRemoteSocketAddress() + "...");
-        return establishControlProcess(serializer, deserializer);
+        if (establishControlProcess(serializer, deserializer)) {
+            connected = true;
+            startHandlingReceivedMessages();
+            success = true;
+        }
+
+        return success;
     }
 
     /**
@@ -75,39 +79,19 @@ public abstract class ControlProcessAgent<C extends MessageContext> implements C
     }
 
     /**
-     * Establishes the control message process for the client, used to send and receive control messages.
+     * Establishes the TCP control message process, used to send and receive control messages.
      *
      * @return true if control message process is successfully established
      */
     private boolean establishControlProcess(ByteSerializerVisitor serializer, MessageDeserializer<C> deserializer) {
         boolean success = false;
 
-        if (establishTCPSenderAndReceiver(serializer, deserializer)) {
-            connected = true;
-            startHandlingReceivedMessages();
-            success = true;
-            Logger.info("Successfully connected to " + socket.getRemoteSocketAddress() + ".");
-        }
-
-        return success;
-    }
-
-    /**
-     * Establishes the control message sender and receiver.
-     *
-     * @param serializer serializer used for message serialization
-     * @param deserializer deserializer used for deserialization
-     * @return true if successfully established
-     */
-    private boolean establishTCPSenderAndReceiver(ByteSerializerVisitor serializer, MessageDeserializer<C> deserializer) {
-        boolean success = false;
-
         try {
-            messageReceiver = new TCPMessageReceiver<>(socket, deserializer);
-            messageSender = new TCPMessageSender(socket, serializer);
+            controlProcess = new TCPControlProcess<>(socket, serializer, deserializer);
             success = true;
-        } catch (Exception e) {
-            Logger.error("Cannot establish control message process: " + e.getMessage());
+            Logger.info("Control process for " + getRemoteSocketAddress() + " has been established successfully.");
+        } catch (IOException e) {
+            Logger.error("Cannot establish control process: " + e.getMessage());
         }
 
         return success;
@@ -119,7 +103,7 @@ public abstract class ControlProcessAgent<C extends MessageContext> implements C
     private synchronized void startHandlingReceivedMessages() {
         Thread receivedMessageHandlingThread = new Thread(() -> {
             while (connected) {
-                Message<C> receivedMessage = messageReceiver.getNextMessage();
+                Message<C> receivedMessage = controlProcess.getNextMessage();
                 if (receivedMessage != null) {
                     processReceivedMessage(receivedMessage);
                 }
@@ -210,7 +194,7 @@ public abstract class ControlProcessAgent<C extends MessageContext> implements C
         }
 
         handleRequestMessageDeparture(request);
-        messageSender.enqueueMessage(request);
+        controlProcess.sendMessage(request);
     }
 
     @Override
@@ -223,7 +207,7 @@ public abstract class ControlProcessAgent<C extends MessageContext> implements C
             throw new IOException("No connection established.");
         }
 
-        messageSender.enqueueMessage(response);
+        controlProcess.sendMessage(response);
         Logger.info("Response message (id: " + response.getId() + ") has been sent: " + response.toString());
     }
 

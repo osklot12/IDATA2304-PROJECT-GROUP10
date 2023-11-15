@@ -39,7 +39,10 @@ public abstract class Client<C extends MessageContext> extends ControlProcessAge
 
         try {
             setSocket(new Socket(serverAddress, portNumber));
-            success = establishConnection(serializer, deserializer);
+            if (establishConnection(serializer, deserializer)) {
+                success = true;
+                Logger.info("Successfully connected to server " + getRemoteSocketAddress());
+            }
         } catch (IOException e) {
             Logger.error("Cannot connect to server '" + serverAddress + "' with port number " + portNumber +
                     ": " + e.getMessage());
