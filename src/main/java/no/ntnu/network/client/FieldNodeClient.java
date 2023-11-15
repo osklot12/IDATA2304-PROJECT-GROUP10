@@ -54,6 +54,11 @@ public class FieldNodeClient extends Client {
         //send the FNST and the FNAT
     }
 
+//    private void sendFNST() {
+//        // Send the FNST to the server
+//        sendControlMessage(new UpdateFNSTRequest(fieldNode.getFNST()));
+//    }
+
 
     @Override
     public void disconnect() {
