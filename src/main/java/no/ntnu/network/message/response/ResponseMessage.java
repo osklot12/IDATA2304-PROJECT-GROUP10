@@ -2,6 +2,7 @@ package no.ntnu.network.message.response;
 
 import no.ntnu.network.message.common.ByteSerializableInteger;
 import no.ntnu.network.message.common.ControlMessage;
+import no.ntnu.network.message.context.MessageContext;
 
 /**
  * A message sent from one node to another, responding to a request message.

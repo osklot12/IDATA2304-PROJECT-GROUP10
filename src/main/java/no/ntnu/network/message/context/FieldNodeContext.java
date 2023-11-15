@@ -4,8 +4,7 @@ import no.ntnu.fieldnode.FieldNode;
 import no.ntnu.network.ClientCommunicationAgent;
 
 /**
- * A context for processing messages for a field node.
- * The context provides access to objects that control messages needs for processing.
+ * A context for processing field node messages.
  */
 public class FieldNodeContext extends ClientContext {
     private final FieldNode fieldNode;

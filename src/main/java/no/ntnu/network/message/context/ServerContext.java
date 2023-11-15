@@ -5,28 +5,44 @@ import no.ntnu.network.CommunicationAgent;
 import no.ntnu.network.centralserver.CentralHub;
 import no.ntnu.network.centralserver.ClientHandler;
 import no.ntnu.network.centralserver.clientproxy.ClientProxy;
+import no.ntnu.network.message.request.RequestMessage;
 import no.ntnu.network.message.response.ResponseMessage;
+import no.ntnu.tools.ServerLogger;
 
 import java.io.IOException;
 import java.net.Socket;
 
 /**
- * A context for processing messages for the central server.
- * The context provides access to objects that control messages needs for processing.
+ * A context for processing server messages.
  */
 public class ServerContext implements MessageContext {
     private final CommunicationAgent agent;
     private final CentralHub centralHub;
+    private final String remoteSocketAddress;
 
     /**
      * Creates a new CentralServerContext.
      *
      * @param agent the communication agent
      * @param centralHub the central hub to operate on
+     * @param remoteSocketAddress the address for the remote socket
      */
-    public ServerContext(CommunicationAgent agent, CentralHub centralHub) {
+    public ServerContext(CommunicationAgent agent, CentralHub centralHub, String remoteSocketAddress) {
+        if (agent == null) {
+            throw new IllegalArgumentException("Cannot create ServerContext, because agent is null");
+        }
+
+        if (centralHub == null) {
+            throw new IllegalArgumentException("Cannot create ServerContext, because central hub is null.");
+        }
+
+        if (remoteSocketAddress == null) {
+            throw new IllegalArgumentException("Cannot create ServerContext, because remote socket address is null");
+        }
+
         this.agent = agent;
         this.centralHub = centralHub;
+        this.remoteSocketAddress = remoteSocketAddress;
     }
 
     /**
@@ -56,5 +72,15 @@ public class ServerContext implements MessageContext {
     @Override
     public boolean acceptResponse(ResponseMessage response) {
         return agent.acceptResponse(response);
+    }
+
+    @Override
+    public void logReceivingRequest(RequestMessage request) {
+        ServerLogger.requestReceived(request, remoteSocketAddress);
+    }
+
+    @Override
+    public void logReceivingResponse(ResponseMessage response) {
+        ServerLogger.responseReceived(response, remoteSocketAddress);
     }
 }

@@ -4,8 +4,7 @@ import no.ntnu.controlpanel.ControlPanel;
 import no.ntnu.network.ClientCommunicationAgent;
 
 /**
- * A context for processing messages for a control panel.
- * The context provides access to objects that control messages needs for processing.
+ * A context for processing control panel messages.
  */
 public class ControlPanelContext extends ClientContext {
     private final ControlPanel controlPanel;

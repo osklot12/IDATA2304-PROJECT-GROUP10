@@ -81,8 +81,14 @@ public class RegistrationConfirmationResponse<C extends ClientContext> extends R
 
     @Override
     public void process(C context) {
+        context.logReceivingResponse(this);
         if (context.acceptResponse(this)) {
             context.setNodeAddress(getNodeAddress().getInteger());
         }
+    }
+
+    @Override
+    public String toString() {
+        return "successful registration, assigned address " + nodeAddress;
     }
 }

@@ -1,6 +1,5 @@
 package no.ntnu.network;
 
-import no.ntnu.network.message.common.ControlMessage;
 import no.ntnu.network.message.request.RequestMessage;
 import no.ntnu.network.message.response.ResponseMessage;
 
@@ -27,7 +26,7 @@ public interface CommunicationAgent {
     void sendResponse(ResponseMessage response) throws IOException;
 
     /**
-     * Accepts a response message.
+     * Returns whether a response is accepted or not.
      *
      * @param responseMessage the response message to accept
      * @return true if accepted, false otherwise

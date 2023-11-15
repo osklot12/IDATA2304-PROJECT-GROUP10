@@ -116,6 +116,7 @@ public class RegisterControlPanelRequest extends RequestMessage implements Messa
 
     @Override
     public void process(ServerContext context) throws IOException {
+        context.logReceivingRequest(this);
         // creates a new client proxy for the control panel
         ControlPanelClientProxy clientProxy = new ControlPanelClientProxy(context.getAgent(), compatibilityList);
 

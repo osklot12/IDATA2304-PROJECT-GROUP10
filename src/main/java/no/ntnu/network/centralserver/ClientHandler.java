@@ -15,7 +15,7 @@ import java.io.IOException;
 import java.net.Socket;
 
 /**
- * A class responsible for handling all communication with a single client.
+ * A class responsible for handling all communication for a server with a single client.
  */
 public class ClientHandler extends ControlProcessAgent<ServerContext> implements Runnable {
     private static final ByteSerializerVisitor SERIALIZER = NofspSerializer.getInstance();
@@ -34,7 +34,7 @@ public class ClientHandler extends ControlProcessAgent<ServerContext> implements
         }
 
         setSocket(clientSocket);
-        this.context = new ServerContext(this, centralHub);
+        this.context = new ServerContext(this, centralHub, clientSocket.getRemoteSocketAddress().toString());
     }
 
     @Override

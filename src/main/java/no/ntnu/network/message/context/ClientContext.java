@@ -1,13 +1,15 @@
 package no.ntnu.network.message.context;
 
 import no.ntnu.network.ClientCommunicationAgent;
+import no.ntnu.network.message.request.RequestMessage;
 import no.ntnu.network.message.response.ResponseMessage;
+import no.ntnu.tools.ClientLogger;
+import no.ntnu.tools.ServerLogger;
 
 import java.io.IOException;
 
 /**
- * A context for client messages to operate on.
- * The ClientContext provides common functionality shared by all clients.
+ * A context for processing client messages.
  */
 public abstract class ClientContext implements MessageContext {
     private final ClientCommunicationAgent agent;
@@ -42,5 +44,15 @@ public abstract class ClientContext implements MessageContext {
     @Override
     public boolean acceptResponse(ResponseMessage response) {
         return agent.acceptResponse(response);
+    }
+
+    @Override
+    public void logReceivingRequest(RequestMessage request) {
+        ClientLogger.requestReceived(request);
+    }
+
+    @Override
+    public void logReceivingResponse(ResponseMessage response) {
+        ClientLogger.responseReceived(response);
     }
 }
