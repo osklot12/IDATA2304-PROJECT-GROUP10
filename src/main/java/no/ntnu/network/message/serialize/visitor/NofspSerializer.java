@@ -2,9 +2,13 @@ package no.ntnu.network.message.serialize.visitor;
 
 import no.ntnu.exception.SerializationException;
 import no.ntnu.network.message.common.*;
+import no.ntnu.network.message.context.ClientContext;
+import no.ntnu.network.message.request.HeartbeatRequest;
 import no.ntnu.network.message.request.RegisterControlPanelRequest;
 import no.ntnu.network.message.request.RequestMessage;
+import no.ntnu.network.message.response.HeartbeatResponse;
 import no.ntnu.network.message.response.RegistrationConfirmationResponse;
+import no.ntnu.network.message.response.ResponseMessage;
 import no.ntnu.network.message.serialize.NofspSerializationConstants;
 import no.ntnu.network.message.serialize.composite.ByteSerializable;
 import no.ntnu.network.message.serialize.tool.SimpleByteBuffer;
@@ -133,11 +137,25 @@ public class NofspSerializer implements ByteSerializerVisitor {
     }
 
     @Override
-    public byte[] visitRegistrationConfirmationResponse(RegistrationConfirmationResponse response) throws SerializationException {
+    public <C extends ClientContext> byte[] visitRegistrationConfirmationResponse(RegistrationConfirmationResponse<C> response) throws SerializationException {
         byte[] commonResponseMessageBytes = getCommonResponseMessageBytes(response);
         byte[] parametersTlv = serialize(response.getNodeAddress());
 
         return packInResponseFrame(ByteHandler.combineBytes(commonResponseMessageBytes, parametersTlv));
+    }
+
+    @Override
+    public <C extends ClientContext> byte[] visitHeartbeatRequest(HeartbeatRequest<C> request) throws SerializationException {
+        byte[] commonRequestMessageBytes = getCommonRequestMessageBytes(request);
+
+        return packInRequestFrame(commonRequestMessageBytes);
+    }
+
+    @Override
+    public byte[] visitHeartbeatResponse(HeartbeatResponse response) throws SerializationException {
+        byte[] commonResponseMessageBytes = getCommonResponseMessageBytes(response);
+
+        return packInResponseFrame(commonResponseMessageBytes);
     }
 
     /**
@@ -164,7 +182,7 @@ public class NofspSerializer implements ByteSerializerVisitor {
      * @return the serialized bytes
      * @throws SerializationException thrown if serialization fails
      */
-    private byte[] getCommonResponseMessageBytes(RegistrationConfirmationResponse response) throws SerializationException {
+    private byte[] getCommonResponseMessageBytes(ResponseMessage response) throws SerializationException {
         // first TLV contains common bytes for all control messages
         byte[] commonControlMessageBytes = getCommonControlMessageBytes(response);
 

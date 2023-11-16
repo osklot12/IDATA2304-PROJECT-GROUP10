@@ -2,7 +2,10 @@ package no.ntnu.network.message.serialize.visitor;
 
 import no.ntnu.exception.SerializationException;
 import no.ntnu.network.message.common.*;
+import no.ntnu.network.message.context.ClientContext;
+import no.ntnu.network.message.request.HeartbeatRequest;
 import no.ntnu.network.message.request.RegisterControlPanelRequest;
+import no.ntnu.network.message.response.HeartbeatResponse;
 import no.ntnu.network.message.response.RegistrationConfirmationResponse;
 import no.ntnu.network.message.serialize.composite.ByteSerializable;
 
@@ -87,7 +90,27 @@ public interface ByteSerializerVisitor {
      *
      * @param response the response to serialize
      * @return the serialized response
+     * @param <C> any client context
      * @throws SerializationException thrown if serialization fails
      */
-    byte[] visitRegistrationConfirmationResponse(RegistrationConfirmationResponse response) throws SerializationException;
+    <C extends ClientContext> byte[] visitRegistrationConfirmationResponse(RegistrationConfirmationResponse<C> response) throws SerializationException;
+
+    /**
+     * Serializes a {@code HeartbeatRequest} object
+     *
+     * @param request the request to serialize
+     * @return the serialized request
+     * @param <C> any client context
+     * @throws SerializationException thrown if serialization fails
+     */
+    <C extends ClientContext> byte[] visitHeartbeatRequest(HeartbeatRequest<C> request) throws SerializationException;
+
+    /**
+     * Serializes a {@code HeartbeatResponse} object.
+     *
+     * @param response the response to serialize
+     * @return the serialized response
+     * @throws SerializationException thrown if serialization fails
+     */
+    byte[] visitHeartbeatResponse(HeartbeatResponse response) throws SerializationException;
 }

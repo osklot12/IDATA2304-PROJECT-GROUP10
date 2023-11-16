@@ -5,6 +5,7 @@ import no.ntnu.network.message.Message;
 import no.ntnu.network.message.common.ControlMessage;
 import no.ntnu.network.message.context.ServerContext;
 import no.ntnu.network.message.request.RegisterControlPanelRequest;
+import no.ntnu.network.message.response.HeartbeatResponse;
 import no.ntnu.network.message.serialize.visitor.ByteSerializerVisitor;
 import no.ntnu.network.message.serialize.visitor.NofspSerializer;
 import org.junit.Before;
@@ -35,6 +36,8 @@ public class NofspServerDeserializerTest {
 
     /**
      * Tests the serialization of the {@code RegisterControlPanelRequest}.
+     *
+     * @throws IOException thrown if an I/O exception occurs
      */
     @Test
     public void testRegisterControlPanelRequestSerialization() throws IOException {
@@ -47,5 +50,19 @@ public class NofspServerDeserializerTest {
         Message<ServerContext> reconstructedMessage = deserializer.deserializeMessage(bytes);
 
         assertEquals(request, reconstructedMessage);
+    }
+
+    /**
+     * Tests the serialization of the {@code HeartbeatResponse}.
+     *
+     * @throws IOException thrown if an I/O exception occurs
+     */
+    @Test
+    public void testHeartbeatResponseSerialization() throws IOException {
+        HeartbeatResponse response = new HeartbeatResponse();
+
+        byte[] bytes = serializer.serialize(response);
+
+        assertEquals(response, deserializer.deserializeMessage(bytes));
     }
 }

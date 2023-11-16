@@ -46,6 +46,7 @@ public class ControlPanelClient extends Client<ControlPanelContext> {
 
         if (connectToServer(serverAddress, CentralServer.PORT_NUMBER, SERIALIZER, DESERIALIZER)) {
             registerControlPanel();
+            registerControlPanel();
         }
     }
 

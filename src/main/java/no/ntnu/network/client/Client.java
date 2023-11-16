@@ -90,14 +90,4 @@ public abstract class Client<C extends MessageContext> extends ControlProcessAge
     protected void logSendResponseMessage(ResponseMessage response) {
         ClientLogger.responseSent(response);
     }
-
-    @Override
-    protected void logReceiveRequestMessage(RequestMessage request) {
-        ClientLogger.requestReceived(request);
-    }
-
-    @Override
-    protected void logReceiveResponseMessage(ResponseMessage response) {
-        ClientLogger.responseReceived(response);
-    }
 }

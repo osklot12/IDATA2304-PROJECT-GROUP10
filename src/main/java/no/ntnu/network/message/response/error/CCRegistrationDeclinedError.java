@@ -20,4 +20,9 @@ public class CCRegistrationDeclinedError extends RegistrationDeclinedError imple
     public void process(ControlPanelContext context) {
         super.commonProcess(context);
     }
+
+    @Override
+    public String toString() {
+        return getDescription().getString();
+    }
 }

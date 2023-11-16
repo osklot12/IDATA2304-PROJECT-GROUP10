@@ -23,8 +23,11 @@ public class NofspSerializationConstants {
     public static final byte[] RESPONSE_BYTES = new byte[] {1, 1};
 
     // request commands (UTF-8 String)
+    public static final String HEART_BEAT = "HBEAT";
     public static final String REGISTER_CONTROL_PANEL_COMMAND = "REGCP";
 
     // status codes
+    public static final int HEART_BEAT_RESPONSE = 0;
     public static final int NODE_REGISTRATION_CONFIRMED_CODE = 1;
+
 }

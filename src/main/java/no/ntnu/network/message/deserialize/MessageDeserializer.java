@@ -9,7 +9,7 @@ import java.io.IOException;
 /**
  * A deserializer for deserializing messages.
  *
- * @param <M> type of message to deserialize
+ * @param <C> type of message context to deserialize for
  */
 public interface MessageDeserializer<C extends MessageContext> {
     /**

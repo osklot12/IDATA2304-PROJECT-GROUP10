@@ -2,6 +2,7 @@ package no.ntnu.network.message.deserialize;
 
 import no.ntnu.exception.SerializationException;
 import no.ntnu.network.message.common.*;
+import no.ntnu.network.message.request.HeartbeatRequest;
 import no.ntnu.network.message.serialize.NofspSerializationConstants;
 import no.ntnu.network.message.serialize.composite.ByteSerializable;
 import no.ntnu.network.message.serialize.tool.ByteHandler;

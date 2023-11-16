@@ -252,18 +252,4 @@ public abstract class ControlProcessAgent<C extends MessageContext> implements C
      * @param response the response message sent
      */
     protected abstract void logSendResponseMessage(ResponseMessage response);
-
-    /**
-     * Log the receiving of a request message.
-     *
-     * @param request the received request message
-     */
-    protected abstract void logReceiveRequestMessage(RequestMessage request);
-
-    /**
-     * Log the receiving of a response message.
-     *
-     * @param response the received response message
-     */
-    protected abstract void logReceiveResponseMessage(ResponseMessage response);
 }

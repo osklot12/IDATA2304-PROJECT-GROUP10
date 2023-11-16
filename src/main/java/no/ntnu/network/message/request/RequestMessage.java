@@ -52,6 +52,4 @@ public abstract class RequestMessage extends ControlMessage {
 
         return result;
     }
-
-    public abstract void process(ServerContext context) throws IOException;
 }

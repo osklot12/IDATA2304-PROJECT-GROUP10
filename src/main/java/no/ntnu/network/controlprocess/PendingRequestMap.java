@@ -52,7 +52,38 @@ public class PendingRequestMap extends ConcurrentHashMap<Integer, PendingRequest
      */
     private void handleTimeout(Integer key) {
         RequestMessage request = get(key).request();
-        Logger.info("Request " + request.toString() + " with id " + request.getId().toString() + " has timed out.");
+        Logger.requestTimeout(request);
         remove(key);
+    }
+
+    /**
+     * Returns the TTL (Time-To-Live) for pending requests.
+     *
+     * @return the request ttl
+     */
+    public long getTtl() {
+        return ttl;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == this) {
+            return true;
+        }
+
+        if (!(o instanceof PendingRequestMap p)) {
+            return false;
+        }
+
+        return super.equals(p) && ttl == p.getTtl();
+    }
+
+    @Override
+    public int hashCode() {
+        int result = super.hashCode();
+
+        result = result * 31 + Long.hashCode(ttl);
+
+        return result;
     }
 }

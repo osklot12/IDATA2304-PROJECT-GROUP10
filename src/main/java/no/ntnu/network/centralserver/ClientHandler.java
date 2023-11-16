@@ -62,14 +62,4 @@ public class ClientHandler extends ControlProcessAgent<ServerContext> implements
     protected void logSendResponseMessage(ResponseMessage response) {
         ServerLogger.responseSent(response, getRemoteSocketAddress().toString());
     }
-
-    @Override
-    protected void logReceiveRequestMessage(RequestMessage request) {
-        ServerLogger.requestReceived(request, getRemoteSocketAddress().toString());
-    }
-
-    @Override
-    protected void logReceiveResponseMessage(ResponseMessage response) {
-        ServerLogger.responseReceived(response, getRemoteSocketAddress().toString());
-    }
 }

@@ -7,6 +7,7 @@ import no.ntnu.network.message.common.ByteSerializableSet;
 import no.ntnu.network.message.common.ByteSerializableString;
 import no.ntnu.network.message.context.ServerContext;
 import no.ntnu.network.message.request.RegisterControlPanelRequest;
+import no.ntnu.network.message.response.HeartbeatResponse;
 import no.ntnu.network.message.serialize.NofspSerializationConstants;
 import no.ntnu.network.message.serialize.tool.TlvReader;
 
@@ -31,6 +32,10 @@ public class NofspServerDeserializer extends NofspDeserializer implements Messag
         if (tlvOfType(bytes, NofspSerializationConstants.REQUEST_BYTES)) {
             // type field: request message
             message = getRequestMessage(valueField);
+
+        } else if (tlvOfType(bytes, NofspSerializationConstants.RESPONSE_BYTES)) {
+            // type field: response message
+            message = getResponseMessage(valueField);
 
         }
 
@@ -65,6 +70,35 @@ public class NofspServerDeserializer extends NofspDeserializer implements Messag
         }
 
         return request;
+    }
+
+    /**
+     * Deserializes a response TLV of bytes into a Message.
+     *
+     * @param bytes tlv to deserialize
+     * @return the response object
+     * @throws IOException thrown if an I/O exception occurs
+     */
+    private Message<ServerContext> getResponseMessage(byte[] bytes) throws IOException {
+        Message<ServerContext> response = null;
+
+        TlvReader tlvReader = new TlvReader(bytes, TLV_FRAME);
+
+        // first TLV holds the message ID
+        ByteSerializableInteger messageId = getMessageId(tlvReader);
+
+        // second TLV holds the status code
+        ByteSerializableInteger statusCode = getStatusCode(tlvReader);
+
+        // third TLV holds the request parameters, which are also TLVs
+        byte[] parameterTlv = tlvReader.readNextTlv();
+
+        if (integerEquals(statusCode, NofspSerializationConstants.HEART_BEAT_RESPONSE)) {
+            // heart beat response
+            response = new HeartbeatResponse(messageId.getInteger());
+        }
+
+        return response;
     }
 
     /**

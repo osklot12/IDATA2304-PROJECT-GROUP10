@@ -1,5 +1,6 @@
 package no.ntnu.tools;
 
+import no.ntnu.network.message.request.RequestMessage;
 import no.ntnu.network.message.serialize.tool.ByteHandler;
 
 /**
@@ -48,5 +49,14 @@ public class Logger {
    */
   public static void printBytes(byte[] bytes) {
     System.out.println(ByteHandler.bytesToString(bytes));
+  }
+
+  /**
+   * Log a timeout for a request message.
+   *
+   * @param request the timed out request message
+   */
+  public static void requestTimeout(RequestMessage request) {
+    Logger.error("[ TIMEOUT " + TimeFormatter.now() + " ] REQUEST ( " + request.getId() + " ): " + request.toString());
   }
 }
