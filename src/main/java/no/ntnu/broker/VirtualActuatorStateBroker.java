@@ -8,13 +8,6 @@ import no.ntnu.controlpanel.virtual.VirtualStandardActuator;
  */
 public class VirtualActuatorStateBroker extends SubscriberList<VirtualActuatorListener> {
     /**
-     * Creates a new VirtualActuatorStateBroker.
-     */
-    public VirtualActuatorStateBroker() {
-        super();
-    }
-
-    /**
      * Notifies the subscribed listeners about a change of state for a virtual actuator.
      *
      * @param actuator the actuator that changed state

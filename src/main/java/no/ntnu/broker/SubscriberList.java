@@ -9,7 +9,7 @@ public abstract class SubscriberList<T> {
     /**
      * Constructor for the EventBroker class.
      */
-    public SubscriberList() {
+    protected SubscriberList() {
         this.subscribers = new ArrayList<>();
     }
 

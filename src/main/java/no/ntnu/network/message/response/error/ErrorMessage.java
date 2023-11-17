@@ -33,4 +33,9 @@ public abstract class ErrorMessage extends ResponseMessage {
     public ByteSerializableString getDescription() {
         return errorDescription;
     }
+
+    @Override
+    public String toString() {
+        return getDescription().toString();
+    }
 }

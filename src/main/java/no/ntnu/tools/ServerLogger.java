@@ -48,4 +48,22 @@ public class ServerLogger {
     public static void responseReceived(ResponseMessage response, String clientAddress) {
         Logger.info("[ RECEIVED " + TimeFormatter.now() + " ] RESPONSE ( " + response.getId() + " ): " + response.toString() + " -> " + clientAddress);
     }
+
+    /**
+     * Log a timeout for a request message.
+     *
+     * @param request the timed out request message
+     */
+    public static void requestTimeout(RequestMessage request, String clientAddress) {
+        Logger.error("[ TIMEOUT " + TimeFormatter.now() + " ] REQUEST ( " + request.getId() + " ): " + request.toString() + " -> " + clientAddress);
+    }
+
+    /**
+     * Log a dead heartbeat event.
+     *
+     * @param clientAddress the client address for the dead client
+     */
+    public static void deadHeartbeat(String clientAddress) {
+        Logger.error("[ DISCONNECTED " + TimeFormatter.now() + " ] Client " + clientAddress + " do not respond and has been disconnected.");
+    }
 }

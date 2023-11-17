@@ -52,10 +52,12 @@ public class TCPControlProcess<C extends MessageContext> {
 
     /**
      * Returns the next available message received.
+     * The method blocks until a message is received, the end of the stream is met or an exception is thrown.
      *
-     * @return the next message
+     * @return the next message received, null if end of stream is met
+     * @throws IOException thrown if an I/O exception occurs
      */
-    public Message<C> getNextMessage() {
+    public Message<C> getNextMessage() throws IOException {
         return messageReceiver.getNextMessage();
     }
 }

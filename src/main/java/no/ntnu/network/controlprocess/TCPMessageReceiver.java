@@ -18,7 +18,6 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 public class TCPMessageReceiver<C extends MessageContext> {
     private final Socket socket;
     private final TlvReader socketReader;
-    private final Queue<Message<C>> queue;
     private final MessageDeserializer<C> deserializer;
 
     /**
@@ -37,46 +36,25 @@ public class TCPMessageReceiver<C extends MessageContext> {
         }
 
         this.socket = socket;
-        this.queue = new ConcurrentLinkedQueue<>();
         this.deserializer = deserializer;
         this.socketReader = new TlvReader(new InputStreamByteSource(socket.getInputStream()), deserializer.getTlvFrame());
-        run();
     }
 
     /**
-     * Returns the next received message.
+     * Returns the next message received.
+     * The method blocks until the next message is received, the end of the stream has been met or an exception occurs.
      *
-     * @return next message, null if no more messages are received
+     * @return the next received message, null if end of stream
+     * @throws IOException thrown if an I/O exception occurs
      */
-    public Message<C> getNextMessage() {
-        return queue.poll();
-    }
+    public Message<C> getNextMessage() throws IOException {
+        Message<C> nextMessage = null;
 
-    /**
-     * Runs the message receiver.
-     */
-    private synchronized void run() {
-        Thread messageReceivingThread = new Thread(() -> {
-            while (!socket.isClosed()) {
-                queue.add(receiveMessage());
-            }
-        });
-
-        messageReceivingThread.start();
-    }
-
-    /**
-     * Receives a message from the socket.
-     */
-    private Message<C> receiveMessage() {
-        Message<C> receivedMessage = null;
-
-        try {
-            receivedMessage = deserializer.deserializeMessage(socketReader.readNextTlv());
-        } catch (IOException e) {
-            Logger.error("Cannot receive message: " + e.getMessage());
+        byte[] nextTlv = socketReader.readNextTlv();
+        if (nextTlv != null) {
+            nextMessage = deserializer.deserializeMessage(nextTlv);
         }
 
-        return receivedMessage;
+        return nextMessage;
     }
 }

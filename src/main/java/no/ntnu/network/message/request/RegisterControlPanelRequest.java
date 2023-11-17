@@ -10,7 +10,7 @@ import no.ntnu.network.message.common.ByteSerializableSet;
 import no.ntnu.network.message.common.ByteSerializableString;
 import no.ntnu.network.message.response.RegistrationConfirmationResponse;
 import no.ntnu.network.message.response.ResponseMessage;
-import no.ntnu.network.message.response.error.CCRegistrationDeclinedError;
+import no.ntnu.network.message.response.error.RegistrationDeclinedError;
 import no.ntnu.network.message.serialize.NofspSerializationConstants;
 import no.ntnu.network.message.serialize.visitor.ByteSerializerVisitor;
 
@@ -125,7 +125,7 @@ public class RegisterControlPanelRequest extends RequestMessage implements Messa
             int clientAddress = context.registerClient(clientProxy);
             response = new RegistrationConfirmationResponse<>(clientAddress);
         } catch (ClientRegistrationException e) {
-            response = new CCRegistrationDeclinedError(e.getMessage());
+            response = new RegistrationDeclinedError<>(e.getMessage());
         }
         response.setId(getId().getInteger());
 

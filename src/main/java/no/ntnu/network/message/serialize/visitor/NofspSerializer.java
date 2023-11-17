@@ -9,6 +9,8 @@ import no.ntnu.network.message.request.RequestMessage;
 import no.ntnu.network.message.response.HeartbeatResponse;
 import no.ntnu.network.message.response.RegistrationConfirmationResponse;
 import no.ntnu.network.message.response.ResponseMessage;
+import no.ntnu.network.message.response.error.ErrorMessage;
+import no.ntnu.network.message.response.error.RegistrationDeclinedError;
 import no.ntnu.network.message.serialize.NofspSerializationConstants;
 import no.ntnu.network.message.serialize.composite.ByteSerializable;
 import no.ntnu.network.message.serialize.tool.SimpleByteBuffer;
@@ -22,25 +24,11 @@ import java.util.Map;
  * described by NOFSP.
  */
 public class NofspSerializer implements ByteSerializerVisitor {
-    private static NofspSerializer instance;
 
     /**
      * Creates a new NofspSerializer.
      */
-    private NofspSerializer() {}
-
-    /**
-     * Returns an instance of the class using the singleton pattern.
-     *
-     * @return instance of the serializer
-     */
-    public static NofspSerializer getInstance() {
-        if (instance == null) {
-            instance = new NofspSerializer();
-        }
-
-        return instance;
-    }
+    public NofspSerializer() {}
 
     @Override
     public byte[] serialize(ByteSerializable serializable) throws SerializationException {
@@ -137,11 +125,19 @@ public class NofspSerializer implements ByteSerializerVisitor {
     }
 
     @Override
-    public <C extends ClientContext> byte[] visitRegistrationConfirmationResponse(RegistrationConfirmationResponse<C> response) throws SerializationException {
+    public byte[] visitRegistrationConfirmationResponse(RegistrationConfirmationResponse<?> response) throws SerializationException {
         byte[] commonResponseMessageBytes = getCommonResponseMessageBytes(response);
         byte[] parametersTlv = serialize(response.getNodeAddress());
 
         return packInResponseFrame(ByteHandler.combineBytes(commonResponseMessageBytes, parametersTlv));
+    }
+
+    @Override
+    public byte[] visitErrorMessage(ErrorMessage errorMessage) throws SerializationException {
+        byte[] commonResponseMessageBytes = getCommonResponseMessageBytes(errorMessage);
+        byte[] errorDescription = serialize(errorMessage.getDescription());
+
+        return packInResponseFrame(ByteHandler.combineBytes(commonResponseMessageBytes, errorDescription));
     }
 
     @Override

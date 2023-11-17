@@ -18,7 +18,7 @@ import java.io.IOException;
  * The class is necessary for a control panel to be able to monitor and control field nodes in the network.
  */
 public class ControlPanelClient extends Client<ControlPanelContext> {
-    private static final ByteSerializerVisitor SERIALIZER = NofspSerializer.getInstance();
+    private static final ByteSerializerVisitor SERIALIZER = new NofspSerializer();
     private static final MessageDeserializer<ControlPanelContext> DESERIALIZER = new NofspControlPanelDeserializer();
     private final ControlPanel controlPanel;
     private ControlPanelContext context;
@@ -40,7 +40,7 @@ public class ControlPanelClient extends Client<ControlPanelContext> {
 
     @Override
     public void connect(String serverAddress) {
-        if (connected()) {
+        if (isConnected()) {
             throw new IllegalStateException("Cannot connect control panel, because it is already connected.");
         }
 

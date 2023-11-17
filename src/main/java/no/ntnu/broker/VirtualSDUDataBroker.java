@@ -8,13 +8,6 @@ import no.ntnu.controlpanel.virtual.VirtualSDUSensorListener;
  */
 public class VirtualSDUDataBroker extends SubscriberList<VirtualSDUSensorListener> {
     /**
-     * Creates a new VirtualSDUDataBroker.
-     */
-    public VirtualSDUDataBroker() {
-        super();
-    }
-
-    /**
      * Notifies the subscribed listeners that new sdu data has arrived for a virtual sdu sensor.
      *
      * @param virtualSensor the sensor that stored the new sdu data

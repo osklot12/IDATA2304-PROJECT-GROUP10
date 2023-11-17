@@ -6,6 +6,7 @@ import no.ntnu.network.message.context.MessageContext;
 import no.ntnu.network.message.deserialize.MessageDeserializer;
 import no.ntnu.network.message.request.RequestMessage;
 import no.ntnu.network.message.response.ResponseMessage;
+import no.ntnu.network.message.serialize.NofspSerializationConstants;
 import no.ntnu.network.message.serialize.visitor.ByteSerializerVisitor;
 import no.ntnu.tools.ClientLogger;
 import no.ntnu.tools.Logger;
@@ -79,6 +80,21 @@ public abstract class Client<C extends MessageContext> extends ControlProcessAge
     @Override
     public void setClientNodeAddress(int address) {
         this.nodeAddress = address;
+    }
+
+    @Override
+    protected void handleEndOfMessageStream() {
+        Logger.error("Connection to the server has been lost.");
+    }
+
+    @Override
+    protected void handleMessageReadingException(IOException e) {
+        Logger.error("Connection to the server has been lost: " + e.getMessage());
+    }
+
+    @Override
+    public void requestTimedOut(RequestMessage requestMessage) {
+        ClientLogger.requestTimeout(requestMessage);
     }
 
     @Override

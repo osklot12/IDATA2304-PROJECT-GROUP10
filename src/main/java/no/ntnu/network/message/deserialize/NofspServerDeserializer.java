@@ -93,9 +93,10 @@ public class NofspServerDeserializer extends NofspDeserializer implements Messag
         // third TLV holds the request parameters, which are also TLVs
         byte[] parameterTlv = tlvReader.readNextTlv();
 
-        if (integerEquals(statusCode, NofspSerializationConstants.HEART_BEAT_RESPONSE)) {
+        if (integerEquals(statusCode, NofspSerializationConstants.HEART_BEAT_CODE)) {
             // heart beat response
             response = new HeartbeatResponse(messageId.getInteger());
+
         }
 
         return response;

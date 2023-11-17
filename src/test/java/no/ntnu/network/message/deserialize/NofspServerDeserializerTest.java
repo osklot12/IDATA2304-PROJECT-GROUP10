@@ -30,7 +30,7 @@ public class NofspServerDeserializerTest {
      */
     @Before
     public void setup() {
-        this.serializer = NofspSerializer.getInstance();
+        this.serializer = new NofspSerializer();
         this.deserializer = new NofspServerDeserializer();
     }
 

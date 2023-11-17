@@ -29,7 +29,7 @@ public class NofspDeserializerTest {
      */
     @Before
     public void setup() {
-        serializer = NofspSerializer.getInstance();
+        serializer = new NofspSerializer();
         deserializer = new NofspDeserializerTestClass();
     }
 

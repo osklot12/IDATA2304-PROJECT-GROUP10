@@ -6,6 +6,7 @@ import no.ntnu.network.message.common.ByteSerializableString;
 import no.ntnu.network.message.context.ControlPanelContext;
 import no.ntnu.network.message.request.HeartbeatRequest;
 import no.ntnu.network.message.response.RegistrationConfirmationResponse;
+import no.ntnu.network.message.response.error.RegistrationDeclinedError;
 import no.ntnu.network.message.serialize.NofspSerializationConstants;
 import no.ntnu.network.message.serialize.tool.TlvReader;
 
@@ -95,7 +96,23 @@ public class NofspControlPanelDeserializer extends NofspDeserializer implements 
             // node registration confirmation response
             response = getRegistrationConfirmedResponse(messageId, parameterTlv);
 
+        } else if (integerEquals(statusCode, NofspSerializationConstants.NODE_REGISTRATION_DECLINED_CODE)) {
+            // node registration declined response
+            response = getRegistrationDeclinedError(messageId, parameterTlv);
         }
+
+        return response;
+    }
+
+    private RegistrationDeclinedError<ControlPanelContext> getRegistrationDeclinedError(ByteSerializableInteger messageId, byte[] parameterTlv) throws IOException {
+        RegistrationDeclinedError<ControlPanelContext> response = null;
+
+        TlvReader parameterReader = new TlvReader(parameterTlv, TLV_FRAME);
+        // deserializes the description
+        byte[] descriptionTlv = parameterReader.readNextTlv();
+        byte[] descriptionValueField = TlvReader.getValueField(descriptionTlv, TLV_FRAME);
+        ByteSerializableString description = getString(descriptionValueField);
+        response = new RegistrationDeclinedError<>(messageId.getInteger(), description.toString());
 
         return response;
     }

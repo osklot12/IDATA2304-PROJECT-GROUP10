@@ -1,11 +1,9 @@
 package no.ntnu.network.centralserver;
 
-import no.ntnu.exception.ClientAlreadyRegisteredException;
 import no.ntnu.exception.NoSuchClientException;
 import no.ntnu.network.centralserver.clientproxy.ClientProxy;
 import no.ntnu.network.centralserver.clientproxy.FieldNodeClientProxy;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 

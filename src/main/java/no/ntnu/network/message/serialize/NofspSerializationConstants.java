@@ -27,7 +27,7 @@ public class NofspSerializationConstants {
     public static final String REGISTER_CONTROL_PANEL_COMMAND = "REGCP";
 
     // status codes
-    public static final int HEART_BEAT_RESPONSE = 0;
+    public static final int HEART_BEAT_CODE = 0;
     public static final int NODE_REGISTRATION_CONFIRMED_CODE = 1;
-
+    public static final int NODE_REGISTRATION_DECLINED_CODE = 101;
 }

@@ -4,6 +4,8 @@ import no.ntnu.exception.SerializationException;
 import no.ntnu.network.message.Message;
 import no.ntnu.network.message.common.ByteSerializableInteger;
 import no.ntnu.network.message.context.ClientContext;
+import no.ntnu.network.message.response.HeartbeatResponse;
+import no.ntnu.network.message.response.ResponseMessage;
 import no.ntnu.network.message.serialize.NofspSerializationConstants;
 import no.ntnu.network.message.serialize.visitor.ByteSerializerVisitor;
 
@@ -36,7 +38,9 @@ public class HeartbeatRequest<C extends ClientContext> extends RequestMessage im
     @Override
     public void process(C context) throws IOException {
         context.logReceivingRequest(this);
-
+        ResponseMessage responseMessage = new HeartbeatResponse();
+        responseMessage.setId(getId().getInteger());
+        context.respond(responseMessage);
     }
 
     @Override
@@ -46,7 +50,7 @@ public class HeartbeatRequest<C extends ClientContext> extends RequestMessage im
 
     @Override
     public String toString() {
-        return "Heartbeat <3";
+        return "Heartbeat";
     }
 
     @Override

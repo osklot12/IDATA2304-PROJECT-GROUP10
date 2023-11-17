@@ -4,7 +4,9 @@ import no.ntnu.network.CommunicationAgent;
 
 /**
  * A proxy for a remote client using the services of the server.
- * The ClientProxy provides means to communicate with the remote client.
+ * The ClientProxy stores useful data about the client, and provides means to communicate with it.
+ * Instead of being dependent on a concrete communication technique, the client proxy relies on the
+ * {@code CommunicationAgent} interface.
  */
 public abstract class ClientProxy {
     private final CommunicationAgent agent;

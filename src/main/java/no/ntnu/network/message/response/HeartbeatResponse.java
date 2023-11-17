@@ -16,7 +16,7 @@ public class HeartbeatResponse extends ResponseMessage implements Message<Server
      * Creates a new HeartbeatResponse.
      */
     public HeartbeatResponse() {
-        super(NofspSerializationConstants.HEART_BEAT_RESPONSE);
+        super(NofspSerializationConstants.HEART_BEAT_CODE);
     }
 
     /**
@@ -33,6 +33,7 @@ public class HeartbeatResponse extends ResponseMessage implements Message<Server
     @Override
     public void process(ServerContext context) throws IOException {
         context.logReceivingResponse(this);
+        context.acceptResponse(this);
     }
 
     @Override

@@ -4,13 +4,15 @@ import no.ntnu.exception.ClientRegistrationException;
 import no.ntnu.network.centralserver.clientproxy.ClientProxy;
 
 /**
- * A class responsible for managing clients.
+ * The CentralHub is the 'logic class' for the central server, responsible for managing clients.
+ * Although the class does handle client communication, it is not dependent on a concrete communication implementation,
+ * and can therefore handle client communication of any type.
  */
 public class CentralHub {
     private final ClientRegister clientRegister;
 
     /**
-     * Creates a new CentralCore.
+     * Creates a new CentralHub.
      */
     public CentralHub() {
         this.clientRegister = new ClientRegister();

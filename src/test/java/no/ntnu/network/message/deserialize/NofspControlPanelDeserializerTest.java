@@ -23,7 +23,7 @@ public class NofspControlPanelDeserializerTest {
      */
     @Before
     public void setup() {
-        serializer = NofspSerializer.getInstance();
+        serializer = new NofspSerializer();
         deserializer = new NofspControlPanelDeserializer();
     }
 

@@ -1,11 +1,14 @@
 package no.ntnu.network.centralserver;
 
 import no.ntnu.network.ControlProcessAgent;
+import no.ntnu.network.connectionservice.HeartBeater;
 import no.ntnu.network.message.Message;
 import no.ntnu.network.message.context.ServerContext;
 import no.ntnu.network.message.deserialize.NofspServerDeserializer;
+import no.ntnu.network.message.request.HeartbeatRequest;
 import no.ntnu.network.message.request.RequestMessage;
 import no.ntnu.network.message.response.ResponseMessage;
+import no.ntnu.network.message.serialize.NofspSerializationConstants;
 import no.ntnu.network.message.serialize.visitor.ByteSerializerVisitor;
 import no.ntnu.network.message.serialize.visitor.NofspSerializer;
 import no.ntnu.tools.Logger;
@@ -18,8 +21,9 @@ import java.net.Socket;
  * A class responsible for handling all communication for a server with a single client.
  */
 public class ClientHandler extends ControlProcessAgent<ServerContext> implements Runnable {
-    private static final ByteSerializerVisitor SERIALIZER = NofspSerializer.getInstance();
+    private static final ByteSerializerVisitor SERIALIZER = new NofspSerializer();
     private static final NofspServerDeserializer DESERIALIZER = new NofspServerDeserializer();
+    private static final long HEARTBEAT_INTERVAL = 20000;
     private final ServerContext context;
 
     /**
@@ -34,6 +38,7 @@ public class ClientHandler extends ControlProcessAgent<ServerContext> implements
         }
 
         setSocket(clientSocket);
+        addConnectionService(new HeartBeater(this, HEARTBEAT_INTERVAL));
         this.context = new ServerContext(this, centralHub, clientSocket.getRemoteSocketAddress().toString());
     }
 
@@ -42,6 +47,16 @@ public class ClientHandler extends ControlProcessAgent<ServerContext> implements
         if (establishConnection(SERIALIZER, DESERIALIZER)) {
             Logger.info("Successfully connected to client " + getRemoteSocketAddress());
         }
+    }
+
+    @Override
+    protected void handleEndOfMessageStream() {
+        Logger.error("Connection to " + getRemoteSocketAddress() + " has been lost.");
+    }
+
+    @Override
+    protected void handleMessageReadingException(IOException e) {
+        Logger.error("Connection to " + getRemoteSocketAddress() + " has been lost: " + e.getMessage());
     }
 
     @Override
@@ -61,5 +76,17 @@ public class ClientHandler extends ControlProcessAgent<ServerContext> implements
     @Override
     protected void logSendResponseMessage(ResponseMessage response) {
         ServerLogger.responseSent(response, getRemoteSocketAddress().toString());
+    }
+
+    @Override
+    public void requestTimedOut(RequestMessage requestMessage) {
+        ServerLogger.requestTimeout(requestMessage, getRemoteSocketAddress().toString());
+
+        // checks if the timed out request is a heartbeat
+        if (NofspSerializationConstants.HEART_BEAT.equals(requestMessage.getCommand().getString())) {
+            // timed out heartbeats closes the connection
+            safelyClose();
+            ServerLogger.deadHeartbeat(getRemoteSocketAddress().toString());
+        }
     }
 }

@@ -7,6 +7,8 @@ import no.ntnu.network.message.request.HeartbeatRequest;
 import no.ntnu.network.message.request.RegisterControlPanelRequest;
 import no.ntnu.network.message.response.HeartbeatResponse;
 import no.ntnu.network.message.response.RegistrationConfirmationResponse;
+import no.ntnu.network.message.response.error.ErrorMessage;
+import no.ntnu.network.message.response.error.RegistrationDeclinedError;
 import no.ntnu.network.message.serialize.composite.ByteSerializable;
 
 /**
@@ -90,10 +92,18 @@ public interface ByteSerializerVisitor {
      *
      * @param response the response to serialize
      * @return the serialized response
-     * @param <C> any client context
      * @throws SerializationException thrown if serialization fails
      */
-    <C extends ClientContext> byte[] visitRegistrationConfirmationResponse(RegistrationConfirmationResponse<C> response) throws SerializationException;
+    byte[] visitRegistrationConfirmationResponse(RegistrationConfirmationResponse<?> response) throws SerializationException;
+
+    /**
+     * Serializes an {@code ErrorMessage} object.
+     *
+     * @param errorMessage the error message to serialize
+     * @return the serialized error message
+     * @throws SerializationException thrown if serialization fails
+     */
+    byte[] visitErrorMessage(ErrorMessage errorMessage) throws SerializationException;
 
     /**
      * Serializes a {@code HeartbeatRequest} object

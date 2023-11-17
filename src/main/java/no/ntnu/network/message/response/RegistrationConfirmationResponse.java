@@ -57,7 +57,7 @@ public class RegistrationConfirmationResponse<C extends ClientContext> extends R
             return true;
         }
 
-        if (!(o instanceof RegistrationConfirmationResponse r)) {
+        if (!(o instanceof RegistrationConfirmationResponse<?> r)) {
             return false;
         }
 

@@ -9,13 +9,6 @@ import no.ntnu.fieldnode.device.sensor.SensorListener;
  */
 public class SensorDataBroker extends SubscriberList<SensorListener> {
     /**
-     * Creates a new SensorDataBroker.
-     */
-    public SensorDataBroker() {
-        super();
-    }
-
-    /**
      * Notifies the subscribed listeners about new data capture for a sensor.
      *
      * @param sensor the sensor that has captured new data

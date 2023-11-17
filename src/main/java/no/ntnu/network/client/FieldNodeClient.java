@@ -11,7 +11,7 @@ import no.ntnu.network.message.serialize.visitor.NofspSerializer;
 
 public class FieldNodeClient extends Client<FieldNodeContext> {
 
-    private static final ByteSerializerVisitor SERIALIZER = NofspSerializer.getInstance();
+    private static final ByteSerializerVisitor SERIALIZER = new NofspSerializer();
     private static final MessageDeserializer<FieldNodeContext> DESERIALIZER = new NofspFieldNodeDeserializer();
 
     private final FieldNode fieldNode;
@@ -28,7 +28,7 @@ public class FieldNodeClient extends Client<FieldNodeContext> {
 
     @Override
     public void connect(String serverAddress) {
-        if (connected()) {
+        if (isConnected()) {
             throw new IllegalStateException("Cannot connect control panel, because it is already connected.");
         }
 

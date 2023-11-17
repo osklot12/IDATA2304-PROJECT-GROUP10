@@ -44,4 +44,13 @@ public class ClientLogger {
     public static void responseReceived(ResponseMessage response) {
         Logger.info("[ RECEIVED " + TimeFormatter.now() + " ] RESPONSE ( " + response.getId() + " ): " + response.toString());
     }
+
+    /**
+     * Log a timeout for a request message.
+     *
+     * @param request the timed out request message
+     */
+    public static void requestTimeout(RequestMessage request) {
+        Logger.error("[ TIMEOUT " + TimeFormatter.now() + " ] REQUEST ( " + request.getId() + " ): " + request.toString());
+    }
 }

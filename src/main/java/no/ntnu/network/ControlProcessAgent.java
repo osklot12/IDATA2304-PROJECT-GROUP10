@@ -1,8 +1,10 @@
 package no.ntnu.network;
 
+import no.ntnu.network.connectionservice.ConnectionService;
+import no.ntnu.network.connectionservice.requestmanager.RequestManager;
+import no.ntnu.network.connectionservice.requestmanager.RequestTimeoutListener;
 import no.ntnu.network.controlprocess.*;
 import no.ntnu.network.message.Message;
-import no.ntnu.network.message.common.ControlMessage;
 import no.ntnu.network.message.context.MessageContext;
 import no.ntnu.network.message.deserialize.MessageDeserializer;
 import no.ntnu.network.message.request.RequestMessage;
@@ -13,27 +15,28 @@ import no.ntnu.tools.Logger;
 import java.io.IOException;
 import java.net.Socket;
 import java.net.SocketAddress;
+import java.net.SocketException;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * An agent responsible for handling control message communication with another node in the network.
  *
  * @param <C> the type of message context for the messages
  */
-public abstract class ControlProcessAgent<C extends MessageContext> implements CommunicationAgent {
+public abstract class ControlProcessAgent<C extends MessageContext> implements CommunicationAgent, RequestTimeoutListener {
     private static final long PENDING_REQUEST_TTL = 3000;
-    private static final int MESSAGE_ID_POOL = 1000000;
-    private final PendingRequestMap pendingRequests;
+    private final List<ConnectionService> connectionServices;
     private Socket socket;
     private TCPControlProcess<C> controlProcess;
-    private int controlMessageIdCounter;
+    private RequestManager requestManager;
     private volatile boolean connected;
 
     /**
      * Creates a new CommunicationAgent.
      */
     protected ControlProcessAgent() {
-        this.pendingRequests = new PendingRequestMap(PENDING_REQUEST_TTL);
-        this.controlMessageIdCounter = 0;
+        this.connectionServices = new ArrayList<>();
         this.connected = false;
     }
 
@@ -58,7 +61,13 @@ public abstract class ControlProcessAgent<C extends MessageContext> implements C
         Logger.info("Connecting to " + socket.getRemoteSocketAddress() + "...");
         if (establishControlProcess(serializer, deserializer)) {
             connected = true;
+
+            requestManager = new RequestManager();
+            requestManager.addListener(this);
+            addConnectionService(requestManager);
+
             startHandlingReceivedMessages();
+            startConnectionServices();
             success = true;
         }
 
@@ -73,6 +82,10 @@ public abstract class ControlProcessAgent<C extends MessageContext> implements C
     protected void setSocket(Socket socket) {
         if (socket == null) {
             throw new IllegalArgumentException("Cannot set socket, because it is null");
+        }
+
+        if (connected) {
+            throw new IllegalStateException("Cannot set socket while already connected.");
         }
 
         this.socket = socket;
@@ -98,23 +111,72 @@ public abstract class ControlProcessAgent<C extends MessageContext> implements C
     }
 
     /**
+     * Starts all connection services.
+     */
+    private void startConnectionServices() {
+        connectionServices.forEach(ConnectionService::start);
+    }
+
+    /**
+     * Stops all connection services.
+     */
+    private void stopConnectionServices() {
+        connectionServices.forEach(ConnectionService::stop);
+    }
+
+    /**
+     * Adds a connection service.
+     *
+     * @param service connection service to add
+     */
+    protected void addConnectionService(ConnectionService service) {
+        connectionServices.add(service);
+    }
+
+    /**
      * Starts handling messages received from the remote socket.
      */
     private synchronized void startHandlingReceivedMessages() {
         Thread receivedMessageHandlingThread = new Thread(() -> {
-            while (connected) {
-                Message<C> receivedMessage = controlProcess.getNextMessage();
-                if (receivedMessage != null) {
-                    processReceivedMessage(receivedMessage);
+            try {
+                while (isConnected() && !socket.isClosed()) {
+                    handleNextMessage();
                 }
-
-                if (socket.isClosed()) {
-                    connected = false;
+            } catch (IOException e) {
+                if (isConnected()) {
+                    handleMessageReadingException(e);
                 }
+            } finally {
+                safelyClose();
             }
         });
         receivedMessageHandlingThread.start();
     }
+
+    /**
+     * Handles the next received message.
+     */
+    private void handleNextMessage() throws IOException {
+        Message<C> nextMessage = controlProcess.getNextMessage();
+        if (nextMessage != null) {
+            processReceivedMessage(nextMessage);
+        } else {
+            handleEndOfMessageStream();
+            close();
+        }
+    }
+
+    /**
+     * Handles the event of meeting the end of the message stream.
+     */
+    protected abstract void handleEndOfMessageStream();
+
+    /**
+     * Handles the case of an I/O exception thrown while trying to read the next message.
+     *
+     * @param e the I/O exception thrown
+     */
+    protected abstract void handleMessageReadingException(IOException e);
 
     /**
      * Processes a received message.
@@ -122,15 +184,6 @@ public abstract class ControlProcessAgent<C extends MessageContext> implements C
      * @param message received message
      */
     protected abstract void processReceivedMessage(Message<C> message);
-
-    /**
-     * Returns whether the agent is connected or not.
-     *
-     * @return true if connected, false otherwise
-     */
-    public boolean connected() {
-        return connected;
-    }
 
     /**
      * Returns the remote socket address.
@@ -151,7 +204,7 @@ public abstract class ControlProcessAgent<C extends MessageContext> implements C
             throw new IOException("No connection established.");
         }
 
-        handleRequestMessageDeparture(request);
+        requestManager.putRequest(request, PENDING_REQUEST_TTL);
         controlProcess.sendMessage(request);
         logSendRequestMessage(request);
     }
@@ -170,55 +223,12 @@ public abstract class ControlProcessAgent<C extends MessageContext> implements C
         logSendResponseMessage(response);
     }
 
-    /**
-     * Handles the sending of a request message.
-     *
-     * @param request the request message to handle
-     */
-    private void handleRequestMessageDeparture(RequestMessage request) {
-        if (pendingRequests.size() >= MESSAGE_ID_POOL) {
-            throw new IllegalStateException("Cannot send request message, because the message id pool is full.");
-        }
-
-        assignMessageId(request);
-        pendingRequests.put(request.getId().getInteger(),
-                new PendingRequest(request, System.currentTimeMillis()));
-    }
-
-    /**
-     * Assigns an ID to a message.
-     *
-     * @param request request to assign id to
-     */
-    private void assignMessageId(RequestMessage request) {
-        // increments id if it is already assigned to a pending request
-        int iterations = 0;
-        while (pendingRequests.containsKey(controlMessageIdCounter)) {
-            if (iterations > MESSAGE_ID_POOL) {
-                throw new IllegalArgumentException("Cannot assign ID to request, because there are no more available IDs.");
-            }
-
-            incrementIdCounter();
-            iterations++;
-        }
-
-        request.setId(controlMessageIdCounter);
-    }
-
-    /**
-     * Increments the message id counter.
-     */
-    private void incrementIdCounter() {
-        controlMessageIdCounter = ((controlMessageIdCounter + 1) % MESSAGE_ID_POOL);
-    }
-
     @Override
     public boolean acceptResponse(ResponseMessage response) {
         boolean accepted = false;
 
-        int responseId = response.getId().getInteger();
-        if (pendingRequests.containsKey(responseId)) {
-            pendingRequests.remove(responseId);
+        RequestMessage correspondingRequest = requestManager.pullRequest(response.getId().getInteger());
+        if (correspondingRequest != null) {
             accepted = true;
         }
 
@@ -232,10 +242,21 @@ public abstract class ControlProcessAgent<C extends MessageContext> implements C
         }
 
         try {
+            stopConnectionServices();
+            connected = false;
             socket.close();
-            Logger.info("Connection has been closed with " + socket.getRemoteSocketAddress());
         } catch (IOException e) {
             Logger.error("Cannot close the connection with " + socket.getRemoteSocketAddress() + ": " + e.getMessage());
+        }
+    }
+
+    protected synchronized boolean isConnected() {
+        return connected;
+    }
+
+    protected synchronized void safelyClose() {
+        if (connected) {
+            close();
         }
     }
 
