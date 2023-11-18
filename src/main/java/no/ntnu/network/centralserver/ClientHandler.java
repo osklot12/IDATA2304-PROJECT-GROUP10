@@ -1,6 +1,8 @@
 package no.ntnu.network.centralserver;
 
 import no.ntnu.network.ControlProcessAgent;
+import no.ntnu.network.ServerAgent;
+import no.ntnu.network.connectionservice.ClientGate;
 import no.ntnu.network.connectionservice.ConnServiceShutdownListener;
 import no.ntnu.network.connectionservice.ConnectionService;
 import no.ntnu.network.connectionservice.HeartBeater;
@@ -22,11 +24,14 @@ import java.net.Socket;
 /**
  * A class responsible for handling all communication for a server with a single client.
  */
-public class ClientHandler extends ControlProcessAgent<ServerContext> implements Runnable, ConnServiceShutdownListener {
+public class ClientHandler extends ControlProcessAgent<ServerContext> implements ServerAgent, Runnable, ConnServiceShutdownListener {
     private static final ByteSerializerVisitor SERIALIZER = new NofspSerializer();
     private static final NofspServerDeserializer DESERIALIZER = new NofspServerDeserializer();
-    private static final long HEARTBEAT_INTERVAL = 20000;
+    private static final long HEARTBEAT_INTERVAL = 10000;
+    private static final long CLIENT_ACCEPTANCE_PHASE = 3000;
+    private ClientGate clientGate;
     private final ServerContext context;
+    private volatile boolean clientRegistered;
 
     /**
      * Creates a new ClientHandler.
@@ -40,17 +45,42 @@ public class ClientHandler extends ControlProcessAgent<ServerContext> implements
         }
 
         setSocket(clientSocket);
-        establishHeartBeater();
+        establishConnectionServices();
         this.context = new ServerContext(this, centralHub, clientSocket.getRemoteSocketAddress().toString());
     }
 
     /**
-     * Establishes the heart beating mechanism.
+     * Establishes all connection services for the client handler.
+     */
+    private void establishConnectionServices() {
+        establishHeartBeater();
+        establishClientGate();
+    }
+
+    /**
+     * Establishes the heart beating service.
      */
     private void establishHeartBeater() {
         HeartBeater heartBeater = new HeartBeater(this, HEARTBEAT_INTERVAL);
         heartBeater.addShutdownListener(this);
-        addConnectionService(new HeartBeater(this, HEARTBEAT_INTERVAL));
+        addConnectionService(heartBeater);
+    }
+
+    /**
+     * Establishes the client gate service.
+     */
+    private void establishClientGate() {
+        clientGate = new ClientGate(this, CLIENT_ACCEPTANCE_PHASE);
+        addConnectionService(clientGate);
+    }
+
+    /**
+     * Returns whether the client has registered or not.
+     *
+     * @return true if registered
+     */
+    public synchronized boolean isClientRegistered() {
+        return clientRegistered;
     }
 
     @Override
@@ -62,12 +92,14 @@ public class ClientHandler extends ControlProcessAgent<ServerContext> implements
 
     @Override
     protected void handleEndOfMessageStream() {
-        Logger.error("Connection to " + getRemoteSocketAddress() + " has been lost.");
+        Logger.error("End of the message stream for " + getRemoteEntityAsString() + " has been met, and the" +
+                " connection will therefore be closed.");
     }
 
     @Override
     protected void handleMessageReadingException(IOException e) {
-        Logger.error("Connection to " + getRemoteSocketAddress() + " has been lost: " + e.getMessage());
+        Logger.error("An exception has been encountered while reading messages from " + getRemoteEntityAsString() +
+                " and the connection will therefore be closed: " + e.getMessage());
     }
 
     @Override
@@ -77,6 +109,11 @@ public class ClientHandler extends ControlProcessAgent<ServerContext> implements
         } catch (IOException e) {
             Logger.error("Cannot process message: " + e.getMessage());
         }
+    }
+
+    @Override
+    protected void logDisconnection() {
+        Logger.info("Client " + getRemoteEntityAsString() + " has been disconnected.");
     }
 
     @Override
@@ -102,10 +139,20 @@ public class ClientHandler extends ControlProcessAgent<ServerContext> implements
     }
 
     @Override
-    public void connectionServiceShutdown(ConnectionService service) {
+    public void connectionServiceShutdown(String message) {
         if (isConnected()) {
-            ServerLogger.emergency("Heartbeat service has shutdown, and the connection is therefore closing...");
+            ServerLogger.emergency(message);
             safelyClose();
         }
+    }
+
+    @Override
+    public void registerClient() {
+        if (!(isConnected())) {
+            throw new IllegalStateException("Cannot register client, because agent is not connected yet.");
+        }
+
+        clientGate.stop();
+        clientRegistered = true;
     }
 }

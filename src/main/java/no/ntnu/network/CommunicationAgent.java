@@ -34,6 +34,13 @@ public interface CommunicationAgent {
     boolean acceptResponse(ResponseMessage responseMessage);
 
     /**
+     * Returns a string representation of the remote entity.
+     *
+     * @return string representation of remote entity
+     */
+    String getRemoteEntityAsString();
+
+    /**
      * Closes the connection.
      */
     void close();

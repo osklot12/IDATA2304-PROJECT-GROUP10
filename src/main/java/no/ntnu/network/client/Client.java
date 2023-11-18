@@ -1,16 +1,14 @@
 package no.ntnu.network.client;
 
-import no.ntnu.network.ClientCommunicationAgent;
+import no.ntnu.network.ClientAgent;
 import no.ntnu.network.ControlProcessAgent;
 import no.ntnu.network.message.context.MessageContext;
 import no.ntnu.network.message.deserialize.MessageDeserializer;
 import no.ntnu.network.message.request.RequestMessage;
 import no.ntnu.network.message.response.ResponseMessage;
-import no.ntnu.network.message.serialize.NofspSerializationConstants;
 import no.ntnu.network.message.serialize.visitor.ByteSerializerVisitor;
 import no.ntnu.tools.ClientLogger;
 import no.ntnu.tools.Logger;
-import no.ntnu.tools.ServerLogger;
 
 import java.io.IOException;
 import java.net.Socket;
@@ -18,7 +16,7 @@ import java.net.Socket;
 /**
  * A client communication agent, responsible for communicating with a server.
  */
-public abstract class Client<C extends MessageContext> extends ControlProcessAgent<C> implements ClientCommunicationAgent {
+public abstract class Client<C extends MessageContext> extends ControlProcessAgent<C> implements ClientAgent {
     private int nodeAddress;
 
     /**
@@ -84,13 +82,20 @@ public abstract class Client<C extends MessageContext> extends ControlProcessAge
 
     @Override
     protected void handleEndOfMessageStream() {
-        Logger.error("Connection to the server has been lost.");
+        Logger.error("End of the message stream has been met, and the connection will therefore be closed.");
     }
 
     @Override
     protected void handleMessageReadingException(IOException e) {
-        Logger.error("Connection to the server has been lost: " + e.getMessage());
+        Logger.error("An exception has been encountered while reading messages and the connection" +
+                "will therefore be closed: " + e.getMessage());
     }
+
+    @Override
+    protected void logDisconnection() {
+        Logger.info("Disconnected from the server.");
+    }
+
 
     @Override
     public void requestTimedOut(RequestMessage requestMessage) {

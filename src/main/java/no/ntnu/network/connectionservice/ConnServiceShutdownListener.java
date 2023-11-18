@@ -9,7 +9,7 @@ public interface ConnServiceShutdownListener {
     /**
      * Triggers when a {@code ConnectionService} shuts down.
      *
-     * @param service the shutdown connection service
+     * @param message the description of the shutdown
      */
-    void connectionServiceShutdown(ConnectionService service);
+    void connectionServiceShutdown(String message);
 }

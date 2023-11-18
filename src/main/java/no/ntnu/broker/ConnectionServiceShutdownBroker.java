@@ -10,9 +10,9 @@ public class ConnectionServiceShutdownBroker extends SubscriberList<ConnServiceS
     /**
      * Notifies the listeners about the shutdown of a connection service.
      *
-     * @param service the shutdown connection service
+     * @param message the description of the shutdown
      */
-    public void notifyListeners(ConnectionService service) {
-        getSubscribers().forEach(listener -> listener.connectionServiceShutdown(service));
+    public void notifyListeners(String message) {
+        getSubscribers().forEach(listener -> listener.connectionServiceShutdown(message));
     }
 }

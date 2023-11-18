@@ -5,7 +5,7 @@ package no.ntnu.network;
  * As some messages requires a client context for processing, and instance of this class provides just that, without
  * having to implement actual network communication logic.
  */
-public class ClientTestAgent extends TestAgent implements ClientCommunicationAgent {
+public class ClientTestAgent extends TestAgent implements ClientAgent {
     private int nodeAddress = -1;
 
     @Override

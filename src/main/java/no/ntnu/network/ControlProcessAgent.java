@@ -246,6 +246,11 @@ public abstract class ControlProcessAgent<C extends MessageContext> implements C
     }
 
     @Override
+    public String getRemoteEntityAsString() {
+        return getRemoteSocketAddress().toString();
+    }
+
+    @Override
     public void close() {
         if (!connected) {
             throw new IllegalStateException("Cannot close the connection, because connection is not open.");
@@ -255,10 +260,16 @@ public abstract class ControlProcessAgent<C extends MessageContext> implements C
             stopConnectionServices();
             connected = false;
             socket.close();
+            logDisconnection();
         } catch (IOException e) {
             Logger.error("Cannot close the connection with " + socket.getRemoteSocketAddress() + ": " + e.getMessage());
         }
     }
+
+    /**
+     * Logs the closing of the connection, triggered by the close() method.
+     */
+    protected abstract void logDisconnection();
 
     /**
      * Returns whether the agent is connected or not, in a synchronized manner.

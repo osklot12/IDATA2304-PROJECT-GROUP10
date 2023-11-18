@@ -1,10 +1,9 @@
 package no.ntnu.network.message.context;
 
-import no.ntnu.network.ClientCommunicationAgent;
+import no.ntnu.network.ClientAgent;
 import no.ntnu.network.message.request.RequestMessage;
 import no.ntnu.network.message.response.ResponseMessage;
 import no.ntnu.tools.ClientLogger;
-import no.ntnu.tools.ServerLogger;
 
 import java.io.IOException;
 
@@ -12,14 +11,14 @@ import java.io.IOException;
  * A context for processing client messages.
  */
 public abstract class ClientContext implements MessageContext {
-    private final ClientCommunicationAgent agent;
+    private final ClientAgent agent;
 
     /**
      * Creates a ClientContext.
      *
      * @param agent the communication agent
      */
-    protected ClientContext(ClientCommunicationAgent agent) {
+    protected ClientContext(ClientAgent agent) {
         if (agent == null) {
             throw new IllegalArgumentException("Cannot create ClientContext, because communication agent is null");
         }

@@ -1,9 +1,9 @@
 package no.ntnu.network;
 
 /**
- * A communication agent for a client.
+ * A communication agent for the connection at the client-side.
  */
-public interface ClientCommunicationAgent extends CommunicationAgent {
+public interface ClientAgent extends CommunicationAgent {
     /**
      * Sets the node address for the client agent.
      *

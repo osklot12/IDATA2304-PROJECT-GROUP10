@@ -2,21 +2,20 @@ package no.ntnu.network.message.context;
 
 import no.ntnu.exception.ClientRegistrationException;
 import no.ntnu.network.CommunicationAgent;
+import no.ntnu.network.ServerAgent;
 import no.ntnu.network.centralserver.CentralHub;
-import no.ntnu.network.centralserver.ClientHandler;
 import no.ntnu.network.centralserver.clientproxy.ClientProxy;
 import no.ntnu.network.message.request.RequestMessage;
 import no.ntnu.network.message.response.ResponseMessage;
 import no.ntnu.tools.ServerLogger;
 
 import java.io.IOException;
-import java.net.Socket;
 
 /**
  * A context for processing server messages.
  */
 public class ServerContext implements MessageContext {
-    private final CommunicationAgent agent;
+    private final ServerAgent agent;
     private final CentralHub centralHub;
     private final String remoteSocketAddress;
 
@@ -27,7 +26,7 @@ public class ServerContext implements MessageContext {
      * @param centralHub the central hub to operate on
      * @param remoteSocketAddress the address for the remote socket
      */
-    public ServerContext(CommunicationAgent agent, CentralHub centralHub, String remoteSocketAddress) {
+    public ServerContext(ServerAgent agent, CentralHub centralHub, String remoteSocketAddress) {
         if (agent == null) {
             throw new IllegalArgumentException("Cannot create ServerContext, because agent is null");
         }
@@ -52,7 +51,13 @@ public class ServerContext implements MessageContext {
      * @throws ClientRegistrationException thrown if registration fails
      */
     public int registerClient(ClientProxy clientProxy) throws ClientRegistrationException {
-        return centralHub.registerClient(clientProxy);
+        int clientAddress = centralHub.registerClient(clientProxy);
+
+        if (clientAddress != -1) {
+            // agent.registerClient();
+        }
+
+        return clientAddress;
     }
 
     /**
@@ -60,7 +65,7 @@ public class ServerContext implements MessageContext {
      *
      * @return the communication agent
      */
-    public CommunicationAgent getAgent() {
+    public ServerAgent getAgent() {
         return agent;
     }
 

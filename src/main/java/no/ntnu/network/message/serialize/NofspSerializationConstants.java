@@ -25,6 +25,7 @@ public class NofspSerializationConstants {
     // request commands (UTF-8 String)
     public static final String HEART_BEAT = "HBEAT";
     public static final String REGISTER_CONTROL_PANEL_COMMAND = "REGCP";
+    public static final String DISCONNECT_CLIENT_COMMAND = "DISC";
 
     // status codes
     public static final int HEART_BEAT_CODE = 0;

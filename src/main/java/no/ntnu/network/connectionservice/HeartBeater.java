@@ -46,7 +46,6 @@ public class HeartBeater implements ConnectionService {
             scheduler = Executors.newSingleThreadScheduledExecutor();
         }
 
-        // Schedule heartbeat task
         scheduler.scheduleAtFixedRate(this::sendHeartbeat, interval, interval, TimeUnit.MILLISECONDS);
     }
 
@@ -59,7 +58,7 @@ public class HeartBeater implements ConnectionService {
         } catch (IOException e) {
             stop();
             // notifies the listeners about the shutdown of the service
-            shutdownBroker.notifyListeners(this);
+            shutdownBroker.notifyListeners("Heartbeat service has shut down: " + e.getMessage());
         }
     }
 

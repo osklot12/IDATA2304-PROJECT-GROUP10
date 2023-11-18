@@ -2,6 +2,7 @@ package no.ntnu.network.centralserver.clientproxy;
 
 import no.ntnu.fieldnode.device.DeviceClass;
 import no.ntnu.network.CommunicationAgent;
+import no.ntnu.network.ServerAgent;
 import no.ntnu.network.centralserver.ClientHandler;
 
 import java.util.Set;
@@ -17,7 +18,7 @@ public class ControlPanelClientProxy extends ClientProxy {
      *
      * @param agent the communication agent for the client
      */
-    public ControlPanelClientProxy(CommunicationAgent agent, Set<DeviceClass> compatibilityList) {
+    public ControlPanelClientProxy(ServerAgent agent, Set<DeviceClass> compatibilityList) {
         super(agent);
 
         this.compatibilityList = compatibilityList;
