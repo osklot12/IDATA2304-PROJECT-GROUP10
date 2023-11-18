@@ -1,6 +1,7 @@
 package no.ntnu.network.message.request;
 
 import no.ntnu.fieldnode.device.DeviceClass;
+import no.ntnu.network.ServerTestAgent;
 import no.ntnu.network.TestAgent;
 import no.ntnu.network.centralserver.CentralHub;
 import no.ntnu.network.message.context.ServerContext;
@@ -19,7 +20,7 @@ import static org.junit.Assert.*;
  * JUnit testing for the RegisterControlPanelRequest class.
  */
 public class RegisterControlPanelRequestTest {
-    TestAgent agent;
+    ServerTestAgent agent;
     CentralHub hub;
     ServerContext context;
     RegisterControlPanelRequest request;
@@ -29,7 +30,7 @@ public class RegisterControlPanelRequestTest {
      */
     @Before
     public void setup() {
-        agent = new TestAgent();
+        agent = new ServerTestAgent();
         hub = new CentralHub();
         context = new ServerContext(agent, hub, "testPeer");
 

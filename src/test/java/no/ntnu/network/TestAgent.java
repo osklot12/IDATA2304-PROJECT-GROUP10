@@ -32,6 +32,11 @@ public class TestAgent implements CommunicationAgent {
     }
 
     @Override
+    public String getRemoteEntityAsString() {
+        return "Testentity";
+    }
+
+    @Override
     public void close() {
         closed = true;
     }

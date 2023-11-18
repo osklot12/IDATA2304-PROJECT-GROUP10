@@ -1,6 +1,7 @@
 package no.ntnu.network.message.deserialize;
 
 import no.ntnu.network.message.common.ByteSerializableInteger;
+import no.ntnu.network.message.common.ByteSerializableSet;
 import no.ntnu.network.message.common.ByteSerializableString;
 import no.ntnu.network.message.serialize.visitor.NofspSerializer;
 import org.junit.Before;
@@ -73,5 +74,22 @@ public class NofspDeserializerTest {
         byte[] bytes = serializer.serialize(string);
 
         assertEquals(string, deserializer.deserialize(bytes));
+    }
+
+    /**
+     * Tests that maps are serialized and deserialized as expected.
+     *
+     * @throws IOException thrown if an I/O exception occurs
+     */
+    @Test
+    public void testSetSerialization() throws IOException {
+        ByteSerializableSet<ByteSerializableString> set = new ByteSerializableSet<>();
+        set.add(new ByteSerializableString("This is the first string."));
+        set.add(new ByteSerializableString("This is the second string."));
+        set.add(new ByteSerializableString("This is the third string."));
+
+        byte[] bytes = serializer.serialize(set);
+
+        assertEquals(set, deserializer.deserialize(bytes));
     }
 }

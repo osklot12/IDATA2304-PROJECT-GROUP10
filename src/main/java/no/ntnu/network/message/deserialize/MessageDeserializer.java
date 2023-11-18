@@ -7,7 +7,9 @@ import no.ntnu.network.message.serialize.tool.TlvFrame;
 import java.io.IOException;
 
 /**
- * A deserializer for deserializing messages.
+ * A deserializer for deserialization of bytes into messages.
+ * The {@code MessageDeserializer} works with arrays of bytes, deserializing them into {@code Message} objects that
+ * can be processed with the given {@code MessageContext}.
  *
  * @param <C> type of message context to deserialize for
  */

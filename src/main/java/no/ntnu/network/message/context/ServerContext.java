@@ -54,7 +54,7 @@ public class ServerContext implements MessageContext {
         int clientAddress = centralHub.registerClient(clientProxy);
 
         if (clientAddress != -1) {
-            // agent.registerClient();
+            agent.registerClient();
         }
 
         return clientAddress;

@@ -2,7 +2,6 @@ package no.ntnu.network.message.deserialize;
 
 import no.ntnu.exception.SerializationException;
 import no.ntnu.network.message.common.*;
-import no.ntnu.network.message.request.HeartbeatRequest;
 import no.ntnu.network.message.serialize.NofspSerializationConstants;
 import no.ntnu.network.message.serialize.composite.ByteSerializable;
 import no.ntnu.network.message.serialize.tool.ByteHandler;
@@ -22,7 +21,7 @@ public abstract class NofspDeserializer {
     protected static final TlvFrame TLV_FRAME = NofspSerializationConstants.TLV_FRAME;
 
     /**
-     * Deserializes a TLV of bytes into a {@code ByteSerializable} object.
+     * Deserializes a TLV of bytes into a generic {@code ByteSerializable} object.
      *
      * @param bytes bytes to deserialize
      * @return a {@code ByteSerializable} object
@@ -45,24 +44,91 @@ public abstract class NofspDeserializer {
             // type field: string
             serializable = getString(valueField);
 
+        } else if (tlvOfType(bytes, NofspSerializationConstants.SET_BYTES)) {
+            // type field: set
+            serializable = getSet(valueField);
+
         } else if (tlvOfType(bytes, NofspSerializationConstants.LIST_BYTES)) {
             // type field: list
-            Class<? extends ByteSerializable> listElementTypeClass = getListElementClass(valueField);
-
-            if (listElementTypeClass != null) {
-                serializable = getList(valueField, listElementTypeClass);
-            }
+            serializable = getList(valueField);
 
         } else if (tlvOfType(bytes, NofspSerializationConstants.MAP_BYTES)) {
             // type field: map
-            Class<? extends ByteSerializable> mapKeyTypeClass = getMapKeyClass(valueField);
-            Class<? extends ByteSerializable> mapValueTypeClass = getMapValueClass(valueField);
-
-            serializable = getMap(valueField, mapKeyTypeClass, mapValueTypeClass);
+            serializable = getMap(valueField);
 
         }
 
         return serializable;
+    }
+
+    /**
+     * Identifies the element type for a serialized set and returns it accordingly.
+     * The element type for the set is identified by the first element in the set, and only elements of this type
+     * will be added to the result.
+     *
+     * @param valueField the value field for the set TLV
+     * @return the reconstructed set, null on error
+     * @throws IOException thrown if an I/O exception is thrown
+     */
+    private ByteSerializable getSet(byte[] valueField) throws IOException {
+        ByteSerializableSet<?> set = null;
+
+        try {
+            Class<? extends ByteSerializable> setElementTypeClass = getTlvTypeClass(valueField);
+            set = getSetOfType(valueField, setElementTypeClass);
+        } catch (IOException e) {
+            throw new IOException("Cannot deserialize set: " + e.getMessage());
+        }
+
+        return set;
+    }
+
+    /**
+     * Identifies the element type for a serialized list and returns it accordingly.
+     * The element type for the list is identified by the first element in the list, and only elements of this type
+     * will be added to the final result.
+     *
+     * @param valueField the value field for the list TLV
+     * @return the reconstructed list, null on error
+     * @throws IOException thrown if an I/O exception is thrown
+     */
+     private ByteSerializableList<?> getList(byte[] valueField) throws IOException {
+        ByteSerializableList<?> list = null;
+
+        try {
+            Class<? extends ByteSerializable> listElementTypeClass = getTlvTypeClass(valueField);
+            if (listElementTypeClass != null) {
+                list = getListOfType(valueField, listElementTypeClass);
+            }
+        } catch (IOException e) {
+            throw new IOException("Cannot deserialize list: " + e.getMessage());
+        }
+
+
+        return list;
+    }
+
+    /**
+     * Identifies the key-value pair type for a serialized map and returns it accordingly.
+     * The key-value pair is identified by the first entry in the map, and only entries of these types will
+     * be added to the final result.
+     *
+     * @param valueField the value field of the map TLV
+     * @return the reconstructed map, null on error
+     * @throws IOException thrown if an I/O exception occurs
+     */
+    private ByteSerializableMap<?, ?> getMap(byte[] valueField) throws IOException {
+        ByteSerializableMap<?, ?> map = null;
+
+        try {
+            Class<? extends ByteSerializable> mapKeyTypeClass = getTlvTypeClass(valueField);
+            Class<? extends ByteSerializable> mapValueTypeClass = getTlvTypeClass(valueField);
+            map = getMapOfType(valueField, mapKeyTypeClass, mapValueTypeClass);
+        } catch (IOException e) {
+            throw new IOException("Cannot deserialize map: " + e.getMessage());
+        }
+
+        return map;
     }
 
     /**
@@ -195,7 +261,7 @@ public abstract class NofspDeserializer {
      * @param <T> class of elements in the set, which implements the {@code ByteSerializable} interface
      * @throws IOException thrown if an I/O exception occurs
      */
-    protected <T extends ByteSerializable> ByteSerializableSet<T> getSet(byte[] bytes, Class<T> typeClass) throws IOException {
+    protected <T extends ByteSerializable> ByteSerializableSet<T> getSetOfType(byte[] bytes, Class<T> typeClass) throws IOException {
        ByteSerializableSet<T> set = new ByteSerializableSet<>();
 
        TlvReader elementReader = new TlvReader(bytes, TLV_FRAME);
@@ -228,7 +294,7 @@ public abstract class NofspDeserializer {
      * @param <T> class of elements in the list, which implements the {@code ByteSerializable} interface
      * @throws IOException thrown if an I/O exception occurs
      */
-    protected <T extends ByteSerializable> ByteSerializableList<T> getList(byte[] bytes, Class<T> typeClass) throws IOException {
+    protected <T extends ByteSerializable> ByteSerializableList<T> getListOfType(byte[] bytes, Class<T> typeClass) throws IOException {
         ByteSerializableList<T> list = new ByteSerializableList<>();
 
         TlvReader tlvReader = new TlvReader(bytes, TLV_FRAME);
@@ -256,10 +322,10 @@ public abstract class NofspDeserializer {
      * Identifies the corresponding class for a given serialized TLV.
      *
      * @param bytes bytes to inspect
-     * @return the class of object
+     * @return the concrete {@code ByteSerializable} class for the TLV
      * @throws IOException thrown if an I/O exception occurs
      */
-    private Class<? extends ByteSerializable> getListElementClass(byte[] bytes) throws IOException {
+    private Class<? extends ByteSerializable> getTlvTypeClass(byte[] bytes) throws IOException {
         Class<? extends ByteSerializable> typeClass = null;
 
         TlvReader tlvReader = new TlvReader(bytes, TLV_FRAME);
@@ -269,7 +335,7 @@ public abstract class NofspDeserializer {
         if (serializable != null) {
             typeClass = serializable.getClass();
         } else {
-            throw new SerializationException("Cannot identify element-type for list: " + ByteHandler.bytesToString(bytes));
+            throw new SerializationException("Cannot identify class for TLV: " + ByteHandler.bytesToString(bytes));
         }
 
         return typeClass;
@@ -287,7 +353,7 @@ public abstract class NofspDeserializer {
      * @param <V> class of value elements in the entries, implementing the {@code ByteSerializable} interface
      * @throws IOException thrown if an I/O exception occurs
      */
-    private <K extends ByteSerializable, V extends ByteSerializable> ByteSerializableMap<K, V> getMap(byte[] bytes, Class<K> mapKeyTypeClass, Class<V> mapValueTypeClass) throws IOException {
+    private <K extends ByteSerializable, V extends ByteSerializable> ByteSerializableMap<K, V> getMapOfType(byte[] bytes, Class<K> mapKeyTypeClass, Class<V> mapValueTypeClass) throws IOException {
         ByteSerializableMap<K, V> map = new ByteSerializableMap<>();
 
         TlvReader tlvReader = new TlvReader(bytes, TLV_FRAME);
@@ -340,53 +406,6 @@ public abstract class NofspDeserializer {
         }
 
         return entry;
-    }
-
-    /**
-     * Identifies the corresponding entry key class for a given serialized map.
-     *
-     * @param bytes the bytes of the TLV value field for the map
-     * @return the corresponding class
-     * @throws IOException thrown if an I/O exception occurs
-     */
-    private Class<? extends ByteSerializable> getMapKeyClass(byte[] bytes) throws IOException {
-        Class<? extends ByteSerializable> keyClass = null;
-
-        TlvReader tlvReader = new TlvReader(bytes, NofspSerializationConstants.TLV_FRAME);
-
-        byte[] firstElement = tlvReader.readNextTlv();
-        ByteSerializable serializable = deserialize(firstElement);
-        if (serializable != null) {
-            keyClass = serializable.getClass();
-        } else {
-            throw new SerializationException("Cannot identify key-type for map: " + ByteHandler.bytesToString(bytes));
-        }
-
-        return keyClass;
-    }
-
-    /**
-     * Identifies the corresponding entry value class for a given serialized map.
-     *
-     * @param bytes the bytes of the TLV value field for the map
-     * @return the corresponding class
-     * @throws IOException thrown if an I/O exception is thrown
-     */
-    private Class<? extends ByteSerializable> getMapValueClass(byte[] bytes) throws IOException {
-        Class<? extends ByteSerializable> valueClass = null;
-
-        TlvReader tlvReader = new TlvReader(bytes, NofspSerializationConstants.TLV_FRAME);
-
-        tlvReader.readNextTlv();
-        byte[] secondElement = tlvReader.readNextTlv();
-        ByteSerializable serializable = deserialize(secondElement);
-        if (serializable != null) {
-            valueClass = serializable.getClass();
-        } else {
-            throw new SerializationException("Cannot identify value-type for map: " + ByteHandler.bytesToString(bytes));
-        }
-
-        return valueClass;
     }
 
     /**

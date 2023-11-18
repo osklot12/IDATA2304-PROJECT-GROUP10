@@ -116,7 +116,7 @@ public class NofspServerDeserializer extends NofspDeserializer implements Messag
         // deserializes compatibility list
         byte[] compatibilityListTlv = parameterReader.readNextTlv();
         byte[] compatibilityListValueField = TlvReader.getValueField(compatibilityListTlv, TLV_FRAME);
-        ByteSerializableSet<ByteSerializableString> compatibilityList = getSet(compatibilityListValueField, ByteSerializableString.class);
+        ByteSerializableSet<ByteSerializableString> compatibilityList = getSetOfType(compatibilityListValueField, ByteSerializableString.class);
         request = new RegisterControlPanelRequest(messageId.getInteger(), makeDeviceClassSet(compatibilityList));
 
         return request;
