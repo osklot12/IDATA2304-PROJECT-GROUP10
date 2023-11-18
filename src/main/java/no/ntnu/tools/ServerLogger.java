@@ -66,4 +66,13 @@ public class ServerLogger {
     public static void deadHeartbeat(String clientAddress) {
         Logger.error("[ DISCONNECTED " + TimeFormatter.now() + " ] Client " + clientAddress + " do not respond and has been disconnected.");
     }
+
+    /**
+     * Log an emergency.
+     *
+     * @param message the emergency message
+     */
+    public static void emergency(String message) {
+        Logger.error("[ EMERGENCY " + TimeFormatter.now() + " ] " + message);
+    }
 }

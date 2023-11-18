@@ -1,5 +1,6 @@
 package no.ntnu.network.connectionservice;
 
+import no.ntnu.broker.ConnectionServiceShutdownBroker;
 import no.ntnu.network.CommunicationAgent;
 import no.ntnu.network.message.request.HeartbeatRequest;
 
@@ -8,14 +9,35 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * A connection service sending heart beat requests to a remote network entity.
+ * The heartbeat requests are sent periodically at a given interval.
+ */
 public class HeartBeater implements ConnectionService {
     private final CommunicationAgent agent;
-    private ScheduledExecutorService scheduler;
     private final long interval;
+    private final ConnectionServiceShutdownBroker shutdownBroker;
+    private ScheduledExecutorService scheduler;
 
+    /**
+     * Creates a new HeartBeater.
+     *
+     * @param agent the communication agent to send heartbeats to
+     * @param interval the interval between the requests sent
+     */
     public HeartBeater(CommunicationAgent agent, long interval) {
         this.agent = agent;
         this.interval = interval;
+        this.shutdownBroker = new ConnectionServiceShutdownBroker();
+    }
+
+    /**
+     * Adds a listener to listen for shutdown of the service.
+     *
+     * @param listener the listener to add
+     */
+    public void addShutdownListener(ConnServiceShutdownListener listener) {
+        shutdownBroker.addSubscriber(listener);
     }
 
     @Override
@@ -28,12 +50,16 @@ public class HeartBeater implements ConnectionService {
         scheduler.scheduleAtFixedRate(this::sendHeartbeat, interval, interval, TimeUnit.MILLISECONDS);
     }
 
+    /**
+     * Sends a heartbeat request.
+     */
     private void sendHeartbeat() {
         try {
-            // Assuming HeartbeatRequest constructor does not require parameters
             agent.sendRequest(new HeartbeatRequest<>());
         } catch (IOException e) {
-            // Handle exceptions, possibly logging them or taking other actions
+            stop();
+            // notifies the listeners about the shutdown of the service
+            shutdownBroker.notifyListeners(this);
         }
     }
 

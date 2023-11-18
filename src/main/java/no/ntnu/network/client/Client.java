@@ -16,7 +16,7 @@ import java.io.IOException;
 import java.net.Socket;
 
 /**
- * A client for communicating with a server.
+ * A client communication agent, responsible for communicating with a server.
  */
 public abstract class Client<C extends MessageContext> extends ControlProcessAgent<C> implements ClientCommunicationAgent {
     private int nodeAddress;

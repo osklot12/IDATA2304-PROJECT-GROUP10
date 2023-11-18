@@ -21,7 +21,7 @@ public class ControlPanelClient extends Client<ControlPanelContext> {
     private static final ByteSerializerVisitor SERIALIZER = new NofspSerializer();
     private static final MessageDeserializer<ControlPanelContext> DESERIALIZER = new NofspControlPanelDeserializer();
     private final ControlPanel controlPanel;
-    private ControlPanelContext context;
+    private final ControlPanelContext context;
 
     /**
      * Creates a new ControlPanelClient.
@@ -45,7 +45,7 @@ public class ControlPanelClient extends Client<ControlPanelContext> {
         }
 
         if (connectToServer(serverAddress, CentralServer.PORT_NUMBER, SERIALIZER, DESERIALIZER)) {
-            registerControlPanel();
+            // connected and needs to register before using services of server
             registerControlPanel();
         }
     }
@@ -71,7 +71,7 @@ public class ControlPanelClient extends Client<ControlPanelContext> {
         try {
             message.process(context);
         } catch (IOException e) {
-            Logger.error("Cannot process message: " + e.getMessage());
+            Logger.error("Cannot process received message: " + e.getMessage());
         }
     }
 }

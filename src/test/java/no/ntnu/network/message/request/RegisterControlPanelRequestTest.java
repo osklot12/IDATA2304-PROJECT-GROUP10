@@ -48,7 +48,7 @@ public class RegisterControlPanelRequestTest {
     public void testValidRegistration() throws IOException {
         request.process(context);
 
-        assertTrue(agent.responseSent instanceof RegistrationConfirmationResponse<?>);
+        assertTrue(agent.getResponseSent() instanceof RegistrationConfirmationResponse<?>);
     }
 
     /**
@@ -62,6 +62,6 @@ public class RegisterControlPanelRequestTest {
         // trying to register the same client twice is not valid
         request.process(context);
 
-        assertTrue(agent.responseSent instanceof RegistrationDeclinedError);
+        assertTrue(agent.getResponseSent() instanceof RegistrationDeclinedError);
     }
 }

@@ -1,6 +1,8 @@
 package no.ntnu.network.centralserver;
 
 import no.ntnu.network.ControlProcessAgent;
+import no.ntnu.network.connectionservice.ConnServiceShutdownListener;
+import no.ntnu.network.connectionservice.ConnectionService;
 import no.ntnu.network.connectionservice.HeartBeater;
 import no.ntnu.network.message.Message;
 import no.ntnu.network.message.context.ServerContext;
@@ -20,7 +22,7 @@ import java.net.Socket;
 /**
  * A class responsible for handling all communication for a server with a single client.
  */
-public class ClientHandler extends ControlProcessAgent<ServerContext> implements Runnable {
+public class ClientHandler extends ControlProcessAgent<ServerContext> implements Runnable, ConnServiceShutdownListener {
     private static final ByteSerializerVisitor SERIALIZER = new NofspSerializer();
     private static final NofspServerDeserializer DESERIALIZER = new NofspServerDeserializer();
     private static final long HEARTBEAT_INTERVAL = 20000;
@@ -38,8 +40,17 @@ public class ClientHandler extends ControlProcessAgent<ServerContext> implements
         }
 
         setSocket(clientSocket);
-        addConnectionService(new HeartBeater(this, HEARTBEAT_INTERVAL));
+        establishHeartBeater();
         this.context = new ServerContext(this, centralHub, clientSocket.getRemoteSocketAddress().toString());
+    }
+
+    /**
+     * Establishes the heart beating mechanism.
+     */
+    private void establishHeartBeater() {
+        HeartBeater heartBeater = new HeartBeater(this, HEARTBEAT_INTERVAL);
+        heartBeater.addShutdownListener(this);
+        addConnectionService(new HeartBeater(this, HEARTBEAT_INTERVAL));
     }
 
     @Override
@@ -87,6 +98,14 @@ public class ClientHandler extends ControlProcessAgent<ServerContext> implements
             // timed out heartbeats closes the connection
             safelyClose();
             ServerLogger.deadHeartbeat(getRemoteSocketAddress().toString());
+        }
+    }
+
+    @Override
+    public void connectionServiceShutdown(ConnectionService service) {
+        if (isConnected()) {
+            ServerLogger.emergency("Heartbeat service has shutdown, and the connection is therefore closing...");
+            safelyClose();
         }
     }
 }

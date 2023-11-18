@@ -15,14 +15,20 @@ import no.ntnu.tools.Logger;
 import java.io.IOException;
 import java.net.Socket;
 import java.net.SocketAddress;
-import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * An agent responsible for handling control message communication with another node in the network.
+ * An agent responsible for handling control message communication with another entity in the network.
+ * The class provides mechanisms for connecting to a remote socket, maintaining the connection and closing it with
+ * a graceful shutdown.
+ * <p/>
+ * The ControlProcessAgent is abstract and designed as a base class for all network communication entities in the
+ * application. It leaves several methods for implementation by the concrete entities, allowing for custom handling
+ * of several events. {@code ConnectionService} instances, which can be integrated by the concrete classes,
+ * are run when connecting to the socket and closed during a graceful shutdown.
  *
- * @param <C> the type of message context for the messages
+ * @param <C> the type of message processing context to use
  */
 public abstract class ControlProcessAgent<C extends MessageContext> implements CommunicationAgent, RequestTimeoutListener {
     private static final long PENDING_REQUEST_TTL = 3000;
@@ -41,37 +47,41 @@ public abstract class ControlProcessAgent<C extends MessageContext> implements C
     }
 
     /**
-     * Establishes connection to a socket.
+     * Establishes connection to the socket.
+     * Requires that the socket has been set.
      *
      * @param serializer the serializer to use for serializing messages
      * @param deserializer the deserializer to use for deserializing messages
      * @return true if connection was successfully established
      */
     protected boolean establishConnection(ByteSerializerVisitor serializer, MessageDeserializer<C> deserializer) {
-        if (socket == null) {
-            throw new IllegalStateException("Please set socket before trying to establish connection.");
-        }
+        if (socket == null) {throw new IllegalStateException("Please set socket before trying to establish connection.");}
 
-        if (socket.isClosed()) {
-            throw new IllegalStateException("Cannot establish connection to socket, because socket is closed.");
-        }
+        if (socket.isClosed()) {throw new IllegalStateException("Cannot establish connection to socket, because socket is closed.");}
+
+        if (isConnected()) {throw new IllegalStateException("Cannot establish connection while already connected.");}
 
         boolean success = false;
 
         Logger.info("Connecting to " + socket.getRemoteSocketAddress() + "...");
         if (establishControlProcess(serializer, deserializer)) {
             connected = true;
-
-            requestManager = new RequestManager();
-            requestManager.addListener(this);
-            addConnectionService(requestManager);
-
-            startHandlingReceivedMessages();
+            createConnectionServices();
             startConnectionServices();
+            startHandlingReceivedMessages();
             success = true;
         }
 
         return success;
+    }
+
+    /**
+     * Creates the connection services for the connection.
+     */
+    private void createConnectionServices() {
+        requestManager = new RequestManager();
+        requestManager.addListener(this);
+        addConnectionService(requestManager);
     }
 
     /**
@@ -84,8 +94,8 @@ public abstract class ControlProcessAgent<C extends MessageContext> implements C
             throw new IllegalArgumentException("Cannot set socket, because it is null");
         }
 
-        if (connected) {
-            throw new IllegalStateException("Cannot set socket while already connected.");
+        if (isConnected()) {
+            throw new IllegalStateException("Cannot set socket while connected.");
         }
 
         this.socket = socket;
@@ -250,10 +260,18 @@ public abstract class ControlProcessAgent<C extends MessageContext> implements C
         }
     }
 
+    /**
+     * Returns whether the agent is connected or not, in a synchronized manner.
+     *
+     * @return true if connected
+     */
     protected synchronized boolean isConnected() {
         return connected;
     }
 
+    /**
+     * Safely closes the connection.
+     */
     protected synchronized void safelyClose() {
         if (connected) {
             close();
