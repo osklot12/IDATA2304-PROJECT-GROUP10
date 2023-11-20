@@ -90,12 +90,10 @@ public class RegisterControlPanelRequest extends RequestMessage implements Messa
     @Override
     public void process(ServerContext context) throws IOException {
         context.logReceivingRequest(this);
-        // creates a new client proxy for the control panel
-        ControlPanelClientProxy clientProxy = new ControlPanelClientProxy(context.getAgent(), compatibilityList);
 
         ResponseMessage response = null;
         try {
-            int clientAddress = context.registerClient(clientProxy);
+            int clientAddress = context.registerControlPanel(compatibilityList);
             response = new RegistrationConfirmationResponse<>(clientAddress);
         } catch (ClientRegistrationException e) {
             response = new RegistrationDeclinedError<>(e.getMessage());

@@ -119,7 +119,8 @@ public class NofspSerializer implements ByteSerializerVisitor {
     @Override
     public byte[] visitRegisterFieldNodeRequest(RegisterFieldNodeRequest request) throws SerializationException {
         byte[] commonRequestMessageBytes = getCommonRequestMessageBytes(request);
-        byte[] parameterTlv = createContainerTlv(request.getSerializableFnst(), request.getSerializableName());
+        byte[] parameterTlv = createContainerTlv(request.getSerializableFnst(), request.getSerializableFnsm(),
+                request.getSerializableName());
 
         return packInRequestFrame(ByteHandler.combineBytes(commonRequestMessageBytes, parameterTlv));
     }

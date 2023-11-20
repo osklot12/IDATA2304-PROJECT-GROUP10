@@ -57,11 +57,15 @@ public class NofspServerDeserializer extends NofspMessageDeserializer<ServerCont
         Tlv fnstTlv = parameterReader.readNextTlv();
         Map<Integer, DeviceClass> fnst = getFnst(fnstTlv);
 
+        // deserializes fnsm
+        Tlv fnsmTlv = parameterReader.readNextTlv();
+        Map<Integer, Integer> fnsm = getFnsm(fnsmTlv);
+
         // deserializes the name (only if one is found)
         Tlv nameTlv = parameterReader.readNextTlv();
         String name = getFieldNodeName(nameTlv);
 
-        request = new RegisterFieldNodeRequest(fnst, name);
+        request = new RegisterFieldNodeRequest(fnst, fnsm, name);
 
         return request;
     }
@@ -97,6 +101,25 @@ public class NofspServerDeserializer extends NofspMessageDeserializer<ServerCont
         });
 
         return fnst;
+    }
+
+    /**
+     * Constructs a FNSM from a map TLV.
+     *
+     * @param fnsmTlv the map tlv representing to fnsm
+     * @return the reconstructed fnsm
+     * @throws IOException thrown if an I/O exception occurs
+     */
+    private Map<Integer, Integer> getFnsm(Tlv fnsmTlv) throws IOException {
+        Map<Integer, Integer> fnsm = new HashMap<>();
+
+        ByteSerializableMap<ByteSerializableInteger, ByteSerializableInteger> serializableFnsm =
+                getMapOfType(fnsmTlv, ByteSerializableInteger.class, ByteSerializableInteger.class);
+        serializableFnsm.forEach((key, value) -> {
+            fnsm.put(key.getInteger(), value.getInteger());
+        });
+
+        return fnsm;
     }
 
     /**

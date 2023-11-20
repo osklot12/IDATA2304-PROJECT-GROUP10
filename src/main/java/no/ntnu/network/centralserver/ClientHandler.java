@@ -46,7 +46,7 @@ public class ClientHandler extends ControlProcessAgent<ServerContext> implements
 
         setSocket(clientSocket);
         establishConnectionServices();
-        this.context = new ServerContext(this, centralHub, clientSocket.getRemoteSocketAddress().toString());
+        this.context = new ServerContext(this, centralHub);
     }
 
     /**

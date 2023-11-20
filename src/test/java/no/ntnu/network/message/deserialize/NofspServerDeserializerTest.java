@@ -51,7 +51,11 @@ public class NofspServerDeserializerTest {
         Map<Integer, DeviceClass> fnst = new HashMap<>();
         fnst.put(20, DeviceClass.S3);
         fnst.put(3, DeviceClass.A2);
-        RegisterFieldNodeRequest request = new RegisterFieldNodeRequest(fnst, "test request");
+
+        Map<Integer, Integer> fnsm = new HashMap<>();
+        fnsm.put(2, 34);
+        fnsm.put(1, 5);
+        RegisterFieldNodeRequest request = new RegisterFieldNodeRequest(fnst, fnsm, "test request");
 
         byte[] bytes = serializer.serialize(request);
         Tlv tlv = TlvReader.contructTlv(bytes, NofspSerializationConstants.TLV_FRAME);

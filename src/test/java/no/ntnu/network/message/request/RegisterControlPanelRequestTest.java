@@ -32,7 +32,7 @@ public class RegisterControlPanelRequestTest {
     public void setup() {
         agent = new ServerTestAgent();
         hub = new CentralHub();
-        context = new ServerContext(agent, hub, "testPeer");
+        context = new ServerContext(agent, hub);
 
         Set<DeviceClass> compatibilityList = new HashSet<>();
         compatibilityList.add(DeviceClass.S3);
