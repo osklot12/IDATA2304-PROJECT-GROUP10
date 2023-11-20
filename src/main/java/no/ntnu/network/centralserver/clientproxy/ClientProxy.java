@@ -10,14 +10,14 @@ import no.ntnu.network.ServerAgent;
  * {@code CommunicationAgent} interface.
  */
 public abstract class ClientProxy {
-    private final ServerAgent agent;
+    private final CommunicationAgent agent;
 
     /**
      * Creates a new ClientProxy.
      *
      * @param agent the communication agent for the remote client
      */
-    protected ClientProxy(ServerAgent agent) {
+    protected ClientProxy(CommunicationAgent agent) {
         if (agent == null) {
             throw new IllegalArgumentException("Cannot create ClientProxy, because communication agent is null.");
         }
@@ -30,7 +30,7 @@ public abstract class ClientProxy {
      *
      * @return the communication agent
      */
-    public ServerAgent getAgent() {
+    public CommunicationAgent getAgent() {
         return agent;
     }
 

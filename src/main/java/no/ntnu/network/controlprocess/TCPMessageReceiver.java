@@ -2,21 +2,18 @@ package no.ntnu.network.controlprocess;
 
 import no.ntnu.network.message.Message;
 import no.ntnu.network.message.context.MessageContext;
-import no.ntnu.network.message.deserialize.MessageDeserializer;
+import no.ntnu.network.message.deserialize.component.MessageDeserializer;
 import no.ntnu.network.message.serialize.tool.InputStreamByteSource;
-import no.ntnu.network.message.serialize.tool.TlvReader;
-import no.ntnu.tools.Logger;
+import no.ntnu.network.message.serialize.tool.tlv.Tlv;
+import no.ntnu.network.message.serialize.tool.tlv.TlvReader;
 
 import java.io.IOException;
 import java.net.Socket;
-import java.util.Queue;
-import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
  * Receives TCP (control) messages from another node in the network.
  */
 public class TCPMessageReceiver<C extends MessageContext> {
-    private final Socket socket;
     private final TlvReader socketReader;
     private final MessageDeserializer<C> deserializer;
 
@@ -35,7 +32,6 @@ public class TCPMessageReceiver<C extends MessageContext> {
             throw new IllegalArgumentException("Cannot create TCPMessageReceiver, because deserializer is null");
         }
 
-        this.socket = socket;
         this.deserializer = deserializer;
         this.socketReader = new TlvReader(new InputStreamByteSource(socket.getInputStream()), deserializer.getTlvFrame());
     }
@@ -50,7 +46,7 @@ public class TCPMessageReceiver<C extends MessageContext> {
     public Message<C> getNextMessage() throws IOException {
         Message<C> nextMessage = null;
 
-        byte[] nextTlv = socketReader.readNextTlv();
+        Tlv nextTlv = socketReader.readNextTlv();
         if (nextTlv != null) {
             nextMessage = deserializer.deserializeMessage(nextTlv);
         }

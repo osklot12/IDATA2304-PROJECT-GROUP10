@@ -1,6 +1,8 @@
-package no.ntnu.network.message.serialize.tool;
+package no.ntnu.network.message.serialize.tool.tlv;
 
-import no.ntnu.exception.TlvReadingException;
+import no.ntnu.network.message.serialize.tool.ByteHandler;
+import no.ntnu.network.message.serialize.tool.ByteSource;
+import no.ntnu.network.message.serialize.tool.SimpleByteBuffer;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -44,15 +46,16 @@ public class TlvReader {
      * @return next TLV, null if there are no more TlVs to read
      * @throws IOException thrown if an I/O exception occurs
      */
-    public byte[] readNextTlv() throws IOException {
-        byte[] tlv = null;
+    public Tlv readNextTlv() throws IOException {
+        Tlv tlv = null;
 
         if (waitForBytes(tlvFrame.typeFieldLength() + tlvFrame.lengthFieldLength())) {
             byte[] lengthField = getLengthField(buffer.toArray(), tlvFrame);
             int valueLength = ByteHandler.bytesToInt(lengthField);
 
             if (waitForBytes(valueLength)) {
-                tlv = buffer.toArray();
+                byte[] tlvBytes = buffer.toArray();
+                tlv = contructTlv(tlvBytes, tlvFrame);
             }
         }
         buffer.reset();
@@ -87,20 +90,39 @@ public class TlvReader {
     }
 
     /**
+     * Constructs a TLV from an array of bytes.
+     *
+     * @param bytes the bytes to construct from
+     * @param frame the tlv frame to construct in
+     * @return a tlv representation of the bytes
+     */
+    public static Tlv contructTlv(byte[] bytes, TlvFrame frame) throws IOException {
+        if (bytes == null) {
+            throw new IllegalArgumentException("Cannot read bytes, because bytes is null.");
+        }
+
+        byte[] typeField = getTypeField(bytes, frame);
+        byte[] valueField = getValueField(bytes, frame);
+        byte[] lengthField = getLengthField(bytes, frame);
+
+        return new Tlv(typeField, lengthField, valueField);
+    }
+
+    /**
      * Returns the first type-field for a TLV in an array of bytes.
      *
      * @param bytes array to read from
      * @param frame the frame defining the TLV
      * @return the first type-field
-     * @throws TlvReadingException thrown when field cannot be read
+     * @throws IOException thrown when field cannot be read
      */
-    public static byte[] getTypeField(byte[] bytes, TlvFrame frame) throws TlvReadingException {
+    public static byte[] getTypeField(byte[] bytes, TlvFrame frame) throws IOException {
         byte[] result = null;
 
         try {
             result = Arrays.copyOfRange(bytes, 0, frame.typeFieldLength());
         } catch (Exception e) {
-            throw new TlvReadingException("Cannot read type-field for TLV: " + e.getMessage());
+            throw new IOException("Cannot read type-field for TLV: " + e.getMessage());
         }
 
         return result;
@@ -112,29 +134,29 @@ public class TlvReader {
      * @param bytes array to read from
      * @param frame the frame defining the TLV
      * @return the first length-field
-     * @throws TlvReadingException thrown when field cannot be read
+     * @throws IOException thrown when field cannot be read
      */
-    public static byte[] getLengthField(byte[] bytes, TlvFrame frame) throws TlvReadingException {
+    public static byte[] getLengthField(byte[] bytes, TlvFrame frame) throws IOException {
         byte[] result = null;
         
         try {
             result = Arrays.copyOfRange(bytes, frame.typeFieldLength(), frame.typeFieldLength() + frame.lengthFieldLength());
         } catch (Exception e) {
-            throw new TlvReadingException("Cannot read length-field for TLV: " + e.getMessage());
+            throw new IOException("Cannot read length-field for TLV: " + e.getMessage());
         }
 
         return result;
     }
 
     /**
-     * Returns the first value-field for a TLV in an array of bytes.
+     * Returns the value-field for a TLV in an array of bytes.
      *
      * @param bytes array to read from
      * @param frame the frame defining the TLV
      * @return the first value-field
-     * @throws TlvReadingException thrown when field cannot be read
+     * @throws IOException thrown when field cannot be read
      */
-    public static byte[] getValueField(byte[] bytes, TlvFrame frame) {
+    public static byte[] getValueField(byte[] bytes, TlvFrame frame) throws IOException {
         int valueStartIndex = frame.typeFieldLength() + frame.lengthFieldLength();
         int valueEndIndex = valueStartIndex + ByteHandler.bytesToInt(getLengthField(bytes, frame));
 

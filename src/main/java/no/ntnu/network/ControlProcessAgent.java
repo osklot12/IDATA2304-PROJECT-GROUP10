@@ -6,7 +6,7 @@ import no.ntnu.network.connectionservice.requestmanager.RequestTimeoutListener;
 import no.ntnu.network.controlprocess.*;
 import no.ntnu.network.message.Message;
 import no.ntnu.network.message.context.MessageContext;
-import no.ntnu.network.message.deserialize.MessageDeserializer;
+import no.ntnu.network.message.deserialize.component.MessageDeserializer;
 import no.ntnu.network.message.request.RequestMessage;
 import no.ntnu.network.message.response.ResponseMessage;
 import no.ntnu.network.message.serialize.visitor.ByteSerializerVisitor;

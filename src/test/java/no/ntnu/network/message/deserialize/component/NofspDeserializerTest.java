@@ -1,8 +1,11 @@
-package no.ntnu.network.message.deserialize;
+package no.ntnu.network.message.deserialize.component;
 
 import no.ntnu.network.message.common.ByteSerializableInteger;
 import no.ntnu.network.message.common.ByteSerializableSet;
 import no.ntnu.network.message.common.ByteSerializableString;
+import no.ntnu.network.message.serialize.NofspSerializationConstants;
+import no.ntnu.network.message.serialize.tool.tlv.Tlv;
+import no.ntnu.network.message.serialize.tool.tlv.TlvReader;
 import no.ntnu.network.message.serialize.visitor.NofspSerializer;
 import org.junit.Before;
 import org.junit.Test;
@@ -44,8 +47,9 @@ public class NofspDeserializerTest {
         ByteSerializableInteger integer = new ByteSerializableInteger(64);
 
         byte[] bytes = serializer.serialize(integer);
+        Tlv tlv = TlvReader.contructTlv(bytes, NofspSerializationConstants.TLV_FRAME);
 
-        assertEquals(integer, deserializer.deserialize(bytes));
+        assertEquals(integer, deserializer.deserialize(tlv));
     }
 
     /**
@@ -58,8 +62,9 @@ public class NofspDeserializerTest {
         ByteSerializableInteger integer = new ByteSerializableInteger(-4605);
 
         byte[] bytes = serializer.serialize(integer);
+        Tlv tlv = TlvReader.contructTlv(bytes, NofspSerializationConstants.TLV_FRAME);
 
-        assertEquals(integer, deserializer.deserialize(bytes));
+        assertEquals(integer, deserializer.deserialize(tlv));
     }
 
     /**
@@ -72,8 +77,9 @@ public class NofspDeserializerTest {
         ByteSerializableString string = new ByteSerializableString("Hello world!");
 
         byte[] bytes = serializer.serialize(string);
+        Tlv tlv = TlvReader.contructTlv(bytes, NofspSerializationConstants.TLV_FRAME);
 
-        assertEquals(string, deserializer.deserialize(bytes));
+        assertEquals(string, deserializer.deserialize(tlv));
     }
 
     /**
@@ -89,7 +95,8 @@ public class NofspDeserializerTest {
         set.add(new ByteSerializableString("This is the third string."));
 
         byte[] bytes = serializer.serialize(set);
+        Tlv tlv = TlvReader.contructTlv(bytes, NofspSerializationConstants.TLV_FRAME);
 
-        assertEquals(set, deserializer.deserialize(bytes));
+        assertEquals(set, deserializer.deserialize(tlv));
     }
 }

@@ -1,5 +1,7 @@
 package no.ntnu.network.message.serialize.tool;
 
+import no.ntnu.network.message.serialize.tool.tlv.Tlv;
+
 import java.io.IOException;
 
 /**
@@ -63,6 +65,35 @@ public class SimpleByteBuffer implements ByteSource {
             for (byte aByte : byteArray) {
                 addByte(aByte);
             }
+        }
+    }
+
+    /**
+     * Adds a TLV to the buffer.
+     *
+     * @param tlv the tlv to add
+     */
+    public void addTlv(Tlv tlv) {
+        if (tlv == null) {
+            throw new IllegalArgumentException("Cannot add TLV, because TLV is null.");
+        }
+
+        byte[] tlvBytes = ByteHandler.combineBytes(tlv.typeField(), tlv.lengthField(), tlv.valueField());
+        addBytes(tlvBytes);
+    }
+
+    /**
+     * Adds an array of TLVs to the buffer.
+     *
+     * @param tlvs TLVs to add
+     */
+    public void addTlvs(Tlv... tlvs) {
+        if (tlvs == null) {
+            throw new IllegalArgumentException("Cannot add TLVs, because TLVs is null.");
+        }
+
+        for (Tlv tlv : tlvs) {
+            addTlv(tlv);
         }
     }
 

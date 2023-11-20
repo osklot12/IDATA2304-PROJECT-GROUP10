@@ -5,6 +5,7 @@ import no.ntnu.network.message.common.*;
 import no.ntnu.network.message.context.ClientContext;
 import no.ntnu.network.message.request.HeartbeatRequest;
 import no.ntnu.network.message.request.RegisterControlPanelRequest;
+import no.ntnu.network.message.request.RegisterFieldNodeRequest;
 import no.ntnu.network.message.response.HeartbeatResponse;
 import no.ntnu.network.message.response.RegistrationConfirmationResponse;
 import no.ntnu.network.message.response.error.ErrorMessage;
@@ -77,6 +78,15 @@ public interface ByteSerializerVisitor {
      * @throws SerializationException thrown if serialization fails
      */
     <K extends ByteSerializable, V extends ByteSerializable> byte[] visitMap(ByteSerializableMap<K, V> map) throws SerializationException;
+
+    /**
+     * Serializes a {@code RegisterFieldNodeRequest} object.
+     *
+     * @param request the request to serialize
+     * @return the serialized request
+     * @throws SerializationException thrown if serialization fails
+     */
+    byte[] visitRegisterFieldNodeRequest(RegisterFieldNodeRequest request) throws SerializationException;
 
     /**
      * Serializes a {@code RegisterControlPanelRequest} object.

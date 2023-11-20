@@ -5,12 +5,12 @@ import no.ntnu.network.message.common.*;
 import no.ntnu.network.message.context.ClientContext;
 import no.ntnu.network.message.request.HeartbeatRequest;
 import no.ntnu.network.message.request.RegisterControlPanelRequest;
+import no.ntnu.network.message.request.RegisterFieldNodeRequest;
 import no.ntnu.network.message.request.RequestMessage;
 import no.ntnu.network.message.response.HeartbeatResponse;
 import no.ntnu.network.message.response.RegistrationConfirmationResponse;
 import no.ntnu.network.message.response.ResponseMessage;
 import no.ntnu.network.message.response.error.ErrorMessage;
-import no.ntnu.network.message.response.error.RegistrationDeclinedError;
 import no.ntnu.network.message.serialize.NofspSerializationConstants;
 import no.ntnu.network.message.serialize.composite.ByteSerializable;
 import no.ntnu.network.message.serialize.tool.SimpleByteBuffer;
@@ -117,27 +117,35 @@ public class NofspSerializer implements ByteSerializerVisitor {
     }
 
     @Override
+    public byte[] visitRegisterFieldNodeRequest(RegisterFieldNodeRequest request) throws SerializationException {
+        byte[] commonRequestMessageBytes = getCommonRequestMessageBytes(request);
+        byte[] parameterTlv = createContainerTlv(request.getSerializableFnst(), request.getSerializableName());
+
+        return packInRequestFrame(ByteHandler.combineBytes(commonRequestMessageBytes, parameterTlv));
+    }
+
+    @Override
     public byte[] visitRegisterControlPanelRequest(RegisterControlPanelRequest request) throws SerializationException {
         byte[] commonRequestMessageBytes = getCommonRequestMessageBytes(request);
-        byte[] parametersTlv = serialize(request.getSerializableCompatibilityList());
+        byte[] parameterTlv = createContainerTlv(request.getSerializableCompatibilityList());
 
-        return packInRequestFrame(ByteHandler.combineBytes(commonRequestMessageBytes, parametersTlv));
+        return packInRequestFrame(ByteHandler.combineBytes(commonRequestMessageBytes, parameterTlv));
     }
 
     @Override
     public byte[] visitRegistrationConfirmationResponse(RegistrationConfirmationResponse<?> response) throws SerializationException {
         byte[] commonResponseMessageBytes = getCommonResponseMessageBytes(response);
-        byte[] parametersTlv = serialize(response.getNodeAddress());
+        byte[] parameterTlv = createContainerTlv(response.getNodeAddress());
 
-        return packInResponseFrame(ByteHandler.combineBytes(commonResponseMessageBytes, parametersTlv));
+        return packInResponseFrame(ByteHandler.combineBytes(commonResponseMessageBytes, parameterTlv));
     }
 
     @Override
     public byte[] visitErrorMessage(ErrorMessage errorMessage) throws SerializationException {
         byte[] commonResponseMessageBytes = getCommonResponseMessageBytes(errorMessage);
-        byte[] errorDescription = serialize(errorMessage.getDescription());
+        byte[] parameterTlv = createContainerTlv(errorMessage.getDescription());
 
-        return packInResponseFrame(ByteHandler.combineBytes(commonResponseMessageBytes, errorDescription));
+        return packInResponseFrame(ByteHandler.combineBytes(commonResponseMessageBytes, parameterTlv));
     }
 
     @Override
@@ -152,6 +160,38 @@ public class NofspSerializer implements ByteSerializerVisitor {
         byte[] commonResponseMessageBytes = getCommonResponseMessageBytes(response);
 
         return packInResponseFrame(commonResponseMessageBytes);
+    }
+
+    /**
+     * Serializes multiple objects and puts them in a container TLV.
+     *
+     * @param serializables the serializable objects to put in container
+     * @return the container TLV
+     * @throws SerializationException thrown if serialization fails
+     */
+    private byte[] createContainerTlv(ByteSerializable... serializables) throws SerializationException {
+        byte[] valueField = serializeAll(serializables);
+        byte[] typeField = NofspSerializationConstants.CONTAINER_TLV;
+        byte[] lengthField = createLengthField(valueField.length);
+
+        return createTlv(typeField, lengthField, valueField);
+    }
+
+    /**
+     * Serializes a series of {@code ByteSerializable} objects, and puts them after one another as TLVs of bytes.
+     *
+     * @param serializables the serializable objects to serialize
+     * @return an array of bytes representing the serialized objects
+     * @throws SerializationException thrown if serialization fails
+     */
+    private byte[] serializeAll(ByteSerializable... serializables) throws SerializationException {
+        SimpleByteBuffer byteBuffer = new SimpleByteBuffer();
+
+        for (ByteSerializable serializable : serializables) {
+            byteBuffer.addBytes(serialize(serializable));
+        }
+
+        return byteBuffer.toArray();
     }
 
     /**

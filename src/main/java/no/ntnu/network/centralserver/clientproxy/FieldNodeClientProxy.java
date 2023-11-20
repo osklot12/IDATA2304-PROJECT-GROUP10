@@ -4,6 +4,7 @@ import no.ntnu.exception.AddressNotAvailableException;
 import no.ntnu.exception.NoSuchActuatorException;
 import no.ntnu.exception.NoSuchDeviceException;
 import no.ntnu.fieldnode.device.DeviceClass;
+import no.ntnu.network.CommunicationAgent;
 import no.ntnu.network.centralserver.ClientHandler;
 
 import java.util.Map;
@@ -21,7 +22,7 @@ public class FieldNodeClientProxy extends ClientProxy {
      *
      * @param agent the client handler
      */
-    public FieldNodeClientProxy(ClientHandler agent, Map<Integer, DeviceClass> fnst, Map<Integer, Integer> fnsm, String name) {
+    public FieldNodeClientProxy(CommunicationAgent agent, Map<Integer, DeviceClass> fnst, Map<Integer, Integer> fnsm, String name) {
         super(agent);
 
         this.fnst = fnst;

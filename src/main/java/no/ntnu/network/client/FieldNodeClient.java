@@ -4,52 +4,56 @@ import no.ntnu.fieldnode.FieldNode;
 import no.ntnu.network.centralserver.CentralServer;
 import no.ntnu.network.message.Message;
 import no.ntnu.network.message.context.FieldNodeContext;
-import no.ntnu.network.message.deserialize.MessageDeserializer;
 import no.ntnu.network.message.deserialize.NofspFieldNodeDeserializer;
+import no.ntnu.network.message.deserialize.component.MessageDeserializer;
 import no.ntnu.network.message.serialize.visitor.ByteSerializerVisitor;
 import no.ntnu.network.message.serialize.visitor.NofspSerializer;
 
+/**
+ * A client for a field node, connecting it to a central server using NOFSP.
+ * The class is necessary for a field node to be able to push sensor data and share actuator control in the
+ * network.
+ */
 public class FieldNodeClient extends Client<FieldNodeContext> {
-
-    private static final ByteSerializerVisitor SERIALIZER = new NofspSerializer();
-    private static final MessageDeserializer<FieldNodeContext> DESERIALIZER = new NofspFieldNodeDeserializer();
-
+    private final ByteSerializerVisitor serializer;
+    private final MessageDeserializer<FieldNodeContext> deserializer;
     private final FieldNode fieldNode;
-
+    private final FieldNodeContext fieldNodeContext;
 
     /**
-     * Initializes a new instance of the FieldNodeClient class.
-     * @param fieldNode    The associated field node.
+     * Creates a new FieldNodeClient.
+     *
+     * @param fieldNode the field node
      */
     public FieldNodeClient(FieldNode fieldNode) {
         super();
+        if (fieldNode == null) {
+            throw new IllegalArgumentException("Cannot create FieldNodeClient, because field node is null.");
+        }
+
+        serializer = new NofspSerializer();
+        deserializer = new NofspFieldNodeDeserializer();
         this.fieldNode = fieldNode;
+        this.fieldNodeContext = new FieldNodeContext(this, fieldNode);
     }
 
     @Override
     public void connect(String serverAddress) {
         if (isConnected()) {
-            throw new IllegalStateException("Cannot connect control panel, because it is already connected.");
+            throw new IllegalStateException("Cannot connect field node, because it is already connected.");
         }
 
-        if (connectToServer(serverAddress, CentralServer.PORT_NUMBER, SERIALIZER, DESERIALIZER)) {
+        if (connectToServer(serverAddress, CentralServer.PORT_NUMBER, serializer, deserializer)) {
+            // connected and needs to register before using services of server
             registerFieldNode();
         }
-
     }
 
+    /**
+     * Registers the field node at the server.
+     */
     private void registerFieldNode() {
-        //send the FNST and the FNAT
-    }
 
-//    private void sendFNST() {
-//        // Send the FNST to the server
-//        sendControlMessage(new UpdateFNSTRequest(fieldNode.getFNST()));
-//    }
-
-
-    @Override
-    public void disconnect() {
     }
 
     @Override
@@ -57,19 +61,8 @@ public class FieldNodeClient extends Client<FieldNodeContext> {
 
     }
 
+    @Override
+    public void disconnect() {
 
-//    /**
-//     * Closes the client socket connection.
-//     */
-//    public void closeConnection() {
-//        try {
-//            if (clientSocket != null) {
-//                clientSocket.close();
-//            }
-//        } catch (IOException e) {
-//            Logger.error("Failed to close the client socket: " + e.getMessage());
-//        }
-//    }
-
+    }
 }
-

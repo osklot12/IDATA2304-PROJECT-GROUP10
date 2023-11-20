@@ -1,4 +1,4 @@
-package no.ntnu.network.message.serialize.tool;
+package no.ntnu.network.message.serialize.tool.tlv;
 
 /**
  * Creates a new TlvFrame.

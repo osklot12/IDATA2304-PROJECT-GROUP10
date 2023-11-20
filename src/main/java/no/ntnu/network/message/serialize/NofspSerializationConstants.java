@@ -1,6 +1,6 @@
 package no.ntnu.network.message.serialize;
 
-import no.ntnu.network.message.serialize.tool.TlvFrame;
+import no.ntnu.network.message.serialize.tool.tlv.TlvFrame;
 
 /**
  * A class holding shared constants for serialization using the technique described by NOFSP.
@@ -19,11 +19,13 @@ public class NofspSerializationConstants {
     public static final byte[] SET_BYTES = new byte[] {0, 10};
     public static final byte[] LIST_BYTES = new byte[] {0, 11};
     public static final byte[] MAP_BYTES = new byte[] {0, 12};
+    public static final byte[] CONTAINER_TLV = new byte[] {0, 13};
     public static final byte[] REQUEST_BYTES = new byte[] {1, 0};
     public static final byte[] RESPONSE_BYTES = new byte[] {1, 1};
 
     // request commands (UTF-8 String)
     public static final String HEART_BEAT = "HBEAT";
+    public static final String REGISTER_FIELD_NODE_COMMAND = "REGFN";
     public static final String REGISTER_CONTROL_PANEL_COMMAND = "REGCP";
     public static final String DISCONNECT_CLIENT_COMMAND = "DISC";
 

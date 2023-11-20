@@ -3,7 +3,7 @@ package no.ntnu.network.controlprocess;
 import no.ntnu.network.message.Message;
 import no.ntnu.network.message.common.ControlMessage;
 import no.ntnu.network.message.context.MessageContext;
-import no.ntnu.network.message.deserialize.MessageDeserializer;
+import no.ntnu.network.message.deserialize.component.MessageDeserializer;
 import no.ntnu.network.message.serialize.visitor.ByteSerializerVisitor;
 
 import java.io.IOException;

@@ -18,7 +18,7 @@ public class ControlPanelClientProxy extends ClientProxy {
      *
      * @param agent the communication agent for the client
      */
-    public ControlPanelClientProxy(ServerAgent agent, Set<DeviceClass> compatibilityList) {
+    public ControlPanelClientProxy(CommunicationAgent agent, Set<DeviceClass> compatibilityList) {
         super(agent);
 
         this.compatibilityList = compatibilityList;

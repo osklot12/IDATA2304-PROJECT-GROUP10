@@ -1,7 +1,11 @@
 package no.ntnu.network.message.deserialize;
 
 import no.ntnu.network.message.context.ControlPanelContext;
+import no.ntnu.network.message.deserialize.component.MessageDeserializer;
 import no.ntnu.network.message.request.HeartbeatRequest;
+import no.ntnu.network.message.serialize.NofspSerializationConstants;
+import no.ntnu.network.message.serialize.tool.tlv.Tlv;
+import no.ntnu.network.message.serialize.tool.tlv.TlvReader;
 import no.ntnu.network.message.serialize.visitor.ByteSerializerVisitor;
 import no.ntnu.network.message.serialize.visitor.NofspSerializer;
 import org.junit.Before;
@@ -35,7 +39,8 @@ public class NofspControlPanelDeserializerTest {
         HeartbeatRequest<ControlPanelContext> request = new HeartbeatRequest<>();
 
         byte[] bytes = serializer.serialize(request);
+        Tlv tlv = TlvReader.contructTlv(bytes, NofspSerializationConstants.TLV_FRAME);
 
-        assertEquals(request, deserializer.deserializeMessage(bytes));
+        assertEquals(request, deserializer.deserializeMessage(tlv));
     }
 }

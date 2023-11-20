@@ -3,7 +3,7 @@ package no.ntnu.network.client;
 import no.ntnu.network.ClientAgent;
 import no.ntnu.network.ControlProcessAgent;
 import no.ntnu.network.message.context.MessageContext;
-import no.ntnu.network.message.deserialize.MessageDeserializer;
+import no.ntnu.network.message.deserialize.component.MessageDeserializer;
 import no.ntnu.network.message.request.RequestMessage;
 import no.ntnu.network.message.response.ResponseMessage;
 import no.ntnu.network.message.serialize.visitor.ByteSerializerVisitor;

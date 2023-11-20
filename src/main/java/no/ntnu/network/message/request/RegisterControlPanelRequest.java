@@ -18,7 +18,7 @@ import java.io.IOException;
 import java.util.Set;
 
 /**
- * A request to register a {@code Control Panel} at the central server.
+ * A request to register a {@code ControlPanel} at the central server.
  */
 public class RegisterControlPanelRequest extends RequestMessage implements Message<ServerContext> {
     private final Set<DeviceClass> compatibilityList;
@@ -88,33 +88,6 @@ public class RegisterControlPanelRequest extends RequestMessage implements Messa
     }
 
     @Override
-    public boolean equals(Object o) {
-        if (o == this) {
-            return true;
-        }
-
-        if (!(o instanceof RegisterControlPanelRequest r)) {
-            return false;
-        }
-
-        return super.equals(r) && compatibilityList.equals(r.getCompatibilityList());
-    }
-
-    @Override
-    public int hashCode() {
-        int result = 17;
-
-        result = result * 31 + compatibilityList.hashCode();
-
-        return result;
-    }
-
-    @Override
-    public String toString() {
-        return "requesting to register control panel";
-    }
-
-    @Override
     public void process(ServerContext context) throws IOException {
         context.logReceivingRequest(this);
         // creates a new client proxy for the control panel
@@ -130,5 +103,32 @@ public class RegisterControlPanelRequest extends RequestMessage implements Messa
         response.setId(getId().getInteger());
 
         context.respond(response);
+    }
+
+    @Override
+    public String toString() {
+        return "requesting to register control panel";
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == this) {
+            return true;
+        }
+
+        if (!(o instanceof RegisterControlPanelRequest r)) {
+            return false;
+        }
+
+        return super.equals(r) && compatibilityList.equals(r.getCompatibilityList());
+    }
+
+    @Override
+    public int hashCode() {
+        int result = super.hashCode();
+
+        result = result * 31 + compatibilityList.hashCode();
+
+        return result;
     }
 }
