@@ -7,6 +7,7 @@ import no.ntnu.network.message.common.ByteSerializableSet;
 import no.ntnu.network.message.common.ByteSerializableString;
 import no.ntnu.network.message.context.ServerContext;
 import no.ntnu.network.message.deserialize.component.NofspMessageDeserializer;
+import no.ntnu.network.message.request.FieldNodePoolPullRequest;
 import no.ntnu.network.message.request.RegisterControlPanelRequest;
 import no.ntnu.network.message.request.RegisterFieldNodeRequest;
 import no.ntnu.network.message.response.HeartbeatResponse;
@@ -39,6 +40,7 @@ public class NofspServerDeserializer extends NofspMessageDeserializer<ServerCont
     private void initializeDeserializationMethods() {
         addRequestMessageDeserialization(NofspSerializationConstants.REGISTER_FIELD_NODE_COMMAND, this::getRegisterFieldNodeRequest);
         addRequestMessageDeserialization(NofspSerializationConstants.REGISTER_CONTROL_PANEL_COMMAND, this::getRegisterControlPanelRequest);
+        addRequestMessageDeserialization(NofspSerializationConstants.FIELD_NODE_POOL_PULL, this::getFieldNodePoolPullRequest);
         addResponseMessageDeserialization(NofspSerializationConstants.HEART_BEAT_CODE, this::getHeartBeatResponse);
     }
 
@@ -189,5 +191,16 @@ public class NofspServerDeserializer extends NofspMessageDeserializer<ServerCont
      */
     private HeartbeatResponse getHeartBeatResponse(int messageId, TlvReader parameterReader) {
         return new HeartbeatResponse(messageId);
+    }
+
+    /**
+     * Deserializes a {@code FieldNodePoolPullRequest}.
+     *
+     * @param messageId the message id
+     * @param parameterReader the tlv reader holding the parameter tlvs
+     * @return the deserialized request
+     */
+    private FieldNodePoolPullRequest getFieldNodePoolPullRequest(int messageId, TlvReader parameterReader) {
+        return new FieldNodePoolPullRequest(messageId);
     }
 }

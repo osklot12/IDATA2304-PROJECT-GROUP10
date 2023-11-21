@@ -38,7 +38,7 @@ public class HeartbeatResponse extends ResponseMessage implements Message<Server
 
     @Override
     public byte[] accept(ByteSerializerVisitor visitor) throws SerializationException {
-        return visitor.visitHeartbeatResponse(this);
+        return visitor.visitResponseMessage(this);
     }
 
     @Override

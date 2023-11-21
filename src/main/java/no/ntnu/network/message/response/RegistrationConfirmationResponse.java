@@ -48,7 +48,7 @@ public class RegistrationConfirmationResponse<C extends ClientContext> extends R
 
     @Override
     public byte[] accept(ByteSerializerVisitor visitor) throws SerializationException {
-        return visitor.visitRegistrationConfirmationResponse(this);
+        return visitor.visitResponseMessage(this, nodeAddress);
     }
 
     @Override

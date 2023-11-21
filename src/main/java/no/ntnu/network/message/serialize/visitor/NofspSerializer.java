@@ -3,10 +3,7 @@ package no.ntnu.network.message.serialize.visitor;
 import no.ntnu.exception.SerializationException;
 import no.ntnu.network.message.common.*;
 import no.ntnu.network.message.context.ClientContext;
-import no.ntnu.network.message.request.HeartbeatRequest;
-import no.ntnu.network.message.request.RegisterControlPanelRequest;
-import no.ntnu.network.message.request.RegisterFieldNodeRequest;
-import no.ntnu.network.message.request.RequestMessage;
+import no.ntnu.network.message.request.*;
 import no.ntnu.network.message.response.HeartbeatResponse;
 import no.ntnu.network.message.response.RegistrationConfirmationResponse;
 import no.ntnu.network.message.response.ResponseMessage;
@@ -16,6 +13,7 @@ import no.ntnu.network.message.serialize.composite.ByteSerializable;
 import no.ntnu.network.message.serialize.tool.SimpleByteBuffer;
 import no.ntnu.network.message.serialize.tool.ByteHandler;
 
+import java.io.Serial;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
@@ -117,50 +115,33 @@ public class NofspSerializer implements ByteSerializerVisitor {
     }
 
     @Override
-    public byte[] visitRegisterFieldNodeRequest(RegisterFieldNodeRequest request) throws SerializationException {
+    public byte[] visitRequestMessage(RequestMessage request, ByteSerializable... parameters) throws SerializationException {
         byte[] commonRequestMessageBytes = getCommonRequestMessageBytes(request);
-        byte[] parameterTlv = createContainerTlv(request.getSerializableFnst(), request.getSerializableFnsm(),
-                request.getSerializableName());
+        byte[] parameterTlv = createContainerTlv(parameters);
 
-        return packInRequestFrame(ByteHandler.combineBytes(commonRequestMessageBytes, parameterTlv));
+        return packInRequestFrame(commonRequestMessageBytes, parameterTlv);
     }
 
     @Override
-    public byte[] visitRegisterControlPanelRequest(RegisterControlPanelRequest request) throws SerializationException {
-        byte[] commonRequestMessageBytes = getCommonRequestMessageBytes(request);
-        byte[] parameterTlv = createContainerTlv(request.getSerializableCompatibilityList());
-
-        return packInRequestFrame(ByteHandler.combineBytes(commonRequestMessageBytes, parameterTlv));
-    }
-
-    @Override
-    public byte[] visitRegistrationConfirmationResponse(RegistrationConfirmationResponse<?> response) throws SerializationException {
-        byte[] commonResponseMessageBytes = getCommonResponseMessageBytes(response);
-        byte[] parameterTlv = createContainerTlv(response.getNodeAddress());
-
-        return packInResponseFrame(ByteHandler.combineBytes(commonResponseMessageBytes, parameterTlv));
-    }
-
-    @Override
-    public byte[] visitErrorMessage(ErrorMessage errorMessage) throws SerializationException {
-        byte[] commonResponseMessageBytes = getCommonResponseMessageBytes(errorMessage);
-        byte[] parameterTlv = createContainerTlv(errorMessage.getDescription());
-
-        return packInResponseFrame(ByteHandler.combineBytes(commonResponseMessageBytes, parameterTlv));
-    }
-
-    @Override
-    public <C extends ClientContext> byte[] visitHeartbeatRequest(HeartbeatRequest<C> request) throws SerializationException {
+    public byte[] visitRequestMessage(RequestMessage request) throws SerializationException {
         byte[] commonRequestMessageBytes = getCommonRequestMessageBytes(request);
 
         return packInRequestFrame(commonRequestMessageBytes);
     }
 
     @Override
-    public byte[] visitHeartbeatResponse(HeartbeatResponse response) throws SerializationException {
+    public byte[] visitResponseMessage(ResponseMessage response, ByteSerializable... parameters) throws SerializationException {
         byte[] commonResponseMessageBytes = getCommonResponseMessageBytes(response);
+        byte[] parameterTlv = createContainerTlv(parameters);
 
-        return packInResponseFrame(commonResponseMessageBytes);
+        return packInResponseFrame(commonResponseMessageBytes, parameterTlv);
+    }
+
+    @Override
+    public byte[] visitResponseMessage(ResponseMessage response) throws SerializationException {
+       byte[] commonResponseMessageBytes = getCommonResponseMessageBytes(response);
+
+       return packInResponseFrame(commonResponseMessageBytes);
     }
 
     /**
@@ -253,11 +234,12 @@ public class NofspSerializer implements ByteSerializerVisitor {
      * Packs the content of a request message into a standard message frame for NOFSP, serializes it returns and it
      * in bytes.
      *
-     * @param valueField the value field of the frame - containing all fields for the request message
+     * @param tlvs the tlvs to pack into the value field for the message frame
      * @return a serialized request frame
      * @throws SerializationException thrown if serialization fails
      */
-    private static byte[] packInRequestFrame(byte[] valueField) throws SerializationException {
+    private static byte[] packInRequestFrame(byte[]... tlvs) throws SerializationException {
+        byte[] valueField = ByteHandler.combineBytes(tlvs);
         byte[] typeField = NofspSerializationConstants.REQUEST_BYTES;
         byte[] lengthField = createLengthField(valueField.length);
 
@@ -268,11 +250,12 @@ public class NofspSerializer implements ByteSerializerVisitor {
      * Packs the content of a response message into a standard message frame for NOFSP, serializes it and returns
      * it in bytes.
      *
-     * @param valueField the value field of the frame - containing all fields for the response message
+     * @param tlvs the tlvs to pack into the value field for the message frame
      * @return a serialized response frame
      * @throws SerializationException thrown if serialization fails
      */
-    private static byte[] packInResponseFrame(byte[] valueField) throws SerializationException {
+    private static byte[] packInResponseFrame(byte[]... tlvs) throws SerializationException {
+        byte[] valueField = ByteHandler.combineBytes(tlvs);
         byte[] typeField = NofspSerializationConstants.RESPONSE_BYTES;
         byte[] lengthField = createLengthField(valueField.length);
 

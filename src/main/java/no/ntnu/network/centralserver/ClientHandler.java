@@ -74,11 +74,7 @@ public class ClientHandler extends ControlProcessAgent<ServerContext> implements
         addConnectionService(clientGate);
     }
 
-    /**
-     * Returns whether the client has registered or not.
-     *
-     * @return true if registered
-     */
+    @Override
     public synchronized boolean isClientRegistered() {
         return clientRegistered;
     }

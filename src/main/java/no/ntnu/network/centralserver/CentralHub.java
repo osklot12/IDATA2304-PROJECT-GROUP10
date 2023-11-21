@@ -2,6 +2,7 @@ package no.ntnu.network.centralserver;
 
 import no.ntnu.exception.ClientRegistrationException;
 import no.ntnu.network.centralserver.clientproxy.ClientProxy;
+import no.ntnu.network.centralserver.clientproxy.FieldNodeClientProxy;
 
 /**
  * The CentralHub is the 'logic class' for the central server, responsible for managing clients.

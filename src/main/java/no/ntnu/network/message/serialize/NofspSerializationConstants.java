@@ -27,6 +27,7 @@ public class NofspSerializationConstants {
     public static final String HEART_BEAT = "HBEAT";
     public static final String REGISTER_FIELD_NODE_COMMAND = "REGFN";
     public static final String REGISTER_CONTROL_PANEL_COMMAND = "REGCP";
+    public static final String FIELD_NODE_POOL_PULL = "PPULL";
     public static final String DISCONNECT_CLIENT_COMMAND = "DISC";
 
     // status codes

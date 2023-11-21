@@ -5,6 +5,7 @@ import no.ntnu.network.message.Message;
 import no.ntnu.network.message.common.ControlMessage;
 import no.ntnu.network.message.context.ServerContext;
 import no.ntnu.network.message.deserialize.component.MessageDeserializer;
+import no.ntnu.network.message.request.FieldNodePoolPullRequest;
 import no.ntnu.network.message.request.RegisterControlPanelRequest;
 import no.ntnu.network.message.request.RegisterFieldNodeRequest;
 import no.ntnu.network.message.response.HeartbeatResponse;
@@ -13,6 +14,7 @@ import no.ntnu.network.message.serialize.tool.tlv.Tlv;
 import no.ntnu.network.message.serialize.tool.tlv.TlvReader;
 import no.ntnu.network.message.serialize.visitor.ByteSerializerVisitor;
 import no.ntnu.network.message.serialize.visitor.NofspSerializer;
+import no.ntnu.tools.Logger;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -58,6 +60,7 @@ public class NofspServerDeserializerTest {
         RegisterFieldNodeRequest request = new RegisterFieldNodeRequest(fnst, fnsm, "test request");
 
         byte[] bytes = serializer.serialize(request);
+        Logger.printBytes(bytes);
         Tlv tlv = TlvReader.contructTlv(bytes, NofspSerializationConstants.TLV_FRAME);
         Message<ServerContext> reconstructedMessage = deserializer.deserializeMessage(tlv);
 
@@ -96,5 +99,20 @@ public class NofspServerDeserializerTest {
         Tlv tlv = TlvReader.contructTlv(bytes, NofspSerializationConstants.TLV_FRAME);
 
         assertEquals(response, deserializer.deserializeMessage(tlv));
+    }
+
+    /**
+     * Tests the serialization of the {@code FieldNodePoolPullRequest}.
+     *
+     * @throws IOException thrown if an I/O exception occurs
+     */
+    @Test
+    public void testFieldNodePoolPullRequestSerialization() throws IOException {
+        FieldNodePoolPullRequest request = new FieldNodePoolPullRequest();
+
+        byte[] bytes = serializer.serialize(request);
+        Tlv tlv = TlvReader.contructTlv(bytes, NofspSerializationConstants.TLV_FRAME);
+
+        assertEquals(request, deserializer.deserializeMessage(tlv));
     }
 }

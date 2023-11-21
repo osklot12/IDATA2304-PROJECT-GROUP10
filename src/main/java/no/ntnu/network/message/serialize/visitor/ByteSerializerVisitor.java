@@ -3,11 +3,10 @@ package no.ntnu.network.message.serialize.visitor;
 import no.ntnu.exception.SerializationException;
 import no.ntnu.network.message.common.*;
 import no.ntnu.network.message.context.ClientContext;
-import no.ntnu.network.message.request.HeartbeatRequest;
-import no.ntnu.network.message.request.RegisterControlPanelRequest;
-import no.ntnu.network.message.request.RegisterFieldNodeRequest;
+import no.ntnu.network.message.request.*;
 import no.ntnu.network.message.response.HeartbeatResponse;
 import no.ntnu.network.message.response.RegistrationConfirmationResponse;
+import no.ntnu.network.message.response.ResponseMessage;
 import no.ntnu.network.message.response.error.ErrorMessage;
 import no.ntnu.network.message.response.error.RegistrationDeclinedError;
 import no.ntnu.network.message.serialize.composite.ByteSerializable;
@@ -80,57 +79,40 @@ public interface ByteSerializerVisitor {
     <K extends ByteSerializable, V extends ByteSerializable> byte[] visitMap(ByteSerializableMap<K, V> map) throws SerializationException;
 
     /**
-     * Serializes a {@code RegisterFieldNodeRequest} object.
+     * Serializes a {@code RequestMessage} with parameters.
      *
-     * @param request the request to serialize
-     * @return the serialized request
+     * @param request the request message to serialize
+     * @param parameters the parameters to serialize, in the given order
+     * @return the serialized request message
      * @throws SerializationException thrown if serialization fails
      */
-    byte[] visitRegisterFieldNodeRequest(RegisterFieldNodeRequest request) throws SerializationException;
+    byte[] visitRequestMessage(RequestMessage request, ByteSerializable... parameters) throws SerializationException;
 
     /**
-     * Serializes a {@code RegisterControlPanelRequest} object.
+     * Serializes a {@code RequestMessage} with no parameters.
      *
-     * @param request the request to serialize
-     * @return the serialized request
+     * @param request the request message to serialize
+     * @return the serialized request message
      * @throws SerializationException thrown if serialization fails
      */
-    byte[] visitRegisterControlPanelRequest(RegisterControlPanelRequest request) throws SerializationException;
+    byte[] visitRequestMessage(RequestMessage request) throws SerializationException;
 
     /**
-     * Serializes a {@code RegistrationConfirmationResponse} object.
+     * Serializes a {@code ResponseMessage} with parameters.
      *
-     * @param response the response to serialize
+     * @param response the response message to serialize
+     * @param parameters the parameters to serialize, in the given order
      * @return the serialized response
      * @throws SerializationException thrown if serialization fails
      */
-    byte[] visitRegistrationConfirmationResponse(RegistrationConfirmationResponse<?> response) throws SerializationException;
+    byte[] visitResponseMessage(ResponseMessage response, ByteSerializable... parameters) throws SerializationException;
 
     /**
-     * Serializes an {@code ErrorMessage} object.
+     * Serializes a {@code ResponseMessage}.
      *
-     * @param errorMessage the error message to serialize
-     * @return the serialized error message
-     * @throws SerializationException thrown if serialization fails
-     */
-    byte[] visitErrorMessage(ErrorMessage errorMessage) throws SerializationException;
-
-    /**
-     * Serializes a {@code HeartbeatRequest} object
-     *
-     * @param request the request to serialize
-     * @return the serialized request
-     * @param <C> any client context
-     * @throws SerializationException thrown if serialization fails
-     */
-    <C extends ClientContext> byte[] visitHeartbeatRequest(HeartbeatRequest<C> request) throws SerializationException;
-
-    /**
-     * Serializes a {@code HeartbeatResponse} object.
-     *
-     * @param response the response to serialize
+     * @param response the response message to serialize
      * @return the serialized response
      * @throws SerializationException thrown if serialization fails
      */
-    byte[] visitHeartbeatResponse(HeartbeatResponse response) throws SerializationException;
+    byte[] visitResponseMessage(ResponseMessage response) throws SerializationException;
 }

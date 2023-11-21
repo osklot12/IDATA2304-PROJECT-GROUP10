@@ -78,6 +78,15 @@ public class ServerContext implements MessageContext {
         return clientAddress;
     }
 
+    /**
+     * Returns whether the client is registered or not.
+     *
+     * @return true if registered
+     */
+    public boolean isClientRegistered() {
+        return agent.isClientRegistered();
+    }
+
     @Override
     public void respond(ResponseMessage responseMessage) throws IOException {
         agent.sendResponse(responseMessage);

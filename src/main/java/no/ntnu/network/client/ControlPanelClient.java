@@ -6,6 +6,7 @@ import no.ntnu.network.message.Message;
 import no.ntnu.network.message.context.ControlPanelContext;
 import no.ntnu.network.message.deserialize.NofspControlPanelDeserializer;
 import no.ntnu.network.message.deserialize.component.MessageDeserializer;
+import no.ntnu.network.message.request.FieldNodePoolPullRequest;
 import no.ntnu.network.message.request.RegisterControlPanelRequest;
 import no.ntnu.network.message.serialize.visitor.ByteSerializerVisitor;
 import no.ntnu.network.message.serialize.visitor.NofspSerializer;

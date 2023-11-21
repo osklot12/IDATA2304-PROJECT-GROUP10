@@ -12,6 +12,7 @@ import no.ntnu.network.message.response.RegistrationConfirmationResponse;
 import no.ntnu.network.message.response.ResponseMessage;
 import no.ntnu.network.message.response.error.RegistrationDeclinedError;
 import no.ntnu.network.message.serialize.NofspSerializationConstants;
+import no.ntnu.network.message.serialize.composite.ByteSerializable;
 import no.ntnu.network.message.serialize.visitor.ByteSerializerVisitor;
 
 import java.io.IOException;
@@ -84,7 +85,7 @@ public class RegisterControlPanelRequest extends RequestMessage implements Messa
 
     @Override
     public byte[] accept(ByteSerializerVisitor visitor) throws SerializationException {
-        return visitor.visitRegisterControlPanelRequest(this);
+        return visitor.visitRequestMessage(this, getSerializableCompatibilityList());
     }
 
     @Override

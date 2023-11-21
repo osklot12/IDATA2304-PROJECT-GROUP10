@@ -13,6 +13,7 @@ import no.ntnu.network.message.response.RegistrationConfirmationResponse;
 import no.ntnu.network.message.response.ResponseMessage;
 import no.ntnu.network.message.response.error.RegistrationDeclinedError;
 import no.ntnu.network.message.serialize.NofspSerializationConstants;
+import no.ntnu.network.message.serialize.composite.ByteSerializable;
 import no.ntnu.network.message.serialize.visitor.ByteSerializerVisitor;
 
 import java.io.IOException;
@@ -110,9 +111,7 @@ public class RegisterFieldNodeRequest extends RequestMessage implements Message<
      * @param result the serializable map to fill
      */
     private void fillSerializableFnsm(ByteSerializableMap<ByteSerializableInteger, ByteSerializableInteger> result) {
-        fnsm.forEach((key, value) -> {
-            result.put(new ByteSerializableInteger(key), new ByteSerializableInteger(value));
-        });
+        fnsm.forEach((key, value) -> result.put(new ByteSerializableInteger(key), new ByteSerializableInteger(value)));
     }
 
     /**
@@ -150,7 +149,7 @@ public class RegisterFieldNodeRequest extends RequestMessage implements Message<
 
     @Override
     public byte[] accept(ByteSerializerVisitor visitor) throws SerializationException {
-        return visitor.visitRegisterFieldNodeRequest(this);
+        return visitor.visitRequestMessage(this, new ByteSerializable[] {getSerializableFnst(), getSerializableFnsm(), getSerializableName()});
     }
 
     @Override
