@@ -1,18 +1,14 @@
 package no.ntnu.network.message.response.error;
 
-import no.ntnu.exception.SerializationException;
-import no.ntnu.network.message.Message;
 import no.ntnu.network.message.context.ClientContext;
 import no.ntnu.network.message.serialize.NofspSerializationConstants;
-
-import java.io.IOException;
 
 /**
  * An error message for when the central server cannot perform a request due to the client not being authenticated.
  *
  * @param <C> any client context for message processing
  */
-public class AuthenticationFailedError<C extends ClientContext> extends ErrorMessage implements Message<C> {
+public class AuthenticationFailedError<C extends ClientContext> extends ErrorMessage<C> {
     /**
      * Creates a new AuthenticationFailedError.
      *
@@ -48,12 +44,5 @@ public class AuthenticationFailedError<C extends ClientContext> extends ErrorMes
         this(errorDescription);
 
         setId(id);
-    }
-
-    @Override
-    public void process(C context) throws IOException {
-        if (context.acceptResponse(this)) {
-            context.logReceivingResponse(this);
-        }
     }
 }

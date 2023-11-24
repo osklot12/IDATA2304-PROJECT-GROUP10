@@ -11,7 +11,7 @@ import no.ntnu.network.message.serialize.visitor.ByteSerializerVisitor;
  * A confirmation response to a node registration request, indicating that the client has been
  * registered successfully.
  */
-public class RegistrationConfirmationResponse<C extends ClientContext> extends ResponseMessage implements Message<C> {
+public class RegistrationConfirmationResponse<C extends ClientContext> extends ResponseMessage<C> {
     private final ByteSerializableInteger nodeAddress;
 
     /**
@@ -52,11 +52,8 @@ public class RegistrationConfirmationResponse<C extends ClientContext> extends R
     }
 
     @Override
-    public void process(C context) {
-        if (context.acceptResponse(this)) {
-            context.logReceivingResponse(this);
-            context.setClientNodeAddress(getNodeAddress().getInteger());
-        }
+    protected void handleResponseProcessing(C context) {
+        context.setClientNodeAddress(getNodeAddress().getInteger());
     }
 
     @Override

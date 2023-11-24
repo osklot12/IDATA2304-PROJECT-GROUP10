@@ -11,7 +11,7 @@ import java.io.IOException;
 /**
  * A response to a successful ADL update request, indicating that the desired updates has been complete.
  */
-public class AdlUpdatedResponse extends ResponseMessage implements Message<ServerContext> {
+public class AdlUpdatedResponse extends ResponseMessage<ServerContext> {
     /**
      * Creates a new AdlUpdateResponse.
      */
@@ -31,10 +31,8 @@ public class AdlUpdatedResponse extends ResponseMessage implements Message<Serve
     }
 
     @Override
-    public void process(ServerContext context) throws IOException {
-        if (context.acceptResponse(this)) {
-            context.logReceivingResponse(this);
-        }
+    protected void handleResponseProcessing(ServerContext context) {
+        // TODO: handle further processing
     }
 
     @Override

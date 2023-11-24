@@ -10,7 +10,7 @@ import java.io.IOException;
 
 /**
  * A message sent from one node to another, requesting a service.
- * The class provides standard request processing for any class extending it.
+ * The class provides standard request message processing for any class extending it.
  * Subclasses of this class should implement their processing logic in the {@code executeAndCreateResponse()} method,
  * and not in the {@code process()} method provided by the {@code Message} interface.
  */

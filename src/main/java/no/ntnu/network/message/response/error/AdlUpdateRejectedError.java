@@ -1,6 +1,5 @@
 package no.ntnu.network.message.response.error;
 
-import no.ntnu.network.message.Message;
 import no.ntnu.network.message.context.ServerContext;
 import no.ntnu.network.message.serialize.NofspSerializationConstants;
 
@@ -9,7 +8,7 @@ import java.io.IOException;
 /**
  * An error message for when an ADL update is rejected.
  */
-public class AdlUpdateRejectedError extends ErrorMessage implements Message<ServerContext> {
+public class AdlUpdateRejectedError extends ErrorMessage<ServerContext> {
     /**
      * Creates a new AdlUpdateRejectedError.
      *
@@ -29,10 +28,5 @@ public class AdlUpdateRejectedError extends ErrorMessage implements Message<Serv
         this(errorDescription);
 
         setId(id);
-    }
-
-    @Override
-    public void process(ServerContext context) throws IOException {
-
     }
 }

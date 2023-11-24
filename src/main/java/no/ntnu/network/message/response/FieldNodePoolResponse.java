@@ -14,7 +14,7 @@ import java.util.Map;
 /**
  * A response to a successful field node pool pull request, containing the field node pool for the central server.
  */
-public class FieldNodePoolResponse extends ResponseMessage implements Message<ControlPanelContext> {
+public class FieldNodePoolResponse extends ResponseMessage<ControlPanelContext> {
     private final Map<Integer, String> fieldNodePool;
 
     /**
@@ -44,10 +44,8 @@ public class FieldNodePoolResponse extends ResponseMessage implements Message<Co
     }
 
     @Override
-    public void process(ControlPanelContext context) throws IOException {
-        if (context.acceptResponse(this)) {
-            context.logReceivingResponse(this);
-        }
+    protected void handleResponseProcessing(ControlPanelContext context) {
+        // TODO handle further processing
     }
 
     @Override

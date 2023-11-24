@@ -2,13 +2,14 @@ package no.ntnu.network.message.response.error;
 
 import no.ntnu.exception.SerializationException;
 import no.ntnu.network.message.common.ByteSerializableString;
+import no.ntnu.network.message.context.MessageContext;
 import no.ntnu.network.message.response.ResponseMessage;
 import no.ntnu.network.message.serialize.visitor.ByteSerializerVisitor;
 
 /**
  * A response message indicating that an error has occurred.
  */
-public abstract class ErrorMessage extends ResponseMessage {
+public abstract class ErrorMessage<C extends MessageContext> extends ResponseMessage<C> {
     private final ByteSerializableString errorDescription;
 
     /**
@@ -34,6 +35,12 @@ public abstract class ErrorMessage extends ResponseMessage {
      */
     public ByteSerializableString getDescription() {
         return errorDescription;
+    }
+
+    @Override
+    protected void handleResponseProcessing(C context) {
+        // error messages usually do not require further processing
+        // the ones that do can override this method
     }
 
     @Override

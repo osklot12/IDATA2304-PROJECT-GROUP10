@@ -11,7 +11,7 @@ import java.io.IOException;
 /**
  * A response to a heartbeat, indicating that the client is still connected.
  */
-public class HeartbeatResponse extends ResponseMessage implements Message<ServerContext> {
+public class HeartbeatResponse extends ResponseMessage<ServerContext> {
     /**
      * Creates a new HeartbeatResponse.
      */
@@ -31,10 +31,8 @@ public class HeartbeatResponse extends ResponseMessage implements Message<Server
     }
 
     @Override
-    public void process(ServerContext context) throws IOException {
-        if (context.acceptResponse(this)) {
-            context.logReceivingResponse(this);
-        }
+    protected void handleResponseProcessing(ServerContext context) {
+        // no further processing required
     }
 
     @Override
