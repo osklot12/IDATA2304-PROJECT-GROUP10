@@ -17,9 +17,31 @@ import java.util.*;
  * A field node is a subsystem in the network consisting of sensors and actuators.
  */
 public class FieldNode implements SensorListener, ActuatorListener {
+    private final static String STANDARD_NAME = "FieldNode";
     private Environment environment;
     private final Map<Integer, Device> devices;
+    private final String name;
     private double latestSensorData;
+
+    /**
+     * Creates a new FieldNode.
+     *
+     * @param environment the environment in which to place the field node
+     * @param name the name of the field node
+     */
+    public FieldNode(Environment environment, String name) {
+        if (environment == null) {
+            throw new IllegalArgumentException("Cannot create FieldNode, because environment is null.");
+        }
+
+        if (name == null) {
+            throw new IllegalArgumentException("Cannot create FieldNode, because name is null.");
+        }
+
+        this.environment = environment;
+        this.devices = new HashMap<>();
+        this.name = name;
+    }
 
     /**
      * Creates a new FieldNode.
@@ -27,8 +49,7 @@ public class FieldNode implements SensorListener, ActuatorListener {
      * @param environment the environment in which to place the field node
      */
     public FieldNode(Environment environment) {
-        this.environment = environment;
-        this.devices = new HashMap<>();
+        this(environment, STANDARD_NAME);
     }
 
     /**
@@ -59,11 +80,32 @@ public class FieldNode implements SensorListener, ActuatorListener {
     public Map<Integer, DeviceClass> getFNST() {
         Map<Integer, DeviceClass> fnst = new HashMap<>();
 
-        devices.forEach((key, value) -> {
-            fnst.put(key, value.getDeviceClass());
-        });
+        devices.forEach((key, value) -> fnst.put(key, value.getDeviceClass()));
 
         return fnst;
+    }
+
+    /**
+     * Returns the Field Node Status Map (FNSM) for the field node.
+     * The FNSM contains all the actuator addresses and their respective state.
+     *
+     * @return FNSM for field node
+     */
+    public Map<Integer, Integer> getFNSM() {
+        Map<Integer, Integer> fnsm = new HashMap<>();
+
+        getActuators().forEach((key, value) -> fnsm.put(key, value.getState()));
+
+        return fnsm;
+    }
+
+    /**
+     * Returns the name of the field node.
+     *
+     * @return the name of field node
+     */
+    public String getName() {
+        return name;
     }
 
     private Map<Integer, Actuator> getActuators() {
@@ -91,10 +133,7 @@ public class FieldNode implements SensorListener, ActuatorListener {
     }
 
     private void setEnvironmentForAllDevices(Environment environment) {
-        devices.values().forEach(
-                (device) -> {
-                    device.setEnvironment(environment);
-                }
+        devices.values().forEach(device -> device.setEnvironment(environment)
         );
     }
 

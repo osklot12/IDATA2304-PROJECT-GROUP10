@@ -1,12 +1,8 @@
 package no.ntnu.network.message.response.error;
 
-import no.ntnu.exception.SerializationException;
 import no.ntnu.network.message.Message;
-import no.ntnu.network.message.common.ByteSerializableString;
 import no.ntnu.network.message.context.ClientContext;
 import no.ntnu.network.message.serialize.NofspSerializationConstants;
-import no.ntnu.network.message.serialize.visitor.ByteSerializerVisitor;
-import no.ntnu.tools.Logger;
 
 import java.io.IOException;
 
@@ -36,13 +32,9 @@ public class RegistrationDeclinedError<C extends ClientContext> extends ErrorMes
     }
 
     @Override
-    public byte[] accept(ByteSerializerVisitor visitor) throws SerializationException {
-        return visitor.visitResponseMessage(this, getDescription());
-    }
-
-    @Override
     public void process(C context) throws IOException {
-        context.logReceivingResponse(this);
-        context.acceptResponse(this);
+        if (context.acceptResponse(this)) {
+            context.logReceivingResponse(this);
+        }
     }
 }

@@ -1,7 +1,7 @@
 package no.ntnu.network.message.context;
 
 import no.ntnu.controlpanel.ControlPanel;
-import no.ntnu.network.ClientAgent;
+import no.ntnu.network.CommunicationAgent;
 
 /**
  * A context for processing control panel messages.
@@ -15,7 +15,7 @@ public class ControlPanelContext extends ClientContext {
      * @param agent the communication agent
      * @param controlPanel the control panel to operate on
      */
-    public ControlPanelContext(ClientAgent agent, ControlPanel controlPanel) {
+    public ControlPanelContext(CommunicationAgent agent, ControlPanel controlPanel) {
         super(agent);
         if (controlPanel == null) {
             throw new IllegalArgumentException("Cannot create ControlPanelContext, because control panel is null");

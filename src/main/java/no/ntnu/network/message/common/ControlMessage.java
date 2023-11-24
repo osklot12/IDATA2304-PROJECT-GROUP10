@@ -1,6 +1,6 @@
 package no.ntnu.network.message.common;
 
-import no.ntnu.network.message.serialize.composite.ByteSerializable;
+import no.ntnu.network.message.serialize.ByteSerializable;
 
 /**
  * A message sent from one node to another for control purposes. Control messages can be categorized into two categories:

@@ -6,8 +6,14 @@ import no.ntnu.network.message.Message;
 import no.ntnu.network.message.context.FieldNodeContext;
 import no.ntnu.network.message.deserialize.NofspFieldNodeDeserializer;
 import no.ntnu.network.message.deserialize.component.MessageDeserializer;
+import no.ntnu.network.message.request.RegisterFieldNodeRequest;
 import no.ntnu.network.message.serialize.visitor.ByteSerializerVisitor;
 import no.ntnu.network.message.serialize.visitor.NofspSerializer;
+import no.ntnu.tools.Logger;
+
+import java.io.IOException;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * A client for a field node, connecting it to a central server using NOFSP.
@@ -18,7 +24,8 @@ public class FieldNodeClient extends Client<FieldNodeContext> {
     private final ByteSerializerVisitor serializer;
     private final MessageDeserializer<FieldNodeContext> deserializer;
     private final FieldNode fieldNode;
-    private final FieldNodeContext fieldNodeContext;
+    private final Set<Integer> adl;
+    private final FieldNodeContext context;
 
     /**
      * Creates a new FieldNodeClient.
@@ -34,7 +41,8 @@ public class FieldNodeClient extends Client<FieldNodeContext> {
         serializer = new NofspSerializer();
         deserializer = new NofspFieldNodeDeserializer();
         this.fieldNode = fieldNode;
-        this.fieldNodeContext = new FieldNodeContext(this, fieldNode);
+        this.adl = new HashSet<>();
+        this.context = new FieldNodeContext(this, fieldNode, this.adl);
     }
 
     @Override
@@ -53,12 +61,20 @@ public class FieldNodeClient extends Client<FieldNodeContext> {
      * Registers the field node at the server.
      */
     private void registerFieldNode() {
-
+        try {
+            sendRequest(new RegisterFieldNodeRequest(fieldNode.getFNST(), fieldNode.getFNSM(), fieldNode.getName()));
+        } catch (IOException e) {
+            Logger.error("Cannot send registration request: " + e.getMessage());
+        }
     }
 
     @Override
     protected void processReceivedMessage(Message<FieldNodeContext> message) {
-
+        try {
+            message.process(context);
+        } catch (IOException e) {
+            Logger.error("Cannot process received message: " + e.getMessage());
+        }
     }
 
     @Override

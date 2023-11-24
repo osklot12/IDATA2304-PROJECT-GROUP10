@@ -10,8 +10,12 @@ import no.ntnu.network.message.deserialize.component.NofspMessageDeserializer;
 import no.ntnu.network.message.request.FieldNodePoolPullRequest;
 import no.ntnu.network.message.request.RegisterControlPanelRequest;
 import no.ntnu.network.message.request.RegisterFieldNodeRequest;
+import no.ntnu.network.message.request.SubscribeToFieldNodeRequest;
+import no.ntnu.network.message.response.AdlUpdatedResponse;
 import no.ntnu.network.message.response.HeartbeatResponse;
+import no.ntnu.network.message.response.error.AdlUpdateRejectedError;
 import no.ntnu.network.message.serialize.NofspSerializationConstants;
+import no.ntnu.network.message.serialize.tool.DataTypeConverter;
 import no.ntnu.network.message.serialize.tool.tlv.Tlv;
 import no.ntnu.network.message.serialize.tool.tlv.TlvReader;
 
@@ -38,10 +42,16 @@ public class NofspServerDeserializer extends NofspMessageDeserializer<ServerCont
      * Adds the implemented server message deserialization methods to the lookup tables.
      */
     private void initializeDeserializationMethods() {
+        // requests
         addRequestMessageDeserialization(NofspSerializationConstants.REGISTER_FIELD_NODE_COMMAND, this::getRegisterFieldNodeRequest);
         addRequestMessageDeserialization(NofspSerializationConstants.REGISTER_CONTROL_PANEL_COMMAND, this::getRegisterControlPanelRequest);
-        addRequestMessageDeserialization(NofspSerializationConstants.FIELD_NODE_POOL_PULL, this::getFieldNodePoolPullRequest);
+        addRequestMessageDeserialization(NofspSerializationConstants.SUBSCRIBE_TO_FIELD_NODE_COMMAND, this::getSubscribeToFieldNodeRequest);
+        addRequestMessageDeserialization(NofspSerializationConstants.FIELD_NODE_POOL_PULL_COMMAND, this::getFieldNodePoolPullRequest);
+
+        // responses
         addResponseMessageDeserialization(NofspSerializationConstants.HEART_BEAT_CODE, this::getHeartBeatResponse);
+        addResponseMessageDeserialization(NofspSerializationConstants.ADL_UPDATED_RESPONSE, this::getAdlUpdatedResponse);
+        addResponseMessageDeserialization(NofspSerializationConstants.ADL_UPDATE_REJECTED, this::getAdlUpdateRejectedError);
     }
 
     /**
@@ -67,7 +77,7 @@ public class NofspServerDeserializer extends NofspMessageDeserializer<ServerCont
         Tlv nameTlv = parameterReader.readNextTlv();
         String name = getFieldNodeName(nameTlv);
 
-        request = new RegisterFieldNodeRequest(fnst, fnsm, name);
+        request = new RegisterFieldNodeRequest(messageId, fnst, fnsm, name);
 
         return request;
     }
@@ -82,27 +92,7 @@ public class NofspServerDeserializer extends NofspMessageDeserializer<ServerCont
     private Map<Integer, DeviceClass> getFnst(Tlv fnstTlv) throws IOException {
         ByteSerializableMap<ByteSerializableInteger, ByteSerializableString> serializableFnst
                 = getMapOfType(fnstTlv, ByteSerializableInteger.class, ByteSerializableString.class);
-        return transformFnst(serializableFnst);
-    }
-
-    /**
-     * Creates a normal FNST from a serializable FNST.
-     *
-     * @param serializableFnst the serializable fnst
-     * @return a normal fnst
-     */
-    private Map<Integer, DeviceClass> transformFnst(ByteSerializableMap<ByteSerializableInteger, ByteSerializableString> serializableFnst) {
-        Map<Integer, DeviceClass> fnst = new HashMap<>();
-
-        serializableFnst.forEach((key, value) -> {
-            int deviceAddress = key.getInteger();
-            DeviceClass deviceClass = DeviceClass.getDeviceClass(value.getString());
-            if (deviceClass != null) {
-                fnst.put(deviceAddress, deviceClass);
-            }
-        });
-
-        return fnst;
+        return DataTypeConverter.getFnst(serializableFnst);
     }
 
     /**
@@ -117,9 +107,7 @@ public class NofspServerDeserializer extends NofspMessageDeserializer<ServerCont
 
         ByteSerializableMap<ByteSerializableInteger, ByteSerializableInteger> serializableFnsm =
                 getMapOfType(fnsmTlv, ByteSerializableInteger.class, ByteSerializableInteger.class);
-        serializableFnsm.forEach((key, value) -> {
-            fnsm.put(key.getInteger(), value.getInteger());
-        });
+        serializableFnsm.forEach((key, value) -> fnsm.put(key.getInteger(), value.getInteger()));
 
         return fnsm;
     }
@@ -154,39 +142,38 @@ public class NofspServerDeserializer extends NofspMessageDeserializer<ServerCont
 
         // deserializes compatibility list
         Tlv compatibilityListTlv = parameterReader.readNextTlv();
-        ByteSerializableSet<ByteSerializableString> compatibilityList = getSetOfType(compatibilityListTlv, ByteSerializableString.class);
+        ByteSerializableSet<ByteSerializableString> serializableCompatibilityList = getSetOfType(compatibilityListTlv, ByteSerializableString.class);
 
-        request = new RegisterControlPanelRequest(messageId, createDeviceClassSet(compatibilityList));
+        request = new RegisterControlPanelRequest(messageId, DataTypeConverter.getCompatibilityList(serializableCompatibilityList));
 
         return request;
     }
 
     /**
-     * Creates a {@code Set} of DeviceClass constants out of a {@code ByteSerializableSet} of strings.
+     * Deserializes a {@code SubscribeToFieldNodeRequest}.
      *
-     * @param serializableSet the set to extract strings from
-     * @return a set with device class constants
+     * @param messageId the message ID
+     * @param parameterReader a TlvReader holding the request parameters
+     * @return the deserialized request
+     * @throws IOException thrown if an I/O exception occurs
      */
-    private Set<DeviceClass> createDeviceClassSet(ByteSerializableSet<ByteSerializableString> serializableSet) {
-        Set<DeviceClass> deviceClassSet = new HashSet<>();
+    private SubscribeToFieldNodeRequest getSubscribeToFieldNodeRequest(int messageId, TlvReader parameterReader) throws IOException {
+        SubscribeToFieldNodeRequest request = null;
 
-        serializableSet.forEach(
-                item -> {
-                    DeviceClass deviceClass = DeviceClass.getDeviceClass(item.getString());
-                    if (deviceClass != null) {
-                        deviceClassSet.add(deviceClass);
-                    }
-                }
-        );
+        // deserializes field node address
+        Tlv fieldNodeAddressTlv = parameterReader.readNextTlv();
+        ByteSerializableInteger serializableAddress = getInteger(fieldNodeAddressTlv);
 
-        return deviceClassSet;
+        request = new SubscribeToFieldNodeRequest(messageId, serializableAddress.getInteger());
+
+        return request;
     }
 
     /**
      * Deserializes a {@code HeartbeatResponse}.
      *
      * @param messageId the message id
-     * @param parameterReader the tlv reader holding the parameter tlvs
+     * @param parameterReader the TlvReader holding the parameter tlvs
      * @return the deserialized request
      */
     private HeartbeatResponse getHeartBeatResponse(int messageId, TlvReader parameterReader) {
@@ -202,5 +189,35 @@ public class NofspServerDeserializer extends NofspMessageDeserializer<ServerCont
      */
     private FieldNodePoolPullRequest getFieldNodePoolPullRequest(int messageId, TlvReader parameterReader) {
         return new FieldNodePoolPullRequest(messageId);
+    }
+
+    /**
+     * Deserializes a {@code AdlUpdatedResponse}.
+     *
+     * @param messageId the message id
+     * @param parameterReader the TlvReader holding the parameter tlvs
+     * @return the deserialized request
+     */
+    private AdlUpdatedResponse getAdlUpdatedResponse(int messageId, TlvReader parameterReader) {
+        return new AdlUpdatedResponse(messageId);
+    }
+
+    /**
+     * Deserializes a {@code AdlUpdateRejectedError}.
+     *
+     * @param messageId the message id
+     * @param parameterReader a TlvReader holding the parameter tlvs
+     * @return the deserialized response
+     * @throws IOException thrown if an I/O exception is thrown
+     */
+    private AdlUpdateRejectedError getAdlUpdateRejectedError(int messageId, TlvReader parameterReader) throws IOException {
+        AdlUpdateRejectedError response = null;
+
+        // deserializes the description
+        String description = getRegularString(parameterReader.readNextTlv());
+
+        response = new AdlUpdateRejectedError(messageId, description);
+
+        return response;
     }
 }

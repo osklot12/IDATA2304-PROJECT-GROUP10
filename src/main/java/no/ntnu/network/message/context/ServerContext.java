@@ -1,26 +1,22 @@
 package no.ntnu.network.message.context;
 
 import no.ntnu.exception.ClientRegistrationException;
+import no.ntnu.exception.SubscriptionException;
 import no.ntnu.fieldnode.device.DeviceClass;
 import no.ntnu.network.CommunicationAgent;
-import no.ntnu.network.ServerAgent;
-import no.ntnu.network.centralserver.CentralHub;
-import no.ntnu.network.centralserver.clientproxy.ClientProxy;
-import no.ntnu.network.centralserver.clientproxy.ControlPanelClientProxy;
-import no.ntnu.network.centralserver.clientproxy.FieldNodeClientProxy;
+import no.ntnu.network.centralserver.centralhub.CentralHub;
+import no.ntnu.network.centralserver.centralhub.clientproxy.FieldNodeClientProxy;
 import no.ntnu.network.message.request.RequestMessage;
 import no.ntnu.network.message.response.ResponseMessage;
 import no.ntnu.tools.ServerLogger;
 
-import java.io.IOException;
 import java.util.Map;
 import java.util.Set;
 
 /**
  * A context for processing server messages.
  */
-public class ServerContext implements MessageContext {
-    private final ServerAgent agent;
+public class ServerContext extends MessageContext {
     private final CentralHub centralHub;
 
     /**
@@ -29,16 +25,12 @@ public class ServerContext implements MessageContext {
      * @param agent the communication agent
      * @param centralHub the central hub to operate on
      */
-    public ServerContext(ServerAgent agent, CentralHub centralHub) {
-        if (agent == null) {
-            throw new IllegalArgumentException("Cannot create ServerContext, because agent is null");
-        }
-
+    public ServerContext(CommunicationAgent agent, CentralHub centralHub) {
+        super(agent);
         if (centralHub == null) {
             throw new IllegalArgumentException("Cannot create ServerContext, because central hub is null.");
         }
 
-        this.agent = agent;
         this.centralHub = centralHub;
     }
 
@@ -52,7 +44,12 @@ public class ServerContext implements MessageContext {
      * @throws ClientRegistrationException thrown if registration fails
      */
     public int registerFieldNode(Map<Integer, DeviceClass> fnst, Map<Integer, Integer> fnsm, String name) throws ClientRegistrationException {
-        return registerClient(new FieldNodeClientProxy(agent, fnst, fnsm, name));
+        int clientAddress = centralHub.registerFieldNode(fnst, fnsm, name, agent);
+        if (clientAddress != -1) {
+            agent.setClientNodeAddress(clientAddress);
+        }
+
+        return clientAddress;
     }
 
     /**
@@ -63,18 +60,11 @@ public class ServerContext implements MessageContext {
      * @throws ClientRegistrationException thrown if registration fails
      */
     public int registerControlPanel(Set<DeviceClass> compatibilityList) throws ClientRegistrationException {
-        return registerClient(new ControlPanelClientProxy(agent, compatibilityList));
-    }
+        int clientAddress = centralHub.registerControlPanel(compatibilityList, agent);
+        if (clientAddress != -1) {
+            agent.setClientNodeAddress(clientAddress);
+        }
 
-    /**
-     * Registers a client proxy at the central hub.
-     *
-     * @param clientProxy the client proxy to register
-     * @throws ClientRegistrationException thrown if registration fails
-     */
-    private int registerClient(ClientProxy clientProxy) throws ClientRegistrationException {
-        int clientAddress = centralHub.registerClient(clientProxy);
-        agent.registerClient();
         return clientAddress;
     }
 
@@ -84,17 +74,27 @@ public class ServerContext implements MessageContext {
      * @return true if registered
      */
     public boolean isClientRegistered() {
-        return agent.isClientRegistered();
+        return agent.getClientNodeAddress() != -1;
     }
 
-    @Override
-    public void respond(ResponseMessage responseMessage) throws IOException {
-        agent.sendResponse(responseMessage);
+    /**
+     * Returns the field node pool.
+     *
+     * @return the field node pool
+     */
+    public Map<Integer, String> getFieldNodePool() {
+        return centralHub.getFieldNodePool();
     }
 
-    @Override
-    public boolean acceptResponse(ResponseMessage response) {
-        return agent.acceptResponse(response);
+    /**
+     * Subscribes a control panel to a field node.
+     *
+     * @param fieldNodeAddress the address of the field node to subscribe to
+     * @return the field node client proxy subscribed to
+     * @throws SubscriptionException thrown if subscribing fails
+     */
+    public FieldNodeClientProxy subscribeToFieldNode(int fieldNodeAddress) throws SubscriptionException {
+        return centralHub.subscribeToFieldNode(agent, fieldNodeAddress);
     }
 
     @Override

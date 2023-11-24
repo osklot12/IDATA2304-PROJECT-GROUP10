@@ -2,8 +2,6 @@ package no.ntnu.network.message.request;
 
 import no.ntnu.exception.SerializationException;
 import no.ntnu.network.message.Message;
-import no.ntnu.network.message.context.ClientContext;
-import no.ntnu.network.message.context.MessageContext;
 import no.ntnu.network.message.context.ServerContext;
 import no.ntnu.network.message.serialize.NofspSerializationConstants;
 import no.ntnu.network.message.serialize.visitor.ByteSerializerVisitor;

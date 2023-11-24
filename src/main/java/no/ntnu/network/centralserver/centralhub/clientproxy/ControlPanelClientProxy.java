@@ -1,9 +1,7 @@
-package no.ntnu.network.centralserver.clientproxy;
+package no.ntnu.network.centralserver.centralhub.clientproxy;
 
 import no.ntnu.fieldnode.device.DeviceClass;
 import no.ntnu.network.CommunicationAgent;
-import no.ntnu.network.ServerAgent;
-import no.ntnu.network.centralserver.ClientHandler;
 
 import java.util.Set;
 

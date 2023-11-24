@@ -1,9 +1,8 @@
 package no.ntnu.network.message.request;
 
 import no.ntnu.fieldnode.device.DeviceClass;
-import no.ntnu.network.ServerTestAgent;
 import no.ntnu.network.TestAgent;
-import no.ntnu.network.centralserver.CentralHub;
+import no.ntnu.network.centralserver.centralhub.CentralHub;
 import no.ntnu.network.message.context.ServerContext;
 import no.ntnu.network.message.response.RegistrationConfirmationResponse;
 import no.ntnu.network.message.response.error.RegistrationDeclinedError;
@@ -20,7 +19,7 @@ import static org.junit.Assert.*;
  * JUnit testing for the RegisterControlPanelRequest class.
  */
 public class RegisterControlPanelRequestTest {
-    ServerTestAgent agent;
+    TestAgent agent;
     CentralHub hub;
     ServerContext context;
     RegisterControlPanelRequest request;
@@ -30,7 +29,7 @@ public class RegisterControlPanelRequestTest {
      */
     @Before
     public void setup() {
-        agent = new ServerTestAgent();
+        agent = new TestAgent();
         hub = new CentralHub();
         context = new ServerContext(agent, hub);
 

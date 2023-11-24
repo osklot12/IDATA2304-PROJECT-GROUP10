@@ -3,10 +3,11 @@ package no.ntnu.network.message.request;
 import no.ntnu.exception.SerializationException;
 import no.ntnu.network.message.Message;
 import no.ntnu.network.message.context.ServerContext;
+import no.ntnu.network.message.response.FieldNodePoolResponse;
 import no.ntnu.network.message.response.ResponseMessage;
+import no.ntnu.network.message.response.error.AuthenticationFailedError;
 import no.ntnu.network.message.serialize.NofspSerializationConstants;
 import no.ntnu.network.message.serialize.visitor.ByteSerializerVisitor;
-import no.ntnu.tools.Logger;
 
 import java.io.IOException;
 
@@ -18,7 +19,7 @@ public class FieldNodePoolPullRequest extends RequestMessage implements Message<
      * Creates a new FieldNodePoolPullRequest.
      */
     public FieldNodePoolPullRequest() {
-        super(NofspSerializationConstants.FIELD_NODE_POOL_PULL);
+        super(NofspSerializationConstants.FIELD_NODE_POOL_PULL_COMMAND);
     }
 
     /**
@@ -27,7 +28,7 @@ public class FieldNodePoolPullRequest extends RequestMessage implements Message<
      * @param id the message id
      */
     public FieldNodePoolPullRequest(int id) {
-        super(NofspSerializationConstants.FIELD_NODE_POOL_PULL);
+        this();
 
         setId(id);
     }
@@ -38,10 +39,12 @@ public class FieldNodePoolPullRequest extends RequestMessage implements Message<
 
         ResponseMessage response = null;
         if (context.isClientRegistered()) {
-
+            response = new FieldNodePoolResponse(context.getFieldNodePool());
         } else {
-
+            response = new AuthenticationFailedError<>("Cannot provide field node pool, because" +
+                    "control panel is not registered.");
         }
+        setResponseId(response);
 
         context.respond(response);
     }
@@ -67,5 +70,10 @@ public class FieldNodePoolPullRequest extends RequestMessage implements Message<
     @Override
     public int hashCode() {
         return super.hashCode();
+    }
+
+    @Override
+    public String toString() {
+        return "requesting to pull field node pool";
     }
 }

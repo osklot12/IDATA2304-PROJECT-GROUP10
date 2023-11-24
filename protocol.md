@@ -656,11 +656,15 @@ groups:
 
 The list below shows all available responses in the protocol.
 
-| Status code | Parameters            | Description                                                                                                                                               |
-|-------------|-----------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------|
-| 0           |                       | Heartbeat response - the client confirms it is still alive.                                                                                               |
-| 1           | _node/client address_ | The central server confirms a node/client registration and responds with their assigned address for the network.                                          |
-| 10          | _field node pool_     | The central server responds to a field node pool pull request, confirming that the request was successfully handled, sending the field node pool with it. |
+| Status code | Parameters             | Description                                                                                                                                                          |
+|-------------|------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| 0           |                        | Heartbeat response - the client confirms it is still alive.                                                                                                          |
+| 1           | _node/client address_  | The central server confirms a node/client registration and responds with their assigned address for the network.                                                     |
+| 2           | _fnst_, _fnsm_, _name_ | The central server confirms the subscription of a field node for a control panel. The response contains all information needed for the control panel.                |
+| 10          | _field node pool_      | The central server responds to a field node pool pull request, confirming that the request was successfully handled, sending the field node pool with it.            |
+| 100         | _error description_    | Authentication failed - the central server responds with this error message when a request is received from a client that is not authenticated (not yet registered). |
+| 101         | _error description_    | Node registration failed - the central server responds with this error message when it is unable to register a client                                                |
+| 102         | _error description_    | Subscription failed - the central server responds with this error message when a subscription of a field node fails.                                                 |
 
 ## Message format
 

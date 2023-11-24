@@ -52,6 +52,14 @@ public class RegistrationConfirmationResponse<C extends ClientContext> extends R
     }
 
     @Override
+    public void process(C context) {
+        if (context.acceptResponse(this)) {
+            context.logReceivingResponse(this);
+            context.setClientNodeAddress(getNodeAddress().getInteger());
+        }
+    }
+
+    @Override
     public boolean equals(Object o) {
         if (o == this) {
             return true;
@@ -71,20 +79,6 @@ public class RegistrationConfirmationResponse<C extends ClientContext> extends R
         result = result * 31 + nodeAddress.hashCode();
 
         return result;
-    }
-
-    protected void commonProcess(ClientContext context) {
-        if (context.acceptResponse(this)) {
-            context.setNodeAddress(getNodeAddress().getInteger());
-        }
-    }
-
-    @Override
-    public void process(C context) {
-        context.logReceivingResponse(this);
-        if (context.acceptResponse(this)) {
-            context.setNodeAddress(getNodeAddress().getInteger());
-        }
     }
 
     @Override

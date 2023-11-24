@@ -1,5 +1,6 @@
 package no.ntnu.network.message.deserialize;
 
+import no.ntnu.exception.SerializationException;
 import no.ntnu.fieldnode.device.DeviceClass;
 import no.ntnu.network.message.Message;
 import no.ntnu.network.message.common.ControlMessage;
@@ -8,13 +9,15 @@ import no.ntnu.network.message.deserialize.component.MessageDeserializer;
 import no.ntnu.network.message.request.FieldNodePoolPullRequest;
 import no.ntnu.network.message.request.RegisterControlPanelRequest;
 import no.ntnu.network.message.request.RegisterFieldNodeRequest;
+import no.ntnu.network.message.request.SubscribeToFieldNodeRequest;
+import no.ntnu.network.message.response.AdlUpdatedResponse;
 import no.ntnu.network.message.response.HeartbeatResponse;
+import no.ntnu.network.message.response.error.AdlUpdateRejectedError;
 import no.ntnu.network.message.serialize.NofspSerializationConstants;
 import no.ntnu.network.message.serialize.tool.tlv.Tlv;
 import no.ntnu.network.message.serialize.tool.tlv.TlvReader;
 import no.ntnu.network.message.serialize.visitor.ByteSerializerVisitor;
 import no.ntnu.network.message.serialize.visitor.NofspSerializer;
-import no.ntnu.tools.Logger;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -60,8 +63,7 @@ public class NofspServerDeserializerTest {
         RegisterFieldNodeRequest request = new RegisterFieldNodeRequest(fnst, fnsm, "test request");
 
         byte[] bytes = serializer.serialize(request);
-        Logger.printBytes(bytes);
-        Tlv tlv = TlvReader.contructTlv(bytes, NofspSerializationConstants.TLV_FRAME);
+        Tlv tlv = TlvReader.constructTlv(bytes, NofspSerializationConstants.TLV_FRAME);
         Message<ServerContext> reconstructedMessage = deserializer.deserializeMessage(tlv);
 
         assertEquals(request, reconstructedMessage);
@@ -80,7 +82,7 @@ public class NofspServerDeserializerTest {
         ControlMessage request = new RegisterControlPanelRequest(compatibilityList);
 
         byte[] bytes = serializer.serialize(request);
-        Tlv tlv = TlvReader.contructTlv(bytes, NofspSerializationConstants.TLV_FRAME);
+        Tlv tlv = TlvReader.constructTlv(bytes, NofspSerializationConstants.TLV_FRAME);
         Message<ServerContext> reconstructedMessage = deserializer.deserializeMessage(tlv);
 
         assertEquals(request, reconstructedMessage);
@@ -96,7 +98,7 @@ public class NofspServerDeserializerTest {
         HeartbeatResponse response = new HeartbeatResponse();
 
         byte[] bytes = serializer.serialize(response);
-        Tlv tlv = TlvReader.contructTlv(bytes, NofspSerializationConstants.TLV_FRAME);
+        Tlv tlv = TlvReader.constructTlv(bytes, NofspSerializationConstants.TLV_FRAME);
 
         assertEquals(response, deserializer.deserializeMessage(tlv));
     }
@@ -111,8 +113,51 @@ public class NofspServerDeserializerTest {
         FieldNodePoolPullRequest request = new FieldNodePoolPullRequest();
 
         byte[] bytes = serializer.serialize(request);
-        Tlv tlv = TlvReader.contructTlv(bytes, NofspSerializationConstants.TLV_FRAME);
+        Tlv tlv = TlvReader.constructTlv(bytes, NofspSerializationConstants.TLV_FRAME);
 
         assertEquals(request, deserializer.deserializeMessage(tlv));
+    }
+
+    /**
+     * Tests the serialization of the {@code SubscribeToFieldNodeRequest}.
+     *
+     * @throws IOException thrown if an I/O exception occurs
+     */
+    @Test
+    public void testSubscribeToFieldNodeRequestSerialization() throws IOException {
+        SubscribeToFieldNodeRequest request = new SubscribeToFieldNodeRequest(4);
+
+        byte[] bytes = serializer.serialize(request);
+        Tlv tlv = TlvReader.constructTlv(bytes, NofspSerializationConstants.TLV_FRAME);
+
+        assertEquals(request, deserializer.deserializeMessage(tlv));
+    }
+
+    /**
+     * Tests the serialization of the {@code AdlUpdatedResponse}.
+     */
+    @Test
+    public void testAdlUpdatedResponseSerialization() throws IOException {
+        AdlUpdatedResponse response = new AdlUpdatedResponse();
+
+        byte[] bytes = serializer.serialize(response);
+        Tlv tlv = TlvReader.constructTlv(bytes, NofspSerializationConstants.TLV_FRAME);
+
+        assertEquals(response, deserializer.deserializeMessage(tlv));
+    }
+
+    /**
+     * Tests the serialization of the {@code AdlUpdateRejectedError}.
+     *
+     * @throws IOException thrown if an I/O exception is thrown
+     */
+    @Test
+    public void testAdlUpdateRejectedErrorSerialization() throws IOException {
+        AdlUpdateRejectedError response = new AdlUpdateRejectedError("Test description");
+
+        byte[] bytes = serializer.serialize(response);
+        Tlv tlv = TlvReader.constructTlv(bytes, NofspSerializationConstants.TLV_FRAME);
+
+        assertEquals(response, deserializer.deserializeMessage(tlv));
     }
 }

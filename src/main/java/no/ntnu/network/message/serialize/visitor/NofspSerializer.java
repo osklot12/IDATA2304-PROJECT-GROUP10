@@ -2,18 +2,13 @@ package no.ntnu.network.message.serialize.visitor;
 
 import no.ntnu.exception.SerializationException;
 import no.ntnu.network.message.common.*;
-import no.ntnu.network.message.context.ClientContext;
 import no.ntnu.network.message.request.*;
-import no.ntnu.network.message.response.HeartbeatResponse;
-import no.ntnu.network.message.response.RegistrationConfirmationResponse;
 import no.ntnu.network.message.response.ResponseMessage;
-import no.ntnu.network.message.response.error.ErrorMessage;
 import no.ntnu.network.message.serialize.NofspSerializationConstants;
-import no.ntnu.network.message.serialize.composite.ByteSerializable;
+import no.ntnu.network.message.serialize.ByteSerializable;
 import no.ntnu.network.message.serialize.tool.SimpleByteBuffer;
 import no.ntnu.network.message.serialize.tool.ByteHandler;
 
-import java.io.Serial;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 

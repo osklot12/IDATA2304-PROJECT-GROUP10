@@ -1,8 +1,8 @@
 package no.ntnu.network.message.request;
 
 import no.ntnu.fieldnode.device.DeviceClass;
-import no.ntnu.network.ServerTestAgent;
-import no.ntnu.network.centralserver.CentralHub;
+import no.ntnu.network.TestAgent;
+import no.ntnu.network.centralserver.centralhub.CentralHub;
 import no.ntnu.network.message.context.ServerContext;
 import org.junit.Before;
 import org.junit.Test;
@@ -17,7 +17,7 @@ import static org.junit.Assert.*;
  * JUnit testing for the RegisterFieldNodeRequest class.
  */
 public class RegisterFieldNodeRequestTest {
-    ServerTestAgent agent;
+    TestAgent agent;
     CentralHub hub;
     ServerContext context;
     Map<Integer, DeviceClass> fnst;
@@ -30,7 +30,7 @@ public class RegisterFieldNodeRequestTest {
      */
     @Before
     public void setup() {
-        agent = new ServerTestAgent();
+        agent = new TestAgent();
         hub = new CentralHub();
         context = new ServerContext(agent, hub);
 
@@ -55,6 +55,6 @@ public class RegisterFieldNodeRequestTest {
     public void testSuccessfulRegistration() throws IOException {
         request.process(context);
 
-        assertTrue(agent.isClientRegistered());
+        assertTrue(agent.getClientNodeAddress() != -1);
     }
 }

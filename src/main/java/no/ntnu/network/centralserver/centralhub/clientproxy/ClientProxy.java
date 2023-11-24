@@ -1,7 +1,6 @@
-package no.ntnu.network.centralserver.clientproxy;
+package no.ntnu.network.centralserver.centralhub.clientproxy;
 
 import no.ntnu.network.CommunicationAgent;
-import no.ntnu.network.ServerAgent;
 
 /**
  * A proxy for a remote client using the services of the server.

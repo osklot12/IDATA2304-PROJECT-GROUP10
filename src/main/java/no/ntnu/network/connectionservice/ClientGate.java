@@ -1,7 +1,6 @@
 package no.ntnu.network.connectionservice;
 
 import no.ntnu.network.CommunicationAgent;
-import no.ntnu.network.ServerAgent;
 import no.ntnu.tools.ServerLogger;
 
 import java.util.concurrent.Executors;

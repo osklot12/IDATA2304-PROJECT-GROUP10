@@ -2,14 +2,9 @@ package no.ntnu.network.message.serialize.visitor;
 
 import no.ntnu.exception.SerializationException;
 import no.ntnu.network.message.common.*;
-import no.ntnu.network.message.context.ClientContext;
 import no.ntnu.network.message.request.*;
-import no.ntnu.network.message.response.HeartbeatResponse;
-import no.ntnu.network.message.response.RegistrationConfirmationResponse;
 import no.ntnu.network.message.response.ResponseMessage;
-import no.ntnu.network.message.response.error.ErrorMessage;
-import no.ntnu.network.message.response.error.RegistrationDeclinedError;
-import no.ntnu.network.message.serialize.composite.ByteSerializable;
+import no.ntnu.network.message.serialize.ByteSerializable;
 
 /**
  * A serializer for common data, acting as the visitor in the Visitor design pattern.

@@ -8,6 +8,7 @@ import no.ntnu.network.message.deserialize.NofspControlPanelDeserializer;
 import no.ntnu.network.message.deserialize.component.MessageDeserializer;
 import no.ntnu.network.message.request.FieldNodePoolPullRequest;
 import no.ntnu.network.message.request.RegisterControlPanelRequest;
+import no.ntnu.network.message.request.SubscribeToFieldNodeRequest;
 import no.ntnu.network.message.serialize.visitor.ByteSerializerVisitor;
 import no.ntnu.network.message.serialize.visitor.NofspSerializer;
 import no.ntnu.tools.Logger;
@@ -50,6 +51,8 @@ public class ControlPanelClient extends Client<ControlPanelContext> {
         if (connectToServer(serverAddress, CentralServer.PORT_NUMBER, serializer, deserializer)) {
             // connected and needs to register before using services of server
             registerControlPanel();
+            subscribeToFieldNode(0);
+            subscribeToFieldNode(0);
         }
     }
 
@@ -61,6 +64,31 @@ public class ControlPanelClient extends Client<ControlPanelContext> {
             sendRequest(new RegisterControlPanelRequest(controlPanel.getCompatibilityList()));
         } catch (IOException e) {
             Logger.error("Cannot send registration request: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Requests the field node pool.
+     */
+    public void requestFieldNodePool() {
+        try {
+            sendRequest(new FieldNodePoolPullRequest());
+        } catch (IOException e) {
+            Logger.error("Cannot send field node pool pull request: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Requests to subscribe to a given field node.
+     *
+     * @param fieldNodeAddress the node address of the field node to subscribe to
+     */
+    public void subscribeToFieldNode(int fieldNodeAddress) {
+        try {
+            sendRequest(new SubscribeToFieldNodeRequest(fieldNodeAddress));
+        } catch (IOException e) {
+            Logger.error("Cannot send request to subscribe to field node with address " + fieldNodeAddress +
+                    ": " + e.getMessage());
         }
     }
 

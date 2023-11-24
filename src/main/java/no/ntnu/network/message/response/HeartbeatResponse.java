@@ -32,8 +32,9 @@ public class HeartbeatResponse extends ResponseMessage implements Message<Server
 
     @Override
     public void process(ServerContext context) throws IOException {
-        context.logReceivingResponse(this);
-        context.acceptResponse(this);
+        if (context.acceptResponse(this)) {
+            context.logReceivingResponse(this);
+        }
     }
 
     @Override

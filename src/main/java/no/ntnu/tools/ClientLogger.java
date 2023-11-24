@@ -10,6 +10,11 @@ import java.time.LocalTime;
  */
 public class ClientLogger {
     /**
+     * Does not allow creating instances of the class.
+     */
+    private ClientLogger() {}
+
+    /**
      * Log a sending of a request message.
      *
      * @param request the request message sent

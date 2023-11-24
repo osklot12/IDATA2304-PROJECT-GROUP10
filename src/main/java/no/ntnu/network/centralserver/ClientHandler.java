@@ -1,15 +1,13 @@
 package no.ntnu.network.centralserver;
 
 import no.ntnu.network.ControlProcessAgent;
-import no.ntnu.network.ServerAgent;
+import no.ntnu.network.centralserver.centralhub.CentralHub;
 import no.ntnu.network.connectionservice.ClientGate;
 import no.ntnu.network.connectionservice.ConnServiceShutdownListener;
-import no.ntnu.network.connectionservice.ConnectionService;
 import no.ntnu.network.connectionservice.HeartBeater;
 import no.ntnu.network.message.Message;
 import no.ntnu.network.message.context.ServerContext;
 import no.ntnu.network.message.deserialize.NofspServerDeserializer;
-import no.ntnu.network.message.request.HeartbeatRequest;
 import no.ntnu.network.message.request.RequestMessage;
 import no.ntnu.network.message.response.ResponseMessage;
 import no.ntnu.network.message.serialize.NofspSerializationConstants;
@@ -24,14 +22,13 @@ import java.net.Socket;
 /**
  * A class responsible for handling all communication for a server with a single client.
  */
-public class ClientHandler extends ControlProcessAgent<ServerContext> implements ServerAgent, Runnable, ConnServiceShutdownListener {
+public class ClientHandler extends ControlProcessAgent<ServerContext> implements Runnable, ConnServiceShutdownListener {
     private static final ByteSerializerVisitor SERIALIZER = new NofspSerializer();
     private static final NofspServerDeserializer DESERIALIZER = new NofspServerDeserializer();
-    private static final long HEARTBEAT_INTERVAL = 10000;
+    private static final long HEARTBEAT_INTERVAL = 30000;
     private static final long CLIENT_ACCEPTANCE_PHASE = 3000;
     private ClientGate clientGate;
     private final ServerContext context;
-    private volatile boolean clientRegistered;
 
     /**
      * Creates a new ClientHandler.
@@ -72,11 +69,6 @@ public class ClientHandler extends ControlProcessAgent<ServerContext> implements
     private void establishClientGate() {
         clientGate = new ClientGate(this, CLIENT_ACCEPTANCE_PHASE);
         addConnectionService(clientGate);
-    }
-
-    @Override
-    public synchronized boolean isClientRegistered() {
-        return clientRegistered;
     }
 
     @Override
@@ -143,12 +135,8 @@ public class ClientHandler extends ControlProcessAgent<ServerContext> implements
     }
 
     @Override
-    public void registerClient() {
-        if (!(isConnected())) {
-            throw new IllegalStateException("Cannot register client, because agent is not connected yet.");
-        }
-
+    public void setClientNodeAddress(int address) {
+        super.setClientNodeAddress(address);
         clientGate.stop();
-        clientRegistered = true;
     }
 }

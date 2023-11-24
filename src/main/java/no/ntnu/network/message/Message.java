@@ -1,7 +1,7 @@
 package no.ntnu.network.message;
 
 import no.ntnu.network.message.context.MessageContext;
-import no.ntnu.network.message.serialize.composite.ByteSerializable;
+import no.ntnu.network.message.serialize.ByteSerializable;
 
 import java.io.IOException;
 

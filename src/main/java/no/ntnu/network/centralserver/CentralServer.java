@@ -1,5 +1,6 @@
 package no.ntnu.network.centralserver;
 
+import no.ntnu.network.centralserver.centralhub.CentralHub;
 import no.ntnu.tools.Logger;
 
 import java.io.IOException;

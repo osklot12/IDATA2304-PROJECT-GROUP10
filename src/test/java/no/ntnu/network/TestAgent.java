@@ -14,6 +14,7 @@ public class TestAgent implements CommunicationAgent {
     private RequestMessage requestSent = null;
     private ResponseMessage responseSent = null;
     private boolean responseAccepted = false;
+    private int clientNodeAddress = -1;
     private boolean closed = false;
 
     @Override
@@ -34,6 +35,16 @@ public class TestAgent implements CommunicationAgent {
     @Override
     public String getRemoteEntityAsString() {
         return "Testentity";
+    }
+
+    @Override
+    public int getClientNodeAddress() {
+        return clientNodeAddress;
+    }
+
+    @Override
+    public void setClientNodeAddress(int address) {
+        clientNodeAddress = address;
     }
 
     @Override

@@ -41,6 +41,20 @@ public interface CommunicationAgent {
     String getRemoteEntityAsString();
 
     /**
+     * Returns the node address for the associated client.
+     *
+     * @return the address for the associated client, -1 if client is not registered
+     */
+    int getClientNodeAddress();
+
+    /**
+     * Sets the node address for the client agent.
+     *
+     * @param address the client node address
+     */
+    void setClientNodeAddress(int address);
+
+    /**
      * Closes the connection.
      */
     void close();

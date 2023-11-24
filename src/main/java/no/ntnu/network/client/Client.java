@@ -1,8 +1,7 @@
 package no.ntnu.network.client;
 
-import no.ntnu.network.ClientAgent;
 import no.ntnu.network.ControlProcessAgent;
-import no.ntnu.network.message.context.MessageContext;
+import no.ntnu.network.message.context.ClientContext;
 import no.ntnu.network.message.deserialize.component.MessageDeserializer;
 import no.ntnu.network.message.request.RequestMessage;
 import no.ntnu.network.message.response.ResponseMessage;
@@ -16,17 +15,7 @@ import java.net.Socket;
 /**
  * A client communication agent, responsible for communicating with a server.
  */
-public abstract class Client<C extends MessageContext> extends ControlProcessAgent<C> implements ClientAgent {
-    private int nodeAddress;
-
-    /**
-     * Creates a new Client.
-     */
-    protected Client() {
-        super();
-        nodeAddress = -1;
-    }
-
+public abstract class Client<C extends ClientContext> extends ControlProcessAgent<C> {
     /**
      * Connects the client to a server.
      *
@@ -65,20 +54,6 @@ public abstract class Client<C extends MessageContext> extends ControlProcessAge
      * Disconnects from the server
      */
     public abstract void disconnect();
-
-    /**
-     * Returns the address for the node.
-     *
-     * @return the node address
-     */
-    public int getNodeAddress() {
-        return nodeAddress;
-    }
-
-    @Override
-    public void setClientNodeAddress(int address) {
-        this.nodeAddress = address;
-    }
 
     @Override
     protected void handleEndOfMessageStream() {

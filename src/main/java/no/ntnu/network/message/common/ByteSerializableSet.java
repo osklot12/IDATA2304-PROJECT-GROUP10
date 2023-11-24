@@ -1,7 +1,7 @@
 package no.ntnu.network.message.common;
 
 import no.ntnu.exception.SerializationException;
-import no.ntnu.network.message.serialize.composite.ByteSerializable;
+import no.ntnu.network.message.serialize.ByteSerializable;
 import no.ntnu.network.message.serialize.visitor.ByteSerializerVisitor;
 
 import java.util.HashSet;

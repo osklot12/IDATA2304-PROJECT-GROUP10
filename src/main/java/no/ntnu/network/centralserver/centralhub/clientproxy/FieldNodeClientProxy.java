@@ -1,11 +1,10 @@
-package no.ntnu.network.centralserver.clientproxy;
+package no.ntnu.network.centralserver.centralhub.clientproxy;
 
 import no.ntnu.exception.AddressNotAvailableException;
 import no.ntnu.exception.NoSuchActuatorException;
 import no.ntnu.exception.NoSuchDeviceException;
 import no.ntnu.fieldnode.device.DeviceClass;
 import no.ntnu.network.CommunicationAgent;
-import no.ntnu.network.centralserver.ClientHandler;
 
 import java.util.Map;
 

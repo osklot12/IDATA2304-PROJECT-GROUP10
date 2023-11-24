@@ -1,4 +1,4 @@
-package no.ntnu.network.message.serialize.composite;
+package no.ntnu.network.message.serialize;
 
 import no.ntnu.exception.SerializationException;
 import no.ntnu.network.message.serialize.visitor.ByteSerializerVisitor;

@@ -3,7 +3,7 @@ package no.ntnu.network.message.deserialize.component;
 import no.ntnu.exception.SerializationException;
 import no.ntnu.network.message.common.*;
 import no.ntnu.network.message.serialize.NofspSerializationConstants;
-import no.ntnu.network.message.serialize.composite.ByteSerializable;
+import no.ntnu.network.message.serialize.ByteSerializable;
 import no.ntnu.network.message.serialize.tool.*;
 import no.ntnu.network.message.serialize.tool.tlv.Tlv;
 import no.ntnu.network.message.serialize.tool.tlv.TlvFrame;
@@ -36,6 +36,8 @@ import java.util.*;
  *         Map
  *     </li>
  * </ul>
+ * <p/>
+ * The class is abstract and serves as a base class for any message deserializer in the application.
  */
 public abstract class NofspDeserializer {
     /**
@@ -115,6 +117,20 @@ public abstract class NofspDeserializer {
     }
 
     /**
+     * Returns an integer Tlv as a regular int.
+     *
+     * @param intTlv the integer tlv to deserialize
+     * @return a regular int
+     */
+    protected int getRegularInt(Tlv intTlv) {
+        if (intTlv == null) {
+            throw new IllegalArgumentException("Cannot deserialize TLV, because intTlv is null.");
+        }
+
+        return getInteger(intTlv).getInteger();
+    }
+
+    /**
      * Deserializes an array of bytes into a {@code ByteSerializableString}, using UTF-8 decoding.
      *
      * @param tlv the string tlv
@@ -127,6 +143,20 @@ public abstract class NofspDeserializer {
         result = new ByteSerializableString(deserializedString);
 
         return result;
+    }
+
+    /**
+     * Returns a String Tlv as a regular string.
+     *
+     * @param stringTlv the string tlv to deserialize
+     * @return a regular string
+     */
+    protected String getRegularString(Tlv stringTlv) {
+        if (stringTlv == null) {
+            throw new IllegalArgumentException("Cannot deserialize TLV, because descriptionTlv is null.");
+        }
+
+        return getString(stringTlv).toString();
     }
 
     /**
@@ -270,7 +300,7 @@ public abstract class NofspDeserializer {
     }
 
     /**
-     * Deserializes an array of bytes to a {@code ByteSerializableMap}, with given classes for key and value elements
+     * Deserializes a TLV of bytes to a {@code ByteSerializableMap}, with given classes for key and value elements
      * for the entries. Only key-value pairs of these classes will be deserialized and added to the result.
      *
      * @param tlv               the map tlv
@@ -301,11 +331,11 @@ public abstract class NofspDeserializer {
                 key = deserializeOfTypeClass(mapKeyTypeClass, entryReader.readNextTlv());
                 value = deserializeOfTypeClass(mapValueTypeClass, entryReader.readNextTlv());
 
-                // puts the entry to the map if key is valid
+                // puts the entry in the map if key is not null
                 if (key != null) {
                     map.put(key, value);
                 } else {
-                    throw new SerializationException("Cannot create map key with null value.");
+                    throw new IOException("Cannot create map key with null value.");
                 }
 
             } else {

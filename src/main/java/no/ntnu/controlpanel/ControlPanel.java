@@ -11,7 +11,7 @@ import java.util.*;
  * actuators.
  */
 public class ControlPanel implements VirtualFieldNodeListener {
-    private static final Set<DeviceClass> COMPATIBILITY_LIST = new HashSet<>();
+    private final Set<DeviceClass> compatibilityList = new HashSet<>();
     private final Map<Integer, VirtualFieldNode> fieldNodes;
 
     /**
@@ -19,7 +19,9 @@ public class ControlPanel implements VirtualFieldNodeListener {
      */
     public ControlPanel() {
         this.fieldNodes = new HashMap<>();
+        compatibilityList.add(DeviceClass.A1);
     }
+
 
     /**
      * Adds a new virtual field node to the control panel.
@@ -89,7 +91,7 @@ public class ControlPanel implements VirtualFieldNodeListener {
      * @return the compatibility list
      */
     public Set<DeviceClass> getCompatibilityList() {
-        return COMPATIBILITY_LIST;
+        return compatibilityList;
     }
 
     @Override

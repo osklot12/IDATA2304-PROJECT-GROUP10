@@ -1,7 +1,9 @@
 package no.ntnu.network.message.response.error;
 
+import no.ntnu.exception.SerializationException;
 import no.ntnu.network.message.common.ByteSerializableString;
 import no.ntnu.network.message.response.ResponseMessage;
+import no.ntnu.network.message.serialize.visitor.ByteSerializerVisitor;
 
 /**
  * A response message indicating that an error has occurred.
@@ -32,6 +34,11 @@ public abstract class ErrorMessage extends ResponseMessage {
      */
     public ByteSerializableString getDescription() {
         return errorDescription;
+    }
+
+    @Override
+    public byte[] accept(ByteSerializerVisitor visitor) throws SerializationException {
+        return visitor.visitResponseMessage(this, getDescription());
     }
 
     @Override

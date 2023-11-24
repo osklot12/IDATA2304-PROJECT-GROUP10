@@ -3,7 +3,6 @@ package no.ntnu.network.message.request;
 import no.ntnu.exception.ClientRegistrationException;
 import no.ntnu.exception.SerializationException;
 import no.ntnu.fieldnode.device.DeviceClass;
-import no.ntnu.network.centralserver.clientproxy.FieldNodeClientProxy;
 import no.ntnu.network.message.Message;
 import no.ntnu.network.message.common.ByteSerializableInteger;
 import no.ntnu.network.message.common.ByteSerializableMap;
@@ -13,7 +12,7 @@ import no.ntnu.network.message.response.RegistrationConfirmationResponse;
 import no.ntnu.network.message.response.ResponseMessage;
 import no.ntnu.network.message.response.error.RegistrationDeclinedError;
 import no.ntnu.network.message.serialize.NofspSerializationConstants;
-import no.ntnu.network.message.serialize.composite.ByteSerializable;
+import no.ntnu.network.message.serialize.tool.DataTypeConverter;
 import no.ntnu.network.message.serialize.visitor.ByteSerializerVisitor;
 
 import java.io.IOException;
@@ -54,33 +53,26 @@ public class RegisterFieldNodeRequest extends RequestMessage implements Message<
     }
 
     /**
+     * Creates a new RegisterFieldNodeRequest.
+     *
+     * @param id the message id
+     * @param fnst the field node system table
+     * @param fnsm the field node status map
+     * @param name name of the field node
+     */
+    public RegisterFieldNodeRequest(int id, Map<Integer, DeviceClass> fnst, Map<Integer, Integer> fnsm, String name) {
+        this(fnst, fnsm, name);
+
+        setId(id);
+    }
+
+    /**
      * Returns the FNST for the field node.
      *
      * @return the fnst
      */
     public Map<Integer, DeviceClass> getFnst() {
         return fnst;
-    }
-
-    /**
-     * Returns the FNST in a serializable format.
-     *
-     * @return the serializable fnst
-     */
-    public ByteSerializableMap<ByteSerializableInteger, ByteSerializableString> getSerializableFnst() {
-        ByteSerializableMap<ByteSerializableInteger, ByteSerializableString> result = new ByteSerializableMap<>();
-
-        fillSerializableFnst(result);
-
-        return result;
-    }
-
-    private void fillSerializableFnst(ByteSerializableMap<ByteSerializableInteger, ByteSerializableString> result) {
-        fnst.forEach((key, value) -> {
-            ByteSerializableInteger integerKey = new ByteSerializableInteger(key);
-            ByteSerializableString stringValue = new ByteSerializableString(value.name());
-            result.put(integerKey, stringValue);
-        });
     }
 
     /**
@@ -93,43 +85,12 @@ public class RegisterFieldNodeRequest extends RequestMessage implements Message<
     }
 
     /**
-     * Returns the field node status map in a serializable format.
-     *
-     * @return serializable fnsm
-     */
-    public ByteSerializableMap<ByteSerializableInteger, ByteSerializableInteger> getSerializableFnsm() {
-        ByteSerializableMap<ByteSerializableInteger, ByteSerializableInteger> result = new ByteSerializableMap<>();
-
-        fillSerializableFnsm(result);
-
-        return result;
-    }
-
-    /**
-     * Fills a serializable map with the entries from the FNSM.
-     *
-     * @param result the serializable map to fill
-     */
-    private void fillSerializableFnsm(ByteSerializableMap<ByteSerializableInteger, ByteSerializableInteger> result) {
-        fnsm.forEach((key, value) -> result.put(new ByteSerializableInteger(key), new ByteSerializableInteger(value)));
-    }
-
-    /**
      * Returns the name for the field node.
      *
      * @return the name
      */
     public String getName() {
         return name;
-    }
-
-    /**
-     * Returns the name in a serializable format.
-     *
-     * @return the serializable name
-     */
-    public ByteSerializableString getSerializableName() {
-        return new ByteSerializableString(name);
     }
 
     @Override
@@ -143,13 +104,15 @@ public class RegisterFieldNodeRequest extends RequestMessage implements Message<
         } catch (ClientRegistrationException e) {
             response = new RegistrationDeclinedError<>(e.getMessage());
         }
+        setResponseId(response);
 
         context.respond(response);
     }
 
     @Override
     public byte[] accept(ByteSerializerVisitor visitor) throws SerializationException {
-        return visitor.visitRequestMessage(this, new ByteSerializable[] {getSerializableFnst(), getSerializableFnsm(), getSerializableName()});
+        return visitor.visitRequestMessage(this, DataTypeConverter.getSerializableFnst(fnst),
+                DataTypeConverter.getSerializableFnsm(fnsm), new ByteSerializableString(name));
     }
 
     @Override

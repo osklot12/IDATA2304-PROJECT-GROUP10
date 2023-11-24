@@ -55,7 +55,7 @@ public class TlvReader {
 
             if (waitForBytes(valueLength)) {
                 byte[] tlvBytes = buffer.toArray();
-                tlv = contructTlv(tlvBytes, tlvFrame);
+                tlv = constructTlv(tlvBytes, tlvFrame);
             }
         }
         buffer.reset();
@@ -96,7 +96,7 @@ public class TlvReader {
      * @param frame the tlv frame to construct in
      * @return a tlv representation of the bytes
      */
-    public static Tlv contructTlv(byte[] bytes, TlvFrame frame) throws IOException {
+    public static Tlv constructTlv(byte[] bytes, TlvFrame frame) throws IOException {
         if (bytes == null) {
             throw new IllegalArgumentException("Cannot read bytes, because bytes is null.");
         }

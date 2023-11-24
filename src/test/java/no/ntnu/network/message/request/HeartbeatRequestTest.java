@@ -1,7 +1,7 @@
 package no.ntnu.network.message.request;
 
 import no.ntnu.controlpanel.ControlPanel;
-import no.ntnu.network.ClientTestAgent;
+import no.ntnu.network.TestAgent;
 import no.ntnu.network.message.context.ControlPanelContext;
 import no.ntnu.network.message.response.HeartbeatResponse;
 import org.junit.Before;
@@ -15,7 +15,7 @@ import static org.junit.Assert.*;
  * JUnit testing for the {@code HeartBeatRequest} class.
  */
 public class HeartbeatRequestTest {
-    ClientTestAgent agent;
+    TestAgent agent;
     ControlPanelContext context;
     HeartbeatRequest<ControlPanelContext> request;
 
@@ -24,7 +24,7 @@ public class HeartbeatRequestTest {
      */
     @Before
     public void setup() {
-        agent = new ClientTestAgent();
+        agent = new TestAgent();
         ControlPanel controlPanel = new ControlPanel();
         context = new ControlPanelContext(agent, controlPanel);
 

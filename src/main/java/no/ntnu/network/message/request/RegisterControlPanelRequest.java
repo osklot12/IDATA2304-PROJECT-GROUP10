@@ -3,7 +3,6 @@ package no.ntnu.network.message.request;
 import no.ntnu.exception.ClientRegistrationException;
 import no.ntnu.exception.SerializationException;
 import no.ntnu.fieldnode.device.DeviceClass;
-import no.ntnu.network.centralserver.clientproxy.ControlPanelClientProxy;
 import no.ntnu.network.message.Message;
 import no.ntnu.network.message.context.ServerContext;
 import no.ntnu.network.message.common.ByteSerializableSet;
@@ -12,7 +11,7 @@ import no.ntnu.network.message.response.RegistrationConfirmationResponse;
 import no.ntnu.network.message.response.ResponseMessage;
 import no.ntnu.network.message.response.error.RegistrationDeclinedError;
 import no.ntnu.network.message.serialize.NofspSerializationConstants;
-import no.ntnu.network.message.serialize.composite.ByteSerializable;
+import no.ntnu.network.message.serialize.tool.DataTypeConverter;
 import no.ntnu.network.message.serialize.visitor.ByteSerializerVisitor;
 
 import java.io.IOException;
@@ -58,34 +57,9 @@ public class RegisterControlPanelRequest extends RequestMessage implements Messa
         return compatibilityList;
     }
 
-    /**
-     * Returns the compatibility list, in a serializable format.
-     *
-     * @return the compatibility list
-     */
-    public ByteSerializableSet<ByteSerializableString> getSerializableCompatibilityList() {
-        return makeSetSerializable(compatibilityList);
-    }
-
-    /**
-     * Creates a {@code ByteSerializableSet} out of a regular {@code Set} of DeviceClass constants.
-     *
-     * @param compatibilityList the compatibility list to convert
-     * @return serializable compatibility list
-     */
-    private ByteSerializableSet<ByteSerializableString> makeSetSerializable(Set<DeviceClass> compatibilityList) {
-        ByteSerializableSet<ByteSerializableString> serializableList = new ByteSerializableSet<>();
-
-        compatibilityList.forEach(
-                item -> serializableList.add(new ByteSerializableString(item.toString()))
-        );
-
-        return serializableList;
-    }
-
     @Override
     public byte[] accept(ByteSerializerVisitor visitor) throws SerializationException {
-        return visitor.visitRequestMessage(this, getSerializableCompatibilityList());
+        return visitor.visitRequestMessage(this, DataTypeConverter.getSerializableCompatibilityList(compatibilityList));
     }
 
     @Override
@@ -99,7 +73,7 @@ public class RegisterControlPanelRequest extends RequestMessage implements Messa
         } catch (ClientRegistrationException e) {
             response = new RegistrationDeclinedError<>(e.getMessage());
         }
-        response.setId(getId().getInteger());
+        setResponseId(response);
 
         context.respond(response);
     }

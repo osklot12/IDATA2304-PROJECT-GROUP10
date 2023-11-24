@@ -1,5 +1,6 @@
 package no.ntnu.network.message.context;
 
+import no.ntnu.network.CommunicationAgent;
 import no.ntnu.network.message.request.RequestMessage;
 import no.ntnu.network.message.response.ResponseMessage;
 
@@ -7,10 +8,25 @@ import java.io.IOException;
 
 /**
  * A context that can be used by messages for processing.
- * The MessageContext provides the message with necessary methods for processing, and helps to encapsulate the means
- * for message processing.
+ * The MessageContext provides the message with necessary methods for processing, and encapsulates the means the logic
+ * for this processing.
  */
-public interface MessageContext {
+public abstract class MessageContext {
+    protected final CommunicationAgent agent;
+
+    /**
+     * Creates a new MessageContext.
+     *
+     * @param agent the communication agent
+     */
+    protected MessageContext(CommunicationAgent agent) {
+        if (agent == null) {
+            throw new IllegalArgumentException("Cannot create MessageContext, because agent is null.");
+        }
+
+        this.agent = agent;
+    }
+
     /**
      * Responds to the remote peer.
      * Used when processing a request.
@@ -18,7 +34,13 @@ public interface MessageContext {
      * @param response the response message
      * @throws IOException thrown if an I/O exception is thrown
      */
-    void respond(ResponseMessage response) throws IOException;
+    public void respond(ResponseMessage response) throws IOException {
+        if (response == null) {
+            throw new IllegalArgumentException("Cannot respond, because response is null.");
+        }
+
+        agent.sendResponse(response);
+    }
 
     /**
      * Accepts a response message.
@@ -26,19 +48,34 @@ public interface MessageContext {
      *
      * @return true if accepted, false otherwise
      */
-    boolean acceptResponse(ResponseMessage response);
+    public boolean acceptResponse(ResponseMessage response) {
+        if (response == null) {
+            throw new IllegalArgumentException("Cannot accept response, because response is null.");
+        }
+
+        return agent.acceptResponse(response);
+    }
+
+    /**
+     * Sets the client node address.
+     *
+     * @param nodeAddress the client node address
+     */
+    public void setClientNodeAddress(int nodeAddress) {
+        agent.setClientNodeAddress(nodeAddress);
+    }
 
     /**
      * Logs the receiving of a request message.
      *
      * @param request the received request
      */
-    void logReceivingRequest(RequestMessage request);
+    public abstract void logReceivingRequest(RequestMessage request);
 
     /**
      * Logs the receiving of a response message.
      *
      * @param response the received response
      */
-    void logReceivingResponse(ResponseMessage response);
+    public abstract void logReceivingResponse(ResponseMessage response);
 }

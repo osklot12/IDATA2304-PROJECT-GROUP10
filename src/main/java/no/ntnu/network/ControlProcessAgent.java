@@ -37,6 +37,7 @@ public abstract class ControlProcessAgent<C extends MessageContext> implements C
     private TCPControlProcess<C> controlProcess;
     private RequestManager requestManager;
     private volatile boolean connected;
+    private volatile int clientNodeAddress;
 
     /**
      * Creates a new CommunicationAgent.
@@ -44,6 +45,7 @@ public abstract class ControlProcessAgent<C extends MessageContext> implements C
     protected ControlProcessAgent() {
         this.connectionServices = new ArrayList<>();
         this.connected = false;
+        this.clientNodeAddress = -1;
     }
 
     /**
@@ -248,6 +250,16 @@ public abstract class ControlProcessAgent<C extends MessageContext> implements C
     @Override
     public String getRemoteEntityAsString() {
         return getRemoteSocketAddress().toString();
+    }
+
+    @Override
+    public int getClientNodeAddress() {
+        return clientNodeAddress;
+    }
+
+    @Override
+    public void setClientNodeAddress(int address) {
+        clientNodeAddress = address;
     }
 
     @Override
