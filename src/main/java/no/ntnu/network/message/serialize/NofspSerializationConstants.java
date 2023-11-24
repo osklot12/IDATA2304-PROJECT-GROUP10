@@ -35,6 +35,7 @@ public class NofspSerializationConstants {
     public static final String FIELD_NODE_POOL_PULL_COMMAND = "PPULL";
     public static final String SUBSCRIBE_TO_FIELD_NODE_COMMAND = "FNSUB";
     public static final String ADL_UPDATE_COMMAND = "ADLUPD";
+    public static final String ACTUATOR_NOTIFICATION_COMMAND = "ACTNOT";
     public static final String DISCONNECT_CLIENT_COMMAND = "DISC";
 
     // status codes - successful requests

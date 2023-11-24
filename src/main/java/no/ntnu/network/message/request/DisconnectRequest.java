@@ -3,6 +3,7 @@ package no.ntnu.network.message.request;
 import no.ntnu.exception.SerializationException;
 import no.ntnu.network.message.Message;
 import no.ntnu.network.message.context.ServerContext;
+import no.ntnu.network.message.response.ResponseMessage;
 import no.ntnu.network.message.serialize.NofspSerializationConstants;
 import no.ntnu.network.message.serialize.visitor.ByteSerializerVisitor;
 
@@ -13,7 +14,7 @@ import java.io.IOException;
  * The request provides a proper way of disconnecting from the server, allowing the server to prevent disconnections
  * of client while crucial tasks are being performed.
  */
-public class DisconnectRequest extends RequestMessage implements Message<ServerContext> {
+public class DisconnectRequest extends RequestMessage<ServerContext> {
     /**
      * Creates a new DisconnectRequest.
      */
@@ -33,8 +34,8 @@ public class DisconnectRequest extends RequestMessage implements Message<ServerC
     }
 
     @Override
-    public void process(ServerContext context) throws IOException {
-
+    protected ResponseMessage executeAndCreateResponse(ServerContext context) {
+        return null;
     }
 
     @Override

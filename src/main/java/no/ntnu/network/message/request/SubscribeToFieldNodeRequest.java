@@ -20,7 +20,7 @@ import java.io.IOException;
  * This subscription makes it possible for the control panel to receive sensor data, and manipulate the actuators
  * for the field node.
  */
-public class SubscribeToFieldNodeRequest extends RequestMessage implements Message<ServerContext> {
+public class SubscribeToFieldNodeRequest extends RequestMessage<ServerContext> {
     private final int fieldNodeAddress;
 
     /**
@@ -47,10 +47,9 @@ public class SubscribeToFieldNodeRequest extends RequestMessage implements Messa
     }
 
     @Override
-    public void process(ServerContext context) throws IOException {
-        context.logReceivingRequest(this);
-
+    protected ResponseMessage executeAndCreateResponse(ServerContext context) {
         ResponseMessage response = null;
+
         if (context.isClientRegistered()) {
             try {
                 FieldNodeClientProxy fieldNodeProxy = context.subscribeToFieldNode(fieldNodeAddress);
@@ -61,9 +60,8 @@ public class SubscribeToFieldNodeRequest extends RequestMessage implements Messa
         } else {
             response = new AuthenticationFailedError<>();
         }
-        setResponseId(response);
 
-        context.respond(response);
+        return response;
     }
 
     @Override

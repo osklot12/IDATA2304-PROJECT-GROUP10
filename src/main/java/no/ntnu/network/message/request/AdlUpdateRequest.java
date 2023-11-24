@@ -18,7 +18,7 @@ import java.util.Set;
  * A request sent from the central server to a field node, requesting to update the active device list (ADL) of
  * the field node.
  */
-public class AdlUpdateRequest extends RequestMessage implements Message<FieldNodeContext> {
+public class AdlUpdateRequest extends RequestMessage<FieldNodeContext> {
     private final Set<Integer> adlUpdates;
 
     /**
@@ -45,19 +45,17 @@ public class AdlUpdateRequest extends RequestMessage implements Message<FieldNod
     }
 
     @Override
-    public void process(FieldNodeContext context) throws IOException {
-        context.logReceivingRequest(this);
-
+    protected ResponseMessage executeAndCreateResponse(FieldNodeContext context) {
         ResponseMessage response = null;
+
         try {
             context.updateAdl(adlUpdates);
             response = new AdlUpdatedResponse();
         } catch (NoSuchDeviceException e) {
             response = new AdlUpdateRejectedError(e.getMessage());
         }
-        setResponseId(response);
 
-        context.respond(response);
+        return response;
     }
 
     @Override

@@ -1,15 +1,11 @@
 package no.ntnu.network.message.deserialize;
 
-import no.ntnu.exception.SerializationException;
 import no.ntnu.fieldnode.device.DeviceClass;
 import no.ntnu.network.message.Message;
 import no.ntnu.network.message.common.ControlMessage;
 import no.ntnu.network.message.context.ServerContext;
 import no.ntnu.network.message.deserialize.component.MessageDeserializer;
-import no.ntnu.network.message.request.FieldNodePoolPullRequest;
-import no.ntnu.network.message.request.RegisterControlPanelRequest;
-import no.ntnu.network.message.request.RegisterFieldNodeRequest;
-import no.ntnu.network.message.request.SubscribeToFieldNodeRequest;
+import no.ntnu.network.message.request.*;
 import no.ntnu.network.message.response.AdlUpdatedResponse;
 import no.ntnu.network.message.response.HeartbeatResponse;
 import no.ntnu.network.message.response.error.AdlUpdateRejectedError;
@@ -135,6 +131,8 @@ public class NofspServerDeserializerTest {
 
     /**
      * Tests the serialization of the {@code AdlUpdatedResponse}.
+     *
+     * @throws IOException thrown if an I/O exception occurs
      */
     @Test
     public void testAdlUpdatedResponseSerialization() throws IOException {
@@ -159,5 +157,20 @@ public class NofspServerDeserializerTest {
         Tlv tlv = TlvReader.constructTlv(bytes, NofspSerializationConstants.TLV_FRAME);
 
         assertEquals(response, deserializer.deserializeMessage(tlv));
+    }
+
+    /**
+     * Tests the serialization of the {@code ActuatorNotificationRequest}.
+     *
+     * @throws IOException thrown if an I/O exception occurs
+     */
+    @Test
+    public void testActuatorNotificationRequestSerialization() throws IOException {
+        ActuatorNotificationRequest request = new ActuatorNotificationRequest(4, 0);
+
+        byte[] bytes = serializer.serialize(request);
+        Tlv tlv = TlvReader.constructTlv(bytes, NofspSerializationConstants.TLV_FRAME);
+
+        assertEquals(request, deserializer.deserializeMessage(tlv));
     }
 }

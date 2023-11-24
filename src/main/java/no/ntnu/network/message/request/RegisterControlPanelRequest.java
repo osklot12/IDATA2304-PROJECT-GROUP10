@@ -20,7 +20,7 @@ import java.util.Set;
 /**
  * A request to register a {@code ControlPanel} at the central server.
  */
-public class RegisterControlPanelRequest extends RequestMessage implements Message<ServerContext> {
+public class RegisterControlPanelRequest extends RequestMessage<ServerContext> {
     private final Set<DeviceClass> compatibilityList;
 
     /**
@@ -63,19 +63,17 @@ public class RegisterControlPanelRequest extends RequestMessage implements Messa
     }
 
     @Override
-    public void process(ServerContext context) throws IOException {
-        context.logReceivingRequest(this);
-
+    protected ResponseMessage executeAndCreateResponse(ServerContext context) {
         ResponseMessage response = null;
+
         try {
             int clientAddress = context.registerControlPanel(compatibilityList);
             response = new RegistrationConfirmationResponse<>(clientAddress);
         } catch (ClientRegistrationException e) {
             response = new RegistrationDeclinedError<>(e.getMessage());
         }
-        setResponseId(response);
 
-        context.respond(response);
+        return response;
     }
 
     @Override

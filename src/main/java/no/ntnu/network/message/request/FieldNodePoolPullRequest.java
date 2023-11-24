@@ -14,7 +14,7 @@ import java.io.IOException;
 /**
  * A request sent from a control panel to the central server, requesting the field node pool.
  */
-public class FieldNodePoolPullRequest extends RequestMessage implements Message<ServerContext> {
+public class FieldNodePoolPullRequest extends RequestMessage<ServerContext> {
     /**
      * Creates a new FieldNodePoolPullRequest.
      */
@@ -34,19 +34,17 @@ public class FieldNodePoolPullRequest extends RequestMessage implements Message<
     }
 
     @Override
-    public void process(ServerContext context) throws IOException {
-        context.logReceivingRequest(this);
-
+    protected ResponseMessage executeAndCreateResponse(ServerContext context) {
         ResponseMessage response = null;
+
         if (context.isClientRegistered()) {
             response = new FieldNodePoolResponse(context.getFieldNodePool());
         } else {
             response = new AuthenticationFailedError<>("Cannot provide field node pool, because" +
                     "control panel is not registered.");
         }
-        setResponseId(response);
 
-        context.respond(response);
+        return response;
     }
 
     @Override

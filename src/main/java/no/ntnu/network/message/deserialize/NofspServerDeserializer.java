@@ -7,10 +7,7 @@ import no.ntnu.network.message.common.ByteSerializableSet;
 import no.ntnu.network.message.common.ByteSerializableString;
 import no.ntnu.network.message.context.ServerContext;
 import no.ntnu.network.message.deserialize.component.NofspMessageDeserializer;
-import no.ntnu.network.message.request.FieldNodePoolPullRequest;
-import no.ntnu.network.message.request.RegisterControlPanelRequest;
-import no.ntnu.network.message.request.RegisterFieldNodeRequest;
-import no.ntnu.network.message.request.SubscribeToFieldNodeRequest;
+import no.ntnu.network.message.request.*;
 import no.ntnu.network.message.response.AdlUpdatedResponse;
 import no.ntnu.network.message.response.HeartbeatResponse;
 import no.ntnu.network.message.response.error.AdlUpdateRejectedError;
@@ -47,6 +44,7 @@ public class NofspServerDeserializer extends NofspMessageDeserializer<ServerCont
         addRequestMessageDeserialization(NofspSerializationConstants.REGISTER_CONTROL_PANEL_COMMAND, this::getRegisterControlPanelRequest);
         addRequestMessageDeserialization(NofspSerializationConstants.SUBSCRIBE_TO_FIELD_NODE_COMMAND, this::getSubscribeToFieldNodeRequest);
         addRequestMessageDeserialization(NofspSerializationConstants.FIELD_NODE_POOL_PULL_COMMAND, this::getFieldNodePoolPullRequest);
+        addRequestMessageDeserialization(NofspSerializationConstants.ACTUATOR_NOTIFICATION_COMMAND, this::getActuatorNotificationRequest);
 
         // responses
         addResponseMessageDeserialization(NofspSerializationConstants.HEART_BEAT_CODE, this::getHeartBeatResponse);
@@ -219,5 +217,27 @@ public class NofspServerDeserializer extends NofspMessageDeserializer<ServerCont
         response = new AdlUpdateRejectedError(messageId, description);
 
         return response;
+    }
+
+    /**
+     * Deserializes a {@code ActuatorNotificationRequest}.
+     *
+     * @param messageId the mssage id
+     * @param parameterReader a TlvReader holding the parameter tlvs
+     * @return the deserialized response
+     * @throws IOException thrown if an I/O exception occurs
+     */
+    private ActuatorNotificationRequest getActuatorNotificationRequest(int messageId, TlvReader parameterReader) throws IOException {
+        ActuatorNotificationRequest request = null;
+
+        // deserializes the actuator address
+        int actuatorAddress = getRegularInt(parameterReader.readNextTlv());
+
+        // deserializes the new state
+        int newState = getRegularInt(parameterReader.readNextTlv());
+
+        request = new ActuatorNotificationRequest(messageId, actuatorAddress, newState);
+
+        return request;
     }
 }

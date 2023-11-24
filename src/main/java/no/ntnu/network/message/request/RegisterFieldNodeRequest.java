@@ -21,7 +21,7 @@ import java.util.Map;
 /**
  * A request to register a {@code FieldNode} at the central server.
  */
-public class RegisterFieldNodeRequest extends RequestMessage implements Message<ServerContext> {
+public class RegisterFieldNodeRequest extends RequestMessage<ServerContext> {
     private final Map<Integer, DeviceClass> fnst;
     private final Map<Integer, Integer> fnsm;
     private final String name;
@@ -94,19 +94,17 @@ public class RegisterFieldNodeRequest extends RequestMessage implements Message<
     }
 
     @Override
-    public void process(ServerContext context) throws IOException {
-        context.logReceivingRequest(this);
-
+    protected ResponseMessage executeAndCreateResponse(ServerContext context) {
         ResponseMessage response = null;
+
         try {
             int clientAddress = context.registerFieldNode(fnst, fnsm, name);
             response = new RegistrationConfirmationResponse<>(clientAddress);
         } catch (ClientRegistrationException e) {
             response = new RegistrationDeclinedError<>(e.getMessage());
         }
-        setResponseId(response);
 
-        context.respond(response);
+        return response;
     }
 
     @Override

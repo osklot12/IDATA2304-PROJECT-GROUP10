@@ -15,7 +15,7 @@ import java.io.IOException;
  *
  * @param <C> any client context
  */
-public class HeartbeatRequest<C extends ClientContext> extends RequestMessage implements Message<C> {
+public class HeartbeatRequest<C extends ClientContext> extends RequestMessage<C> {
     /**
      * Creates a new HeartbeatRequest.
      */
@@ -35,12 +35,8 @@ public class HeartbeatRequest<C extends ClientContext> extends RequestMessage im
     }
 
     @Override
-    public void process(C context) throws IOException {
-        context.logReceivingRequest(this);
-        ResponseMessage responseMessage = new HeartbeatResponse();
-        setResponseId(responseMessage);
-
-        context.respond(responseMessage);
+    protected ResponseMessage executeAndCreateResponse(C context) {
+        return new HeartbeatResponse();
     }
 
     @Override
