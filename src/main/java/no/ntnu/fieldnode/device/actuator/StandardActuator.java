@@ -44,7 +44,7 @@ public abstract class StandardActuator implements Actuator, EnvironmentStateModi
     @Override
     public void setState(int state) throws ActuatorInvalidStateException {
         this.state.setState(state);
-        stateBroker.notifyListeners(this);
+        stateBroker.notifyListeners(state);
     }
 
     @Override
@@ -53,12 +53,12 @@ public abstract class StandardActuator implements Actuator, EnvironmentStateModi
     }
 
     @Override
-    public boolean addListener(ActuatorListener actuatorListener) {
-        return stateBroker.addSubscriber(actuatorListener);
+    public void addListener(ActuatorListener actuatorListener, int actuatorAddress) {
+        stateBroker.put(actuatorListener, actuatorAddress);
     }
 
     @Override
-    public boolean removeListener(ActuatorListener actuatorListener) {
-        return stateBroker.removeSubscriber(actuatorListener);
+    public void removeListener(ActuatorListener actuatorListener) {
+        stateBroker.remove(actuatorListener);
     }
 }

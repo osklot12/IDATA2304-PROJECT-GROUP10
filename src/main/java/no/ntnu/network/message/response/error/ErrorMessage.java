@@ -3,13 +3,15 @@ package no.ntnu.network.message.response.error;
 import no.ntnu.exception.SerializationException;
 import no.ntnu.network.message.common.ByteSerializableString;
 import no.ntnu.network.message.context.MessageContext;
+import no.ntnu.network.message.response.RegistrationConfirmationResponse;
 import no.ntnu.network.message.response.ResponseMessage;
+import no.ntnu.network.message.response.StandardProcessingResponseMessage;
 import no.ntnu.network.message.serialize.visitor.ByteSerializerVisitor;
 
 /**
  * A response message indicating that an error has occurred.
  */
-public abstract class ErrorMessage<C extends MessageContext> extends ResponseMessage<C> {
+public abstract class ErrorMessage<C extends MessageContext> extends StandardProcessingResponseMessage<C> {
     private final ByteSerializableString errorDescription;
 
     /**
@@ -51,5 +53,27 @@ public abstract class ErrorMessage<C extends MessageContext> extends ResponseMes
     @Override
     public String toString() {
         return getDescription().toString();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == this) {
+            return true;
+        }
+
+        if (!(o instanceof ErrorMessage<?> e)) {
+            return false;
+        }
+
+        return super.equals(e) && errorDescription.equals(e.errorDescription);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = super.hashCode();
+
+        result = result * 31 + errorDescription.hashCode();
+
+        return result;
     }
 }

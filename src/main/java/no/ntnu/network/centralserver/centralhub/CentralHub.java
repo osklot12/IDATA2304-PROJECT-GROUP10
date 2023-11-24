@@ -1,13 +1,14 @@
 package no.ntnu.network.centralserver.centralhub;
 
-import no.ntnu.exception.ClientRegistrationException;
-import no.ntnu.exception.SubscriptionException;
+import no.ntnu.exception.*;
 import no.ntnu.fieldnode.device.DeviceClass;
 import no.ntnu.network.CommunicationAgent;
 import no.ntnu.network.centralserver.centralhub.clientproxy.ClientProxy;
 import no.ntnu.network.centralserver.centralhub.clientproxy.ControlPanelClientProxy;
 import no.ntnu.network.centralserver.centralhub.clientproxy.FieldNodeClientProxy;
 import no.ntnu.network.message.request.AdlUpdateRequest;
+import no.ntnu.network.message.request.ServerFnsmNotificationRequest;
+import no.ntnu.tools.Logger;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -221,8 +222,18 @@ public class CentralHub {
      * @param fieldNodeAddress the address of the field node to subscribe to
      */
     private void addFieldNodeSubscriber(int subscriberAddress, int fieldNodeAddress) {
-        Set<Integer> subscribers = sensorDataRoutingTable.get(fieldNodeAddress);
+        Set<Integer> subscribers = getFieldNodeSubscribers(fieldNodeAddress);
         subscribers.add(subscriberAddress);
+    }
+
+    /**
+     * Returns a set of addresses representing the control panels subscribed to the given field node.
+     *
+     * @param fieldNodeAddress the address of the field node
+     * @return the field node subscribers
+     */
+    private Set<Integer> getFieldNodeSubscribers(int fieldNodeAddress) {
+        return sensorDataRoutingTable.get(fieldNodeAddress);
     }
 
     /**
@@ -285,5 +296,53 @@ public class CentralHub {
         fieldNodes.forEach((key, value) -> fieldNodePool.put(key, value.getName()));
 
         return fieldNodePool;
+    }
+
+    /**
+     * Sets the state for a given actuator.
+     *
+     * @param fieldNodeAddress the address of the field node
+     * @param actuatorAddress the address of the actuator
+     * @param newState the new state to set
+     * @throws NoSuchAddressException thrown if one of the addresses is invalid
+     */
+    public void setActuatorState(int fieldNodeAddress, int actuatorAddress, int newState) throws NoSuchAddressException {
+        if (!(fieldNodes.containsKey(fieldNodeAddress))) {
+            throw new NoSuchAddressException("Cannot set actuator state for field node with address " + fieldNodeAddress +
+                    ", because no such field node exists.");
+        }
+
+        FieldNodeClientProxy fieldNode = fieldNodes.get(fieldNodeAddress);
+        try {
+            fieldNode.setActuatorState(actuatorAddress, newState);
+            handleActuatorStateChangeForwarding(fieldNodeAddress, actuatorAddress, newState);
+        } catch (NoSuchActuatorException e) {
+            throw new NoSuchAddressException("Cannot set state of actuator with address " + actuatorAddress +
+                    " for field node with address " + fieldNodeAddress + ", because no such actuator exists.");
+        }
+    }
+
+    /**
+     * Handles the forwarding of information about the change of state for an actuator.
+     * All control panels subscribed to the field node will need to be notified about this event.
+     *
+     * @param fieldNodeAddress the address of the field node
+     * @param actuatorAddress the address of the actuator
+     * @param newState the new state of the actuator
+     */
+    private void handleActuatorStateChangeForwarding(int fieldNodeAddress, int actuatorAddress, int newState) {
+        ServerFnsmNotificationRequest request = new ServerFnsmNotificationRequest(fieldNodeAddress, actuatorAddress, newState);
+
+        getFieldNodeSubscribers(fieldNodeAddress).forEach(controlPanelAddress -> {
+            ControlPanelClientProxy controlPanel = controlPanels.get(controlPanelAddress);
+            CommunicationAgent agent = controlPanel.getAgent();
+
+            try {
+                agent.sendRequest(request);
+            } catch (IOException e) {
+                Logger.error("Cannot notify " + agent.getRemoteEntityAsString() + " about the change of state for" +
+                        "actuator " + actuatorAddress + " on field node " + fieldNodeAddress);
+            }
+        });
     }
 }

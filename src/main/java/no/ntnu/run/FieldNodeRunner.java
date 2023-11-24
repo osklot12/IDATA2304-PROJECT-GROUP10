@@ -11,5 +11,11 @@ public class FieldNodeRunner {
         FieldNode fieldNode = FieldNodeFactory.getSomeNoiseFieldNode(environment);
         FieldNodeClient client = new FieldNodeClient(fieldNode);
         client.connect("localhost");
+        try {
+            Thread.sleep(10000);
+            fieldNode.setActuatorState(3, 3);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

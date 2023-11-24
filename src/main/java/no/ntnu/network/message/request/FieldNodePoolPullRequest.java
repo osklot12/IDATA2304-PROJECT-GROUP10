@@ -14,7 +14,7 @@ import java.io.IOException;
 /**
  * A request sent from a control panel to the central server, requesting the field node pool.
  */
-public class FieldNodePoolPullRequest extends RequestMessage<ServerContext> {
+public class FieldNodePoolPullRequest extends StandardProcessingRequestMessage<ServerContext> {
     /**
      * Creates a new FieldNodePoolPullRequest.
      */

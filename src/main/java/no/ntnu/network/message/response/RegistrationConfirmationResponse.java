@@ -11,7 +11,7 @@ import no.ntnu.network.message.serialize.visitor.ByteSerializerVisitor;
  * A confirmation response to a node registration request, indicating that the client has been
  * registered successfully.
  */
-public class RegistrationConfirmationResponse<C extends ClientContext> extends ResponseMessage<C> {
+public class RegistrationConfirmationResponse<C extends ClientContext> extends StandardProcessingResponseMessage<C> {
     private final ByteSerializableInteger nodeAddress;
 
     /**

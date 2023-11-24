@@ -14,7 +14,7 @@ import java.util.Map;
 /**
  * A response to a successful field node pool pull request, containing the field node pool for the central server.
  */
-public class FieldNodePoolResponse extends ResponseMessage<ControlPanelContext> {
+public class FieldNodePoolResponse extends StandardProcessingResponseMessage<ControlPanelContext> {
     private final Map<Integer, String> fieldNodePool;
 
     /**

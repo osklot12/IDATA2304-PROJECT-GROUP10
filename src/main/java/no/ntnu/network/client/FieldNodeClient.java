@@ -1,11 +1,15 @@
 package no.ntnu.network.client;
 
 import no.ntnu.fieldnode.FieldNode;
+import no.ntnu.fieldnode.FieldNodeListener;
+import no.ntnu.fieldnode.device.actuator.Actuator;
+import no.ntnu.fieldnode.device.actuator.ActuatorListener;
 import no.ntnu.network.centralserver.CentralServer;
 import no.ntnu.network.message.Message;
 import no.ntnu.network.message.context.FieldNodeContext;
 import no.ntnu.network.message.deserialize.NofspFieldNodeDeserializer;
 import no.ntnu.network.message.deserialize.component.MessageDeserializer;
+import no.ntnu.network.message.request.ActuatorNotificationRequest;
 import no.ntnu.network.message.request.RegisterFieldNodeRequest;
 import no.ntnu.network.message.serialize.visitor.ByteSerializerVisitor;
 import no.ntnu.network.message.serialize.visitor.NofspSerializer;
@@ -20,7 +24,7 @@ import java.util.Set;
  * The class is necessary for a field node to be able to push sensor data and share actuator control in the
  * network.
  */
-public class FieldNodeClient extends Client<FieldNodeContext> {
+public class FieldNodeClient extends Client<FieldNodeContext> implements FieldNodeListener {
     private final ByteSerializerVisitor serializer;
     private final MessageDeserializer<FieldNodeContext> deserializer;
     private final FieldNode fieldNode;
@@ -41,6 +45,7 @@ public class FieldNodeClient extends Client<FieldNodeContext> {
         serializer = new NofspSerializer();
         deserializer = new NofspFieldNodeDeserializer();
         this.fieldNode = fieldNode;
+        fieldNode.addListener(this);
         this.adl = new HashSet<>();
         this.context = new FieldNodeContext(this, fieldNode, this.adl);
     }
@@ -68,6 +73,20 @@ public class FieldNodeClient extends Client<FieldNodeContext> {
         }
     }
 
+    /**
+     * Sends a request to update the state of an actuator.
+     *
+     * @param actuatorAddress the address of the actuator
+     * @param newState the new state of the actuator
+     */
+    private void requestActuatorStateUpdate(int actuatorAddress, int newState) {
+        try {
+            sendRequest(new ActuatorNotificationRequest(actuatorAddress, newState));
+        } catch (IOException e) {
+            Logger.error("Cannot send request to update actuator state for actuator " + actuatorAddress);
+        }
+    }
+
     @Override
     protected void processReceivedMessage(Message<FieldNodeContext> message) {
         try {
@@ -79,6 +98,16 @@ public class FieldNodeClient extends Client<FieldNodeContext> {
 
     @Override
     public void disconnect() {
+
+    }
+
+    @Override
+    public void actuatorStateChange(int actuatorAddress, int newState) {
+        requestActuatorStateUpdate(actuatorAddress, newState);
+    }
+
+    @Override
+    public void sensorDataCapture(int sensorAddress, double data) {
 
     }
 }

@@ -7,6 +7,7 @@ import no.ntnu.network.message.common.ByteSerializableMap;
 import no.ntnu.network.message.common.ByteSerializableString;
 import no.ntnu.network.message.context.ControlPanelContext;
 import no.ntnu.network.message.deserialize.component.NofspClientMessageDeserializer;
+import no.ntnu.network.message.request.ServerFnsmNotificationRequest;
 import no.ntnu.network.message.response.FieldNodePoolResponse;
 import no.ntnu.network.message.response.SubscribedToFieldNodeResponse;
 import no.ntnu.network.message.serialize.NofspSerializationConstants;
@@ -34,6 +35,9 @@ public class NofspControlPanelDeserializer extends NofspClientMessageDeserialize
      * Adds the implemented control panel message deserialization methods to the lookup tables.
      */
     private void initializeDeserializationMethods() {
+        // requests
+        addRequestMessageDeserialization(NofspSerializationConstants.FNSM_NOTIFICATION_COMMAND, this::getServerFnsmNotificationRequest);
+
         // responses
         addResponseMessageDeserialization(NofspSerializationConstants.FIELD_NODE_POOL_CODE, this::getFieldNodePoolResponse);
         addResponseMessageDeserialization(NofspSerializationConstants.SUBSCRIBED_TO_FIELD_NODE_CODE, this::getSubscribeToFieldNodeResponse);
@@ -86,5 +90,30 @@ public class NofspControlPanelDeserializer extends NofspClientMessageDeserialize
         String name = getRegularString(parameterReader.readNextTlv());
 
         return new SubscribedToFieldNodeResponse(messageId, fnst, fnsm, name);
+    }
+
+    /**
+     * Deserializes a {@code ServerFnsmNotificationRequest}.
+     *
+     * @param messageId the message id
+     * @param parameterReader a TlvReader holding the message parameters
+     * @return the deserialized response
+     * @throws IOException thrown if an I/O exception occurs
+     */
+    private ServerFnsmNotificationRequest getServerFnsmNotificationRequest(int messageId, TlvReader parameterReader) throws IOException {
+        ServerFnsmNotificationRequest request = null;
+
+        // deserializes the field node address
+        int fieldNodeAddress = getRegularInt(parameterReader.readNextTlv());
+
+        // deserializes the actuator address
+        int actuatorAddress = getRegularInt(parameterReader.readNextTlv());
+
+        // deseializes the new state
+        int newState = getRegularInt(parameterReader.readNextTlv());
+
+        request = new ServerFnsmNotificationRequest(messageId, fieldNodeAddress, actuatorAddress, newState);
+
+        return request;
     }
 }

@@ -20,7 +20,7 @@ import java.util.Set;
 /**
  * A request to register a {@code ControlPanel} at the central server.
  */
-public class RegisterControlPanelRequest extends RequestMessage<ServerContext> {
+public class RegisterControlPanelRequest extends StandardProcessingRequestMessage<ServerContext> {
     private final Set<DeviceClass> compatibilityList;
 
     /**

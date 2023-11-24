@@ -36,6 +36,7 @@ public class NofspSerializationConstants {
     public static final String SUBSCRIBE_TO_FIELD_NODE_COMMAND = "FNSUB";
     public static final String ADL_UPDATE_COMMAND = "ADLUPD";
     public static final String ACTUATOR_NOTIFICATION_COMMAND = "ACTNOT";
+    public static final String FNSM_NOTIFICATION_COMMAND = "FNSMNOT";
     public static final String DISCONNECT_CLIENT_COMMAND = "DISC";
 
     // status codes - successful requests
@@ -43,11 +44,15 @@ public class NofspSerializationConstants {
     public static final int NODE_REGISTRATION_CONFIRMED_CODE = 1;
     public static final int SUBSCRIBED_TO_FIELD_NODE_CODE = 2;
     public static final int FIELD_NODE_POOL_CODE = 10;
-    public static final int ADL_UPDATED_RESPONSE = 20;
+    public static final int ADL_UPDATED_CODE = 20;
+    public static final int SERVER_FNSM_UPDATED_CODE = 25;
+    public static final int VIRTUAL_ACTUATOR_UPDATED_CODE = 27;
 
     // status codes - error
     public static final int AUTHENTICATION_FAILED_CODE = 100;
     public static final int NODE_REGISTRATION_DECLINED_CODE = 101;
     public static final int SUBSCRIPTION_FAILED_CODE = 102;
-    public static final int ADL_UPDATE_REJECTED = 103;
+    public static final int ADL_UPDATE_REJECTED_CODE = 103;
+    public static final int SERVER_FNSM_UPDATE_REJECTED_CODE = 104;
+    public static final int NO_SUCH_VIRTUAL_DEVICE_CODE = 105;
 }

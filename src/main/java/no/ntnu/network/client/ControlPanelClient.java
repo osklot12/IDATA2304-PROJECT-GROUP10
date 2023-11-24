@@ -52,7 +52,6 @@ public class ControlPanelClient extends Client<ControlPanelContext> {
             // connected and needs to register before using services of server
             registerControlPanel();
             subscribeToFieldNode(0);
-            subscribeToFieldNode(0);
         }
     }
 

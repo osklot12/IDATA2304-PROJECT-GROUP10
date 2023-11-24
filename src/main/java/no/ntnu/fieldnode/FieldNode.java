@@ -1,5 +1,7 @@
 package no.ntnu.fieldnode;
 
+import no.ntnu.broker.ActuatorStateBroker;
+import no.ntnu.broker.FieldNodeEventBroker;
 import no.ntnu.fieldnode.device.Device;
 import no.ntnu.fieldnode.device.DeviceClass;
 import no.ntnu.fieldnode.device.actuator.Actuator;
@@ -17,10 +19,11 @@ import java.util.*;
  * A field node is a subsystem in the network consisting of sensors and actuators.
  */
 public class FieldNode implements SensorListener, ActuatorListener {
-    private final static String STANDARD_NAME = "FieldNode";
+    private static final String STANDARD_NAME = "FieldNode";
     private Environment environment;
     private final Map<Integer, Device> devices;
     private final String name;
+    private final FieldNodeEventBroker eventBroker;
     private double latestSensorData;
 
     /**
@@ -41,6 +44,7 @@ public class FieldNode implements SensorListener, ActuatorListener {
         this.environment = environment;
         this.devices = new HashMap<>();
         this.name = name;
+        this.eventBroker = new FieldNodeEventBroker();
     }
 
     /**
@@ -69,6 +73,15 @@ public class FieldNode implements SensorListener, ActuatorListener {
     public void setEnvironment(Environment environment) {
         this.environment = environment;
         setEnvironmentForAllDevices(environment);
+    }
+
+    /**
+     * Adds a listener listening for the events of the field node.
+     *
+     * @param listener the listener to add
+     */
+    public void addListener(FieldNodeListener listener) {
+        eventBroker.addSubscriber(listener);
     }
 
     /**
@@ -133,8 +146,7 @@ public class FieldNode implements SensorListener, ActuatorListener {
     }
 
     private void setEnvironmentForAllDevices(Environment environment) {
-        devices.values().forEach(device -> device.setEnvironment(environment)
-        );
+        devices.values().forEach(device -> device.setEnvironment(environment));
     }
 
     /**
@@ -147,8 +159,8 @@ public class FieldNode implements SensorListener, ActuatorListener {
         int address = -1;
 
         if (!(devices.containsValue(device))) {
-            if (connectDevice(device)) {
-                address = generateNewDeviceAddress();
+            address = generateNewDeviceAddress();
+            if (connectDevice(device, address)) {
                 devices.put(address, device);
             } else {
                 disconnectDevice(device);
@@ -158,7 +170,7 @@ public class FieldNode implements SensorListener, ActuatorListener {
         return address;
     }
 
-    private boolean connectDevice(Device device) {
+    private boolean connectDevice(Device device, int address) {
         boolean success = true;
 
         device.setEnvironment(environment);
@@ -168,7 +180,8 @@ public class FieldNode implements SensorListener, ActuatorListener {
         }
 
         if (device instanceof Actuator actuator) {
-            success = success && connectActuator(actuator);
+            connectActuator(actuator, address);
+            success = true;
         }
 
         return success;
@@ -185,8 +198,8 @@ public class FieldNode implements SensorListener, ActuatorListener {
         return success;
     }
 
-    private boolean connectActuator(Actuator actuator) {
-        return actuator.addListener(this);
+    private void connectActuator(Actuator actuator, int address) {
+        actuator.addListener(this, address);
     }
 
     private void disconnectDevice(Device device) {
@@ -267,7 +280,7 @@ public class FieldNode implements SensorListener, ActuatorListener {
     }
 
     @Override
-    public void actuatorStateChanged(Actuator actuator) {
-        System.out.println("State changed to " + actuator.getState());
+    public void actuatorStateChanged(int actuatorAddress, int newState) {
+        eventBroker.notifyActuatorStateChange(actuatorAddress, newState);
     }
 }

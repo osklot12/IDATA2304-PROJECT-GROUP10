@@ -5,6 +5,8 @@ import no.ntnu.network.message.common.ByteSerializableSet;
 import no.ntnu.network.message.context.FieldNodeContext;
 import no.ntnu.network.message.deserialize.component.NofspClientMessageDeserializer;
 import no.ntnu.network.message.request.AdlUpdateRequest;
+import no.ntnu.network.message.response.ServerFnsmUpdatedResponse;
+import no.ntnu.network.message.response.error.ServerFnsmUpdateRejectedError;
 import no.ntnu.network.message.serialize.NofspSerializationConstants;
 import no.ntnu.network.message.serialize.tool.DataTypeConverter;
 import no.ntnu.network.message.serialize.tool.tlv.TlvReader;
@@ -31,6 +33,10 @@ public class NofspFieldNodeDeserializer extends NofspClientMessageDeserializer<F
     private void initializeDeserializationMethods() {
         // requests
         addRequestMessageDeserialization(NofspSerializationConstants.ADL_UPDATE_COMMAND, this::getAdlUpdateRequest);
+
+        // responses
+        addResponseMessageDeserialization(NofspSerializationConstants.SERVER_FNSM_UPDATED_CODE, this::getServerFnsmUpdatedResponse);
+        addResponseMessageDeserialization(NofspSerializationConstants.SERVER_FNSM_UPDATE_REJECTED_CODE, this::getServerFnsmUpdateRejectedError);
     }
 
     /**
@@ -52,5 +58,35 @@ public class NofspFieldNodeDeserializer extends NofspClientMessageDeserializer<F
         request = new AdlUpdateRequest(messageId, adlUpdates);
 
         return request;
+    }
+
+    /**
+     * Deserializes a {@code ServerFnsmUpdatedResponse}.
+     *
+     * @param messageId the message id
+     * @param parameterReader a TlvReader holding the parameter tlvs
+     * @return the deserialized response
+     */
+    private ServerFnsmUpdatedResponse getServerFnsmUpdatedResponse(int messageId, TlvReader parameterReader) {
+        return new ServerFnsmUpdatedResponse(messageId);
+    }
+
+    /**
+     * Deserializes a {@code ServerFnsmUpdateRejectedError}.
+     *
+     * @param messageId the message id
+     * @param parameterReader a TlvReader holding the parameter tlvs
+     * @return the deserialized response
+     * @throws IOException thrown if an I/O exception occurs
+     */
+    private ServerFnsmUpdateRejectedError getServerFnsmUpdateRejectedError(int messageId, TlvReader parameterReader) throws IOException {
+        ServerFnsmUpdateRejectedError response = null;
+
+        // deserializes the error description
+        String description = getRegularString(parameterReader.readNextTlv());
+
+        response = new ServerFnsmUpdateRejectedError(messageId, description);
+
+        return response;
     }
 }

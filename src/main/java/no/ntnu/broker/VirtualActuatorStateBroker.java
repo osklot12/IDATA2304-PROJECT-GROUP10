@@ -13,10 +13,7 @@ public class VirtualActuatorStateBroker extends SubscriberList<VirtualActuatorLi
      * @param actuator the actuator that changed state
      */
     public void notifyListeners(VirtualStandardActuator actuator, boolean global) {
-        getSubscribers().forEach(
-                (listener) -> {
-                    listener.virtualActuatorStateChanged(actuator, global);
-                }
+        getSubscribers().forEach(listener -> listener.virtualActuatorStateChanged(actuator, global)
         );
     }
 }

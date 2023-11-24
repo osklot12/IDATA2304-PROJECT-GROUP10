@@ -6,22 +6,23 @@ import no.ntnu.network.message.serialize.NofspSerializationConstants;
 import no.ntnu.network.message.serialize.visitor.ByteSerializerVisitor;
 
 /**
- * A response to a successful ADL update request, indicating that the desired updates has been complete.
+ * A response to a {@code ServerFnsmNotificationRequest}, indicating that the virtual actuator has been updated
+ * accordingly.
  */
-public class AdlUpdatedResponse extends StandardProcessingResponseMessage<ServerContext> {
+public class VirtualActuatorUpdatedResponse extends StandardProcessingResponseMessage<ServerContext> {
     /**
-     * Creates a new AdlUpdateResponse.
+     * Creates a new VirtualActuatorUpdatedResponse.
      */
-    public AdlUpdatedResponse() {
-        super(NofspSerializationConstants.ADL_UPDATED_CODE);
+    public VirtualActuatorUpdatedResponse() {
+        super(NofspSerializationConstants.VIRTUAL_ACTUATOR_UPDATED_CODE);
     }
 
     /**
-     * Creates a new AdlUpdatedResponse.
+     * Creates a new VirtualActuatorUpdatedResponse.
      *
      * @param id the message id
      */
-    public AdlUpdatedResponse(int id) {
+    public VirtualActuatorUpdatedResponse(int id) {
         this();
 
         setId(id);
@@ -29,16 +30,11 @@ public class AdlUpdatedResponse extends StandardProcessingResponseMessage<Server
 
     @Override
     protected void handleResponseProcessing(ServerContext context) {
-        // TODO: handle further processing
+        // no processing required
     }
 
     @Override
     public byte[] accept(ByteSerializerVisitor visitor) throws SerializationException {
         return visitor.visitResponseMessage(this);
-    }
-
-    @Override
-    public String toString() {
-        return "ADL was successfully updated.";
     }
 }

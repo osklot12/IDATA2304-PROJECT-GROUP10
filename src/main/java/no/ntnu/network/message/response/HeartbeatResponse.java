@@ -11,7 +11,7 @@ import java.io.IOException;
 /**
  * A response to a heartbeat, indicating that the client is still connected.
  */
-public class HeartbeatResponse extends ResponseMessage<ServerContext> {
+public class HeartbeatResponse extends StandardProcessingResponseMessage<ServerContext> {
     /**
      * Creates a new HeartbeatResponse.
      */

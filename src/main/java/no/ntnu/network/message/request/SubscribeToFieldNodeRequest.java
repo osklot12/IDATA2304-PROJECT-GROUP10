@@ -20,7 +20,7 @@ import java.io.IOException;
  * This subscription makes it possible for the control panel to receive sensor data, and manipulate the actuators
  * for the field node.
  */
-public class SubscribeToFieldNodeRequest extends RequestMessage<ServerContext> {
+public class SubscribeToFieldNodeRequest extends StandardProcessingRequestMessage<ServerContext> {
     private final int fieldNodeAddress;
 
     /**

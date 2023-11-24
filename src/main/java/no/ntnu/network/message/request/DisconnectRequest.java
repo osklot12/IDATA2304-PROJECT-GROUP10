@@ -14,7 +14,7 @@ import java.io.IOException;
  * The request provides a proper way of disconnecting from the server, allowing the server to prevent disconnections
  * of client while crucial tasks are being performed.
  */
-public class DisconnectRequest extends RequestMessage<ServerContext> {
+public class DisconnectRequest extends StandardProcessingRequestMessage<ServerContext> {
     /**
      * Creates a new DisconnectRequest.
      */

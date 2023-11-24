@@ -1,6 +1,5 @@
 package no.ntnu.broker;
 
-import no.ntnu.network.connectionservice.ConnectionService;
 import no.ntnu.network.connectionservice.ConnServiceShutdownListener;
 
 /**

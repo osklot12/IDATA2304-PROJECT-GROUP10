@@ -10,7 +10,9 @@ import no.ntnu.network.message.deserialize.component.NofspMessageDeserializer;
 import no.ntnu.network.message.request.*;
 import no.ntnu.network.message.response.AdlUpdatedResponse;
 import no.ntnu.network.message.response.HeartbeatResponse;
+import no.ntnu.network.message.response.VirtualActuatorUpdatedResponse;
 import no.ntnu.network.message.response.error.AdlUpdateRejectedError;
+import no.ntnu.network.message.response.error.NoSuchVirtualDeviceError;
 import no.ntnu.network.message.serialize.NofspSerializationConstants;
 import no.ntnu.network.message.serialize.tool.DataTypeConverter;
 import no.ntnu.network.message.serialize.tool.tlv.Tlv;
@@ -18,9 +20,7 @@ import no.ntnu.network.message.serialize.tool.tlv.TlvReader;
 
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * A deserializer for the central server, deserializing server-specific messages.
@@ -48,8 +48,10 @@ public class NofspServerDeserializer extends NofspMessageDeserializer<ServerCont
 
         // responses
         addResponseMessageDeserialization(NofspSerializationConstants.HEART_BEAT_CODE, this::getHeartBeatResponse);
-        addResponseMessageDeserialization(NofspSerializationConstants.ADL_UPDATED_RESPONSE, this::getAdlUpdatedResponse);
-        addResponseMessageDeserialization(NofspSerializationConstants.ADL_UPDATE_REJECTED, this::getAdlUpdateRejectedError);
+        addResponseMessageDeserialization(NofspSerializationConstants.ADL_UPDATED_CODE, this::getAdlUpdatedResponse);
+        addResponseMessageDeserialization(NofspSerializationConstants.ADL_UPDATE_REJECTED_CODE, this::getAdlUpdateRejectedError);
+        addResponseMessageDeserialization(NofspSerializationConstants.VIRTUAL_ACTUATOR_UPDATED_CODE, this::getVirtualActuatorUpdatedResponse);
+        addResponseMessageDeserialization(NofspSerializationConstants.NO_SUCH_VIRTUAL_DEVICE_CODE, this::getNoSuchVirtualDeviceError);
     }
 
     /**
@@ -222,7 +224,7 @@ public class NofspServerDeserializer extends NofspMessageDeserializer<ServerCont
     /**
      * Deserializes a {@code ActuatorNotificationRequest}.
      *
-     * @param messageId the mssage id
+     * @param messageId the message id
      * @param parameterReader a TlvReader holding the parameter tlvs
      * @return the deserialized response
      * @throws IOException thrown if an I/O exception occurs
@@ -239,5 +241,36 @@ public class NofspServerDeserializer extends NofspMessageDeserializer<ServerCont
         request = new ActuatorNotificationRequest(messageId, actuatorAddress, newState);
 
         return request;
+    }
+
+    /**
+     * Deserializes a {@code VirtualActuatorUpdatedResponse}.
+     *
+     * @param messageId the message id
+     * @param parameterReader a TlvReader holding the parameter tlvs
+     * @return the deserialized response
+     * @throws IOException thrown if an I/O exception occurs
+     */
+    private VirtualActuatorUpdatedResponse getVirtualActuatorUpdatedResponse(int messageId, TlvReader parameterReader) throws IOException {
+        return new VirtualActuatorUpdatedResponse(messageId);
+    }
+
+    /**
+     * Deserializes a {@code NoSuchVirtualDeviceError}.
+     *
+     * @param messageId the message id
+     * @param parameterReader a TlvReader holding the parameter tlvs
+     * @return the deserialized response
+     * @throws IOException thrown if an I/O exception occurs
+     */
+    private NoSuchVirtualDeviceError getNoSuchVirtualDeviceError(int messageId, TlvReader parameterReader) throws IOException {
+        NoSuchVirtualDeviceError response = null;
+
+        // deserializes the error description
+        String description = getRegularString(parameterReader.readNextTlv());
+
+        response = new NoSuchVirtualDeviceError(messageId, description);
+
+        return response;
     }
 }

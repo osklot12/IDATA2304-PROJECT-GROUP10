@@ -26,15 +26,14 @@ public interface Actuator extends Device, EnvironmentStateModifier {
      * Adds a listener to the actuator.
      *
      * @param actuatorListener listener to add
-     * @return true if successfully added
+     * @param actuatorAddress the address the listeners use for the actuator
      */
-    boolean addListener(ActuatorListener actuatorListener);
+    void addListener(ActuatorListener actuatorListener, int actuatorAddress);
 
     /**
      * Removes a listener from the actuator.
      *
      * @param actuatorListener listener to remove
-     * @return true if successfully removed
      */
-    boolean removeListener(ActuatorListener actuatorListener);
+    void removeListener(ActuatorListener actuatorListener);
 }

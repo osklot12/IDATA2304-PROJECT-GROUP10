@@ -1,6 +1,7 @@
 package no.ntnu.network.message.context;
 
 import no.ntnu.exception.ClientRegistrationException;
+import no.ntnu.exception.NoSuchAddressException;
 import no.ntnu.exception.SubscriptionException;
 import no.ntnu.fieldnode.device.DeviceClass;
 import no.ntnu.network.CommunicationAgent;
@@ -95,6 +96,17 @@ public class ServerContext extends MessageContext {
      */
     public FieldNodeClientProxy subscribeToFieldNode(int fieldNodeAddress) throws SubscriptionException {
         return centralHub.subscribeToFieldNode(agent, fieldNodeAddress);
+    }
+
+    /**
+     * Updates the address for a given actuator on a given field node.
+     *
+     * @param actuatorAddress the address of the actuator
+     * @param newState the new state to set
+     * @throws NoSuchAddressException thrown if one of the addresses is invalid
+     */
+    public void updateActuatorState(int actuatorAddress, int newState) throws NoSuchAddressException {
+        centralHub.setActuatorState(agent.getClientNodeAddress(), actuatorAddress, newState);
     }
 
     @Override

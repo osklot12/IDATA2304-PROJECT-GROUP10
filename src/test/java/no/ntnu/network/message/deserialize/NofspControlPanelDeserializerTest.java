@@ -4,6 +4,7 @@ import no.ntnu.fieldnode.device.DeviceClass;
 import no.ntnu.network.message.context.ControlPanelContext;
 import no.ntnu.network.message.deserialize.component.MessageDeserializer;
 import no.ntnu.network.message.request.HeartbeatRequest;
+import no.ntnu.network.message.request.ServerFnsmNotificationRequest;
 import no.ntnu.network.message.response.FieldNodePoolResponse;
 import no.ntnu.network.message.response.SubscribedToFieldNodeResponse;
 import no.ntnu.network.message.serialize.NofspSerializationConstants;
@@ -72,6 +73,8 @@ public class NofspControlPanelDeserializerTest {
 
     /**
      * Tests the serialization of {@code SubscribedToFieldNodeResponse}.
+     *
+     * @throws IOException thrown if an I/O exception occurs
      */
     @Test
     public void testSubscribedToFieldNodeResponseSerialization() throws IOException {
@@ -91,5 +94,20 @@ public class NofspControlPanelDeserializerTest {
         Tlv tlv = TlvReader.constructTlv(bytes, NofspSerializationConstants.TLV_FRAME);
 
         assertEquals(response, deserializer.deserializeMessage(tlv));
+    }
+
+    /**
+     * Tests the serialization of {@code ServerFnsmNotificationRequest}.
+     *
+     * @throws IOException thrown if an I/O exception occurs
+     */
+    @Test
+    public void testServerFnsmNotificationRequestSerialization() throws IOException {
+        ServerFnsmNotificationRequest request = new ServerFnsmNotificationRequest(1, 1, 2);
+
+        byte[] bytes = serializer.serialize(request);
+        Tlv tlv = TlvReader.constructTlv(bytes, NofspSerializationConstants.TLV_FRAME);
+
+        assertEquals(request, deserializer.deserializeMessage(tlv));
     }
 }

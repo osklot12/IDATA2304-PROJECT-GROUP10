@@ -3,6 +3,8 @@ package no.ntnu.network.message.deserialize;
 import no.ntnu.network.message.context.FieldNodeContext;
 import no.ntnu.network.message.deserialize.component.MessageDeserializer;
 import no.ntnu.network.message.request.AdlUpdateRequest;
+import no.ntnu.network.message.response.ServerFnsmUpdatedResponse;
+import no.ntnu.network.message.response.error.ServerFnsmUpdateRejectedError;
 import no.ntnu.network.message.serialize.NofspSerializationConstants;
 import no.ntnu.network.message.serialize.tool.tlv.Tlv;
 import no.ntnu.network.message.serialize.tool.tlv.TlvReader;
@@ -47,5 +49,35 @@ public class NofspFieldNodeDeserializerTest {
         Tlv tlv = TlvReader.constructTlv(bytes, NofspSerializationConstants.TLV_FRAME);
 
         assertEquals(request, deserializer.deserializeMessage(tlv));
+    }
+
+    /**
+     * Tests the serialization of the {@code ServerFnsmUpdatedResponse}.
+     *
+     * @throws IOException thrown if an I/O exception occurs
+     */
+    @Test
+    public void testServerFnsmUpdatedResponseSerialization() throws IOException {
+        ServerFnsmUpdatedResponse response = new ServerFnsmUpdatedResponse();
+
+        byte[] bytes = serializer.serialize(response);
+        Tlv tlv = TlvReader.constructTlv(bytes, NofspSerializationConstants.TLV_FRAME);
+
+        assertEquals(response, deserializer.deserializeMessage(tlv));
+    }
+
+    /**
+     * Tests the serialization of the {@code ServerFnsmUpdateRejectedError}.
+     *
+     * @throws IOException thrown if an I/O exception occurs
+     */
+    @Test
+    public void testServerFnsmUpdateRejectedErrorSerialization() throws IOException {
+        ServerFnsmUpdateRejectedError response = new ServerFnsmUpdateRejectedError("TestDescription");
+
+        byte[] bytes = serializer.serialize(response);
+        Tlv tlv = TlvReader.constructTlv(bytes, NofspSerializationConstants.TLV_FRAME);
+
+        assertEquals(response, deserializer.deserializeMessage(tlv));
     }
 }

@@ -1,21 +1,21 @@
 package no.ntnu.network.message.request;
 
+import no.ntnu.exception.NoSuchAddressException;
 import no.ntnu.exception.SerializationException;
-import no.ntnu.network.message.Message;
 import no.ntnu.network.message.common.ByteSerializableInteger;
 import no.ntnu.network.message.context.ServerContext;
 import no.ntnu.network.message.response.ResponseMessage;
+import no.ntnu.network.message.response.ServerFnsmUpdatedResponse;
 import no.ntnu.network.message.response.error.AuthenticationFailedError;
+import no.ntnu.network.message.response.error.ServerFnsmUpdateRejectedError;
 import no.ntnu.network.message.serialize.NofspSerializationConstants;
 import no.ntnu.network.message.serialize.visitor.ByteSerializerVisitor;
-
-import java.io.IOException;
 
 /**
  * A request sent from a field node to the central server, notifying it about a change of state for an actuator and
  * requesting it to update its FNSM accordingly.
  */
-public class ActuatorNotificationRequest extends RequestMessage<ServerContext> {
+public class ActuatorNotificationRequest extends StandardProcessingRequestMessage<ServerContext> {
     private final int actuatorAddress;
     private final int newState;
 
@@ -50,7 +50,12 @@ public class ActuatorNotificationRequest extends RequestMessage<ServerContext> {
         ResponseMessage response = null;
 
         if (context.isClientRegistered()) {
-
+            try {
+                context.updateActuatorState(actuatorAddress, newState);
+                response = new ServerFnsmUpdatedResponse();
+            } catch (NoSuchAddressException e) {
+                response = new ServerFnsmUpdateRejectedError(e.getMessage());
+            }
         } else {
             response = new AuthenticationFailedError<>();
         }

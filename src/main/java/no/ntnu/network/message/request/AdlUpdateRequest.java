@@ -18,7 +18,7 @@ import java.util.Set;
  * A request sent from the central server to a field node, requesting to update the active device list (ADL) of
  * the field node.
  */
-public class AdlUpdateRequest extends RequestMessage<FieldNodeContext> {
+public class AdlUpdateRequest extends StandardProcessingRequestMessage<FieldNodeContext> {
     private final Set<Integer> adlUpdates;
 
     /**

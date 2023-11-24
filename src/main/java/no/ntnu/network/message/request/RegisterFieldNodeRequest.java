@@ -21,7 +21,7 @@ import java.util.Map;
 /**
  * A request to register a {@code FieldNode} at the central server.
  */
-public class RegisterFieldNodeRequest extends RequestMessage<ServerContext> {
+public class RegisterFieldNodeRequest extends StandardProcessingRequestMessage<ServerContext> {
     private final Map<Integer, DeviceClass> fnst;
     private final Map<Integer, Integer> fnsm;
     private final String name;

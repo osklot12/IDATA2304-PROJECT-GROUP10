@@ -3,6 +3,7 @@ package no.ntnu.network.message.request;
 import no.ntnu.exception.SerializationException;
 import no.ntnu.network.message.Message;
 import no.ntnu.network.message.context.ClientContext;
+import no.ntnu.network.message.context.MessageContext;
 import no.ntnu.network.message.response.HeartbeatResponse;
 import no.ntnu.network.message.response.ResponseMessage;
 import no.ntnu.network.message.serialize.NofspSerializationConstants;
@@ -15,7 +16,7 @@ import java.io.IOException;
  *
  * @param <C> any client context
  */
-public class HeartbeatRequest<C extends ClientContext> extends RequestMessage<C> {
+public class HeartbeatRequest<C extends ClientContext> extends StandardProcessingRequestMessage<C> {
     /**
      * Creates a new HeartbeatRequest.
      */

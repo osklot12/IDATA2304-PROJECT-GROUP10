@@ -8,7 +8,9 @@ import no.ntnu.network.message.deserialize.component.MessageDeserializer;
 import no.ntnu.network.message.request.*;
 import no.ntnu.network.message.response.AdlUpdatedResponse;
 import no.ntnu.network.message.response.HeartbeatResponse;
+import no.ntnu.network.message.response.VirtualActuatorUpdatedResponse;
 import no.ntnu.network.message.response.error.AdlUpdateRejectedError;
+import no.ntnu.network.message.response.error.NoSuchVirtualDeviceError;
 import no.ntnu.network.message.serialize.NofspSerializationConstants;
 import no.ntnu.network.message.serialize.tool.tlv.Tlv;
 import no.ntnu.network.message.serialize.tool.tlv.TlvReader;
@@ -172,5 +174,35 @@ public class NofspServerDeserializerTest {
         Tlv tlv = TlvReader.constructTlv(bytes, NofspSerializationConstants.TLV_FRAME);
 
         assertEquals(request, deserializer.deserializeMessage(tlv));
+    }
+
+    /**
+     * Tests the serialization of the {@code VirtualActuatorUpdatedResponse}.
+     *
+     * @throws IOException thrown if an I/O exception occurs
+     */
+    @Test
+    public void testVirtualActuatorUpdatedResponse() throws IOException {
+        VirtualActuatorUpdatedResponse response = new VirtualActuatorUpdatedResponse();
+
+        byte[] bytes = serializer.serialize(response);
+        Tlv tlv = TlvReader.constructTlv(bytes, NofspSerializationConstants.TLV_FRAME);
+
+        assertEquals(response, deserializer.deserializeMessage(tlv));
+    }
+
+    /**
+     * Tests the serialization of the {@code NoSuchVirtualDeviceError}.
+     *
+     * @throws IOException thrown if an I/O exception occurs
+     */
+    @Test
+    public void testNoSuchVirtualDeviceError() throws IOException {
+        NoSuchVirtualDeviceError response = new NoSuchVirtualDeviceError("TestDescription");
+
+        byte[] bytes = serializer.serialize(response);
+        Tlv tlv = TlvReader.constructTlv(bytes, NofspSerializationConstants.TLV_FRAME);
+
+        assertEquals(response, deserializer.deserializeMessage(tlv));
     }
 }

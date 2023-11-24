@@ -7,7 +7,8 @@ public interface ActuatorListener {
     /**
      * Triggers when a state for an actuator changes.
      *
-     * @param actuator actuator that changes state
+     * @param actuatorAddress the address of the actuator
+     * @param newState the new state of the actuator
      */
-    void actuatorStateChanged(Actuator actuator);
+    void actuatorStateChanged(int actuatorAddress, int newState);
 }

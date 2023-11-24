@@ -1,21 +1,21 @@
 package no.ntnu.broker;
 
-import no.ntnu.fieldnode.device.actuator.Actuator;
 import no.ntnu.fieldnode.device.actuator.ActuatorListener;
+
+import java.util.HashMap;
 
 /**
  * A class representing a broker responsible for notifying ActuatorListeners about a change
- * of state for an actuator.
+ * of state for an actuator. The broker stores the listeners together with their address for the actuator,
+ * as different listeners can have different addresses for the same actuator.
  */
-public class ActuatorStateBroker extends SubscriberList<ActuatorListener> {
+public class ActuatorStateBroker extends HashMap<ActuatorListener, Integer> {
     /**
-     * Notifies the subscribed listeners about a change of state for an actuator.
+     * Notifies all listeners about the event of a changed actuator state.
      *
-     * @param actuator the actuator that changed state
+     * @param newState the new state of the actuator
      */
-    public void notifyListeners(Actuator actuator) {
-        getSubscribers().forEach(
-                listener -> listener.actuatorStateChanged(actuator)
-        );
+    public void notifyListeners(int newState) {
+        forEach((listener, address) -> listener.actuatorStateChanged(address, newState));
     }
 }

@@ -16,7 +16,7 @@ import java.util.Map;
  * A response to a {@code SubscribeToFieldNodeRequest}, confirming that the control panel has been subscribed.
  * The response contains all the information the control panel needs about the field node.
  */
-public class SubscribedToFieldNodeResponse extends ResponseMessage<ControlPanelContext> {
+public class SubscribedToFieldNodeResponse extends StandardProcessingResponseMessage<ControlPanelContext> {
     private final Map<Integer, DeviceClass> fnst;
     private final Map<Integer, Integer> fnsm;
     private final String name;
