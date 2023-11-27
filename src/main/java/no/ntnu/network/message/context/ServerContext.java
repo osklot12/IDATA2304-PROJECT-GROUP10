@@ -7,10 +7,12 @@ import no.ntnu.fieldnode.device.DeviceClass;
 import no.ntnu.network.CommunicationAgent;
 import no.ntnu.network.centralserver.centralhub.CentralHub;
 import no.ntnu.network.centralserver.centralhub.clientproxy.FieldNodeClientProxy;
+import no.ntnu.network.message.request.FieldNodeActivateActuatorRequest;
 import no.ntnu.network.message.request.RequestMessage;
 import no.ntnu.network.message.response.ResponseMessage;
 import no.ntnu.tools.ServerLogger;
 
+import java.io.IOException;
 import java.util.Map;
 import java.util.Set;
 
@@ -99,14 +101,52 @@ public class ServerContext extends MessageContext {
     }
 
     /**
-     * Updates the address for a given actuator on a given field node.
+     * Updates the address for a given actuator for a given field node.
+     * The information is updated locally at the central server, and does not provoke a request to the actual field
+     * node.
      *
      * @param actuatorAddress the address of the actuator
      * @param newState the new state to set
      * @throws NoSuchAddressException thrown if one of the addresses is invalid
      */
-    public void updateActuatorState(int actuatorAddress, int newState) throws NoSuchAddressException {
-        centralHub.setActuatorState(agent.getClientNodeAddress(), actuatorAddress, newState);
+    public void updateLocalActuatorState(int actuatorAddress, int newState) throws NoSuchAddressException {
+        centralHub.setLocalActuatorState(agent.getClientNodeAddress(), actuatorAddress, newState);
+    }
+
+    /**
+     * Requests a remote field node to change state for a given actuator.
+     *
+     * @param fieldNodeAddress the address of the field node
+     * @param actuatorAddress the address of the actuator
+     * @param newState the new state to set
+     */
+    public void requestActuatorActivationForFieldNode(int fieldNodeAddress, int actuatorAddress, int newState) throws IOException {
+        FieldNodeClientProxy proxy = centralHub.getFieldNodeProxy(fieldNodeAddress);
+        // checks if a field node with the given address exists
+        if (proxy != null) {
+            // checks if the field node has an actuator with the given address
+            if (proxy.getFNSM().containsKey(actuatorAddress)) {
+                CommunicationAgent agent = proxy.getAgent();
+                agent.sendRequest(new FieldNodeActivateActuatorRequest(actuatorAddress, newState));
+            } else {
+                throw new IOException("Cannot request actuator activation for actuator " +
+                        "with address " + actuatorAddress + " on field node " + fieldNodeAddress +
+                        ", because no such actuator exists.");
+            }
+        } else {
+            throw new IOException("Cannot request actuator activation for field node with" +
+                    " address " + fieldNodeAddress + ", because no such field node exists.");
+        }
+    }
+
+    /**
+     * Returns the field node client proxy for a given field node address.
+     *
+     * @param fieldNodeAddress the address of the field node
+     * @return the field node client proxy, null if not found
+     */
+    public FieldNodeClientProxy getFieldNodeProxy(int fieldNodeAddress) {
+        return centralHub.getFieldNodeProxy(fieldNodeAddress);
     }
 
     @Override

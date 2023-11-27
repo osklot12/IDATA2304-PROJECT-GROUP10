@@ -8,8 +8,11 @@ import no.ntnu.network.message.common.ByteSerializableString;
 import no.ntnu.network.message.context.ControlPanelContext;
 import no.ntnu.network.message.deserialize.component.NofspClientMessageDeserializer;
 import no.ntnu.network.message.request.ServerFnsmNotificationRequest;
+import no.ntnu.network.message.response.ActuatorStateSetControlPanelResponse;
+import no.ntnu.network.message.response.ActuatorStateSetServerResponse;
 import no.ntnu.network.message.response.FieldNodePoolResponse;
 import no.ntnu.network.message.response.SubscribedToFieldNodeResponse;
+import no.ntnu.network.message.response.error.FieldNodeUnreachableError;
 import no.ntnu.network.message.serialize.NofspSerializationConstants;
 import no.ntnu.network.message.serialize.tool.DataTypeConverter;
 import no.ntnu.network.message.serialize.tool.tlv.Tlv;
@@ -41,6 +44,8 @@ public class NofspControlPanelDeserializer extends NofspClientMessageDeserialize
         // responses
         addResponseMessageDeserialization(NofspSerializationConstants.FIELD_NODE_POOL_CODE, this::getFieldNodePoolResponse);
         addResponseMessageDeserialization(NofspSerializationConstants.SUBSCRIBED_TO_FIELD_NODE_CODE, this::getSubscribeToFieldNodeResponse);
+        addResponseMessageDeserialization(NofspSerializationConstants.ACTUATOR_STATE_SET_CODE, this::getActuatorStateSetControlPanelResponse);
+        addResponseMessageDeserialization(NofspSerializationConstants.FIELD_NODE_UNREACHABLE_CODE, this::getFieldNodeUnreachableError);
     }
 
     /**
@@ -89,7 +94,9 @@ public class NofspControlPanelDeserializer extends NofspClientMessageDeserialize
         // deserializes name
         String name = getRegularString(parameterReader.readNextTlv());
 
-        return new SubscribedToFieldNodeResponse(messageId, fnst, fnsm, name);
+        response = new SubscribedToFieldNodeResponse(messageId, fnst, fnsm, name);
+
+        return response;
     }
 
     /**
@@ -109,11 +116,42 @@ public class NofspControlPanelDeserializer extends NofspClientMessageDeserialize
         // deserializes the actuator address
         int actuatorAddress = getRegularInt(parameterReader.readNextTlv());
 
-        // deseializes the new state
+        // deserializes the new state
         int newState = getRegularInt(parameterReader.readNextTlv());
 
         request = new ServerFnsmNotificationRequest(messageId, fieldNodeAddress, actuatorAddress, newState);
 
         return request;
+    }
+
+    /**
+     * Deserializes a {@code ActuatorStateSetControlPanelResponse}.
+     *
+     * @param messageId the message id
+     * @param parameterReader a TlvReader holding the message parameters
+     * @return the deserialized response
+     * @throws IOException thrown if an I/O exception occurs
+     */
+    private ActuatorStateSetControlPanelResponse getActuatorStateSetControlPanelResponse(int messageId, TlvReader parameterReader) throws IOException {
+        return new ActuatorStateSetControlPanelResponse(messageId);
+    }
+
+    /**
+     * Deserializes a {@code FieldNodeUnreachableError}.
+     *
+     * @param messageId the message id
+     * @param parameterReader a TlvReader holding the message parameters
+     * @return the deserialized response
+     * @throws IOException thrown if an I/O exception occurs
+     */
+    private FieldNodeUnreachableError getFieldNodeUnreachableError(int messageId, TlvReader parameterReader) throws IOException {
+        FieldNodeUnreachableError response = null;
+
+        // deserializes the error description
+        String description = getRegularString(parameterReader.readNextTlv());
+
+        response = new FieldNodeUnreachableError(messageId, description);
+
+        return response;
     }
 }

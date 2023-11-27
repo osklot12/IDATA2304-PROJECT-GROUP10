@@ -51,7 +51,7 @@ public class ActuatorNotificationRequest extends StandardProcessingRequestMessag
 
         if (context.isClientRegistered()) {
             try {
-                context.updateActuatorState(actuatorAddress, newState);
+                context.updateLocalActuatorState(actuatorAddress, newState);
                 response = new ServerFnsmUpdatedResponse();
             } catch (NoSuchAddressException e) {
                 response = new ServerFnsmUpdateRejectedError(e.getMessage());

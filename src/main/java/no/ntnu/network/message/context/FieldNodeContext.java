@@ -1,5 +1,6 @@
 package no.ntnu.network.message.context;
 
+import no.ntnu.exception.ActuatorInteractionFailedException;
 import no.ntnu.exception.NoSuchDeviceException;
 import no.ntnu.fieldnode.FieldNode;
 import no.ntnu.network.CommunicationAgent;
@@ -29,6 +30,17 @@ public class FieldNodeContext extends ClientContext {
 
         this.fieldNode = fieldNode;
         this.adl = adl;
+    }
+
+    /**
+     * Sets the state of an actuator.
+     *
+     * @param actuatorAddress the address of the actuator
+     * @param newState the new state to set
+     * @throws ActuatorInteractionFailedException thrown if state for the given actuator cannot be set
+     */
+    public void setActuatorState(int actuatorAddress, int newState) throws ActuatorInteractionFailedException {
+        fieldNode.setActuatorState(actuatorAddress, newState);
     }
 
     /**

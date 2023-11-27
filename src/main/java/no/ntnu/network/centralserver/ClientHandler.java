@@ -37,6 +37,7 @@ public class ClientHandler extends ControlProcessAgent<ServerContext> implements
      * @param centralHub the central hub
      */
     public ClientHandler(Socket clientSocket, CentralHub centralHub) {
+        super();
         if (clientSocket == null) {
             throw new IllegalArgumentException("Cannot create ClientHandler, because client socket is null.");
         }

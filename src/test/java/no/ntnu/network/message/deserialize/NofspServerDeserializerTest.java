@@ -6,10 +6,12 @@ import no.ntnu.network.message.common.ControlMessage;
 import no.ntnu.network.message.context.ServerContext;
 import no.ntnu.network.message.deserialize.component.MessageDeserializer;
 import no.ntnu.network.message.request.*;
+import no.ntnu.network.message.response.ActuatorStateSetServerResponse;
 import no.ntnu.network.message.response.AdlUpdatedResponse;
 import no.ntnu.network.message.response.HeartbeatResponse;
 import no.ntnu.network.message.response.VirtualActuatorUpdatedResponse;
 import no.ntnu.network.message.response.error.AdlUpdateRejectedError;
+import no.ntnu.network.message.response.error.DeviceInteractionFailedError;
 import no.ntnu.network.message.response.error.NoSuchVirtualDeviceError;
 import no.ntnu.network.message.serialize.NofspSerializationConstants;
 import no.ntnu.network.message.serialize.tool.tlv.Tlv;
@@ -197,8 +199,53 @@ public class NofspServerDeserializerTest {
      * @throws IOException thrown if an I/O exception occurs
      */
     @Test
-    public void testNoSuchVirtualDeviceError() throws IOException {
+    public void testNoSuchVirtualDeviceErrorSerialization() throws IOException {
         NoSuchVirtualDeviceError response = new NoSuchVirtualDeviceError("TestDescription");
+
+        byte[] bytes = serializer.serialize(response);
+        Tlv tlv = TlvReader.constructTlv(bytes, NofspSerializationConstants.TLV_FRAME);
+
+        assertEquals(response, deserializer.deserializeMessage(tlv));
+    }
+
+    /**
+     * Tests the serialization of the {@code ServerActivateActuatorRequest}.
+     *
+     * @throws IOException thrown if an I/O exception occurs
+     */
+    @Test
+    public void testServerActivateActuatorRequestSerialization() throws IOException {
+        ServerActivateActuatorRequest request = new ServerActivateActuatorRequest(1, 2, 1);
+
+        byte[] bytes = serializer.serialize(request);
+        Tlv tlv = TlvReader.constructTlv(bytes, NofspSerializationConstants.TLV_FRAME);
+
+        assertEquals(request, deserializer.deserializeMessage(tlv));
+    }
+
+    /**
+     * Tests the serialization of the {@code ActuatorStateSetServerResponse}.
+     *
+     * @throws IOException thrown if an I/O exception occurs
+     */
+    @Test
+    public void testActuatorStateSetServerResponseSerialization() throws IOException {
+        ActuatorStateSetServerResponse response = new ActuatorStateSetServerResponse();
+
+        byte[] bytes = serializer.serialize(response);
+        Tlv tlv = TlvReader.constructTlv(bytes, NofspSerializationConstants.TLV_FRAME);
+
+        assertEquals(response, deserializer.deserializeMessage(tlv));
+    }
+
+    /**
+     * Tests the serialization of the {@code DeviceInteractionFailedError}.
+     *
+     * @throws IOException thrown if an I/O exception occurs
+     */
+    @Test
+    public void testDeviceInteractionFailedErrorSerialization() throws IOException {
+        DeviceInteractionFailedError response = new DeviceInteractionFailedError("TestDescription");
 
         byte[] bytes = serializer.serialize(response);
         Tlv tlv = TlvReader.constructTlv(bytes, NofspSerializationConstants.TLV_FRAME);

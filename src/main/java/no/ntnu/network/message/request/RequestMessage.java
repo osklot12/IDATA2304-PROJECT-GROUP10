@@ -1,12 +1,8 @@
 package no.ntnu.network.message.request;
 
-import no.ntnu.network.message.Message;
 import no.ntnu.network.message.common.ByteSerializableString;
 import no.ntnu.network.message.common.ControlMessage;
-import no.ntnu.network.message.context.MessageContext;
 import no.ntnu.network.message.response.ResponseMessage;
-
-import java.io.IOException;
 
 /**
  * A message sent from one node to another, requesting a service.
@@ -30,7 +26,7 @@ public abstract class RequestMessage extends ControlMessage {
      * @param response response to set id for
      */
     protected void setResponseId(ResponseMessage response) {
-        response.setId(getId().getInteger());
+        response.setId(getId());
     }
 
     /**

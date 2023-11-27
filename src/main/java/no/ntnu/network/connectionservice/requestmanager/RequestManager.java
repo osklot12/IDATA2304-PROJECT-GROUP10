@@ -43,11 +43,12 @@ public class RequestManager implements ConnectionService {
         }
 
         assignRequestId(request);
-        requests.put(request.getId().getInteger(), new PendingRequest(request, System.currentTimeMillis(), ttl));
+        requests.put(request.getId(), new PendingRequest(request, System.currentTimeMillis(), ttl));
     }
 
     private void assignRequestId(RequestMessage request) {
-        request.setId(getRandomAvailableId());
+        int messageId = getRandomAvailableId();
+        request.setId(messageId);
     }
 
     private int getRandomAvailableId() {

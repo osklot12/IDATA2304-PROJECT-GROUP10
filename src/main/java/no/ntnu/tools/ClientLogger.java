@@ -3,8 +3,6 @@ package no.ntnu.tools;
 import no.ntnu.network.message.request.RequestMessage;
 import no.ntnu.network.message.response.ResponseMessage;
 
-import java.time.LocalTime;
-
 /**
  * A class encapsulating logging for a client.
  */
@@ -20,7 +18,7 @@ public class ClientLogger {
      * @param request the request message sent
      */
     public static void requestSent(RequestMessage request) {
-        Logger.info("[ SENT " + TimeFormatter.now() + " ] REQUEST ( " + request.getId() + " ): " + request.toString());
+        Logger.info("[ SENT " + TimeFormatter.now() + " ] REQUEST ( " + request.getSerializableId() + " ): " + request.toString());
     }
 
     /**
@@ -29,7 +27,7 @@ public class ClientLogger {
      * @param response the response message sent
      */
     public static void responseSent(ResponseMessage response) {
-        Logger.info("[ SENT " + TimeFormatter.now() + " ] RESPONSE ( " + response.getId() + " ): " + response.toString());
+        Logger.info("[ SENT " + TimeFormatter.now() + " ] RESPONSE ( " + response.getSerializableId() + " ): " + response.toString());
     }
 
     /**
@@ -38,7 +36,7 @@ public class ClientLogger {
      * @param request the received request message
      */
     public static void requestReceived(RequestMessage request) {
-        Logger.info("[ RECEIVED " + TimeFormatter.now() + " ] REQUEST ( " + request.getId() + " ): " + request.toString());
+        Logger.info("[ RECEIVED " + TimeFormatter.now() + " ] REQUEST ( " + request.getSerializableId() + " ): " + request.toString());
     }
 
     /**
@@ -47,7 +45,7 @@ public class ClientLogger {
      * @param response the received response message
      */
     public static void responseReceived(ResponseMessage response) {
-        Logger.info("[ RECEIVED " + TimeFormatter.now() + " ] RESPONSE ( " + response.getId() + " ): " + response.toString());
+        Logger.info("[ RECEIVED " + TimeFormatter.now() + " ] RESPONSE ( " + response.getSerializableId() + " ): " + response.toString());
     }
 
     /**
@@ -56,6 +54,6 @@ public class ClientLogger {
      * @param request the timed out request message
      */
     public static void requestTimeout(RequestMessage request) {
-        Logger.error("[ TIMEOUT " + TimeFormatter.now() + " ] REQUEST ( " + request.getId() + " ): " + request.toString());
+        Logger.error("[ TIMEOUT " + TimeFormatter.now() + " ] REQUEST ( " + request.getSerializableId() + " ): " + request.toString());
     }
 }

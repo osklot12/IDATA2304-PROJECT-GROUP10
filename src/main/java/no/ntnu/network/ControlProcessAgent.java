@@ -35,7 +35,7 @@ public abstract class ControlProcessAgent<C extends MessageContext> implements C
     private final List<ConnectionService> connectionServices;
     private Socket socket;
     private TCPControlProcess<C> controlProcess;
-    private RequestManager requestManager;
+    protected RequestManager requestManager;
     private volatile boolean connected;
     private volatile int clientNodeAddress;
 
@@ -236,15 +236,8 @@ public abstract class ControlProcessAgent<C extends MessageContext> implements C
     }
 
     @Override
-    public boolean acceptResponse(ResponseMessage response) {
-        boolean accepted = false;
-
-        RequestMessage correspondingRequest = requestManager.pullRequest(response.getId().getInteger());
-        if (correspondingRequest != null) {
-            accepted = true;
-        }
-
-        return accepted;
+    public RequestMessage acceptResponse(ResponseMessage response) {
+        return requestManager.pullRequest(response.getId());
     }
 
     @Override

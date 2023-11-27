@@ -43,8 +43,7 @@ public abstract class MessageContext {
     }
 
     /**
-     * Accepts a response message.
-     * Used when processing a response.
+     * Indicates whether the response is accepted or not.
      *
      * @return true if accepted, false otherwise
      */
@@ -53,7 +52,7 @@ public abstract class MessageContext {
             throw new IllegalArgumentException("Cannot accept response, because response is null.");
         }
 
-        return agent.acceptResponse(response);
+        return agent.acceptResponse(response) != null;
     }
 
     /**

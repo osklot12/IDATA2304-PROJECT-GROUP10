@@ -212,7 +212,7 @@ public class NofspSerializer implements ByteSerializerVisitor {
      * @return the serialized bytes
      */
     private byte[] getCommonControlMessageBytes(ControlMessage controlMessage) throws SerializationException {
-        return controlMessage.getId().accept(this);
+        return controlMessage.getSerializableId().accept(this);
     }
 
     /**

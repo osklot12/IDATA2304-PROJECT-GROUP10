@@ -5,6 +5,7 @@ import no.ntnu.network.message.common.ByteSerializableSet;
 import no.ntnu.network.message.context.FieldNodeContext;
 import no.ntnu.network.message.deserialize.component.NofspClientMessageDeserializer;
 import no.ntnu.network.message.request.AdlUpdateRequest;
+import no.ntnu.network.message.request.FieldNodeActivateActuatorRequest;
 import no.ntnu.network.message.response.ServerFnsmUpdatedResponse;
 import no.ntnu.network.message.response.error.ServerFnsmUpdateRejectedError;
 import no.ntnu.network.message.serialize.NofspSerializationConstants;
@@ -33,6 +34,7 @@ public class NofspFieldNodeDeserializer extends NofspClientMessageDeserializer<F
     private void initializeDeserializationMethods() {
         // requests
         addRequestMessageDeserialization(NofspSerializationConstants.ADL_UPDATE_COMMAND, this::getAdlUpdateRequest);
+        addRequestMessageDeserialization(NofspSerializationConstants.ACTUATOR_NOTIFICATION_COMMAND, this::getFieldNodeActivateActuatorRequest);
 
         // responses
         addResponseMessageDeserialization(NofspSerializationConstants.SERVER_FNSM_UPDATED_CODE, this::getServerFnsmUpdatedResponse);
@@ -88,5 +90,27 @@ public class NofspFieldNodeDeserializer extends NofspClientMessageDeserializer<F
         response = new ServerFnsmUpdateRejectedError(messageId, description);
 
         return response;
+    }
+
+    /**
+     * Deserializes a {@code FieldNodeActivateActuatorRequest}.
+     *
+     * @param messageId the message id
+     * @param parameterReader a TlvReader holding parameter tlvs
+     * @return the deserialized request
+     * @throws IOException thrown if an I/O exception occurs
+     */
+    private FieldNodeActivateActuatorRequest getFieldNodeActivateActuatorRequest(int messageId, TlvReader parameterReader) throws IOException {
+        FieldNodeActivateActuatorRequest request = null;
+
+        // deserializes the actuator address
+        int actuatorAddress = getRegularInt(parameterReader.readNextTlv());
+
+        // deserializes the new state
+        int newState = getRegularInt(parameterReader.readNextTlv());
+
+        request = new FieldNodeActivateActuatorRequest(messageId, actuatorAddress, newState);
+
+        return request;
     }
 }

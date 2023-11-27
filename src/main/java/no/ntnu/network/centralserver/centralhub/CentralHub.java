@@ -7,6 +7,7 @@ import no.ntnu.network.centralserver.centralhub.clientproxy.ClientProxy;
 import no.ntnu.network.centralserver.centralhub.clientproxy.ControlPanelClientProxy;
 import no.ntnu.network.centralserver.centralhub.clientproxy.FieldNodeClientProxy;
 import no.ntnu.network.message.request.AdlUpdateRequest;
+import no.ntnu.network.message.request.FieldNodeActivateActuatorRequest;
 import no.ntnu.network.message.request.ServerFnsmNotificationRequest;
 import no.ntnu.tools.Logger;
 
@@ -299,14 +300,16 @@ public class CentralHub {
     }
 
     /**
-     * Sets the state for a given actuator.
+     * Sets the local state for a given actuator.
+     * This makes the central hub update its FNSM for the appropriate field node, and will notify any subscribed
+     * control panel about the event.
      *
      * @param fieldNodeAddress the address of the field node
      * @param actuatorAddress the address of the actuator
      * @param newState the new state to set
      * @throws NoSuchAddressException thrown if one of the addresses is invalid
      */
-    public void setActuatorState(int fieldNodeAddress, int actuatorAddress, int newState) throws NoSuchAddressException {
+    public void setLocalActuatorState(int fieldNodeAddress, int actuatorAddress, int newState) throws NoSuchAddressException {
         if (!(fieldNodes.containsKey(fieldNodeAddress))) {
             throw new NoSuchAddressException("Cannot set actuator state for field node with address " + fieldNodeAddress +
                     ", because no such field node exists.");
@@ -320,6 +323,16 @@ public class CentralHub {
             throw new NoSuchAddressException("Cannot set state of actuator with address " + actuatorAddress +
                     " for field node with address " + fieldNodeAddress + ", because no such actuator exists.");
         }
+    }
+
+    /**
+     * Returns the field node proxy with the given address.
+     *
+     * @param fieldNodeAddress the address of the field node
+     * @return the field node proxy for the given address, null if none is found
+     */
+    public FieldNodeClientProxy getFieldNodeProxy(int fieldNodeAddress) {
+        return fieldNodes.get(fieldNodeAddress);
     }
 
     /**

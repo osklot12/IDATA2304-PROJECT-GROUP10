@@ -13,6 +13,7 @@ public interface CommunicationAgent {
      * Sends a request message to the remote peer.
      *
      * @param request request message to send
+     * @return the assigned message id for the request
      * @throws IOException thrown if an I/O exception is thrown
      */
     void sendRequest(RequestMessage request) throws IOException;
@@ -26,12 +27,12 @@ public interface CommunicationAgent {
     void sendResponse(ResponseMessage response) throws IOException;
 
     /**
-     * Returns whether a response is accepted or not.
+     * Returns the related request for a response message.
      *
      * @param responseMessage the response message to accept
-     * @return true if accepted, false otherwise
+     * @return the related request message, null if response was not accepted
      */
-    boolean acceptResponse(ResponseMessage responseMessage);
+    RequestMessage acceptResponse(ResponseMessage responseMessage);
 
     /**
      * Returns a string representation of the remote entity.

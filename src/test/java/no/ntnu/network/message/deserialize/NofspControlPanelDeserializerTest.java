@@ -5,8 +5,10 @@ import no.ntnu.network.message.context.ControlPanelContext;
 import no.ntnu.network.message.deserialize.component.MessageDeserializer;
 import no.ntnu.network.message.request.HeartbeatRequest;
 import no.ntnu.network.message.request.ServerFnsmNotificationRequest;
+import no.ntnu.network.message.response.ActuatorStateSetControlPanelResponse;
 import no.ntnu.network.message.response.FieldNodePoolResponse;
 import no.ntnu.network.message.response.SubscribedToFieldNodeResponse;
+import no.ntnu.network.message.response.error.FieldNodeUnreachableError;
 import no.ntnu.network.message.serialize.NofspSerializationConstants;
 import no.ntnu.network.message.serialize.tool.tlv.Tlv;
 import no.ntnu.network.message.serialize.tool.tlv.TlvReader;
@@ -109,5 +111,35 @@ public class NofspControlPanelDeserializerTest {
         Tlv tlv = TlvReader.constructTlv(bytes, NofspSerializationConstants.TLV_FRAME);
 
         assertEquals(request, deserializer.deserializeMessage(tlv));
+    }
+
+    /**
+     * Tests the serialization of {@code ActuatorStateSetControlPanelResponse}.
+     *
+     * @throws IOException thrown if an I/O exception occurs
+     */
+    @Test
+    public void testActuatorStateSetControlPanelResponseSerialization() throws IOException {
+        ActuatorStateSetControlPanelResponse response = new ActuatorStateSetControlPanelResponse();
+
+        byte[] bytes = serializer.serialize(response);
+        Tlv tlv = TlvReader.constructTlv(bytes, NofspSerializationConstants.TLV_FRAME);
+
+        assertEquals(response, deserializer.deserializeMessage(tlv));
+    }
+
+    /**
+     * Tests the serialization of {@code FieldNodeUnreachableError}.
+     *
+     * @throws IOException thrown if an I/O exception occurs
+     */
+    @Test
+    public void testFieldNodeUnreachableError() throws IOException {
+        FieldNodeUnreachableError response = new FieldNodeUnreachableError("TestDescription");
+
+        byte[] bytes = serializer.serialize(response);
+        Tlv tlv = TlvReader.constructTlv(bytes, NofspSerializationConstants.TLV_FRAME);
+
+        assertEquals(response, deserializer.deserializeMessage(tlv));
     }
 }

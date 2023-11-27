@@ -3,8 +3,6 @@ package no.ntnu.tools;
 import no.ntnu.network.message.request.RequestMessage;
 import no.ntnu.network.message.response.ResponseMessage;
 
-import java.time.LocalTime;
-
 /**
  * A class encapsulating logging for the central server.
  */
@@ -21,7 +19,7 @@ public class ServerLogger {
      * @param clientAddress the destination address for the request
      */
     public static void requestSent(RequestMessage request, String clientAddress) {
-        Logger.info("[ SENT " + TimeFormatter.now() + " ] REQUEST ( " + request.getId() + " ): " + request.toString() + " -> " + clientAddress);
+        Logger.info("[ SENT " + TimeFormatter.now() + " ] REQUEST ( " + request.getSerializableId() + " ): " + request.toString() + " -> " + clientAddress);
     }
 
     /**
@@ -31,7 +29,7 @@ public class ServerLogger {
      * @param clientAddress the destination address for the request
      */
     public static void responseSent(ResponseMessage response, String clientAddress) {
-        Logger.info("[ SENT " + TimeFormatter.now() + " ] RESPONSE ( " + response.getId() + " ): " + response.toString() + " -> " + clientAddress);
+        Logger.info("[ SENT " + TimeFormatter.now() + " ] RESPONSE ( " + response.getSerializableId() + " ): " + response.toString() + " -> " + clientAddress);
     }
 
     /**
@@ -41,7 +39,7 @@ public class ServerLogger {
      * @param clientAddress the destination address for the request
      */
     public static void requestReceived(RequestMessage request, String clientAddress) {
-        Logger.info("[ RECEIVED " + TimeFormatter.now() + " ] REQUEST ( " + request.getId() + " ): " + request.toString() + " -> " + clientAddress);
+        Logger.info("[ RECEIVED " + TimeFormatter.now() + " ] REQUEST ( " + request.getSerializableId() + " ): " + request.toString() + " -> " + clientAddress);
     }
 
     /**
@@ -51,7 +49,7 @@ public class ServerLogger {
      * @param clientAddress the destination address for the request
      */
     public static void responseReceived(ResponseMessage response, String clientAddress) {
-        Logger.info("[ RECEIVED " + TimeFormatter.now() + " ] RESPONSE ( " + response.getId() + " ): " + response.toString() + " -> " + clientAddress);
+        Logger.info("[ RECEIVED " + TimeFormatter.now() + " ] RESPONSE ( " + response.getSerializableId() + " ): " + response.toString() + " -> " + clientAddress);
     }
 
     /**
@@ -60,7 +58,7 @@ public class ServerLogger {
      * @param request the timed out request message
      */
     public static void requestTimeout(RequestMessage request, String clientAddress) {
-        Logger.error("[ TIMEOUT " + TimeFormatter.now() + " ] REQUEST ( " + request.getId() + " ): " + request.toString() + " -> " + clientAddress);
+        Logger.error("[ TIMEOUT " + TimeFormatter.now() + " ] REQUEST ( " + request.getSerializableId() + " ): " + request.toString() + " -> " + clientAddress);
     }
 
     /**

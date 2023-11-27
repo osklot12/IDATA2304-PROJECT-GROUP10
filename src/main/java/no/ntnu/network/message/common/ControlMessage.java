@@ -10,22 +10,31 @@ import no.ntnu.network.message.serialize.ByteSerializable;
  * connection, as different connections can use the same IDs.
  */
 public abstract class ControlMessage implements ByteSerializable {
-    private ByteSerializableInteger id;
+    private int id;
 
     /**
      * Creates a new ControlMessage.
      */
     protected ControlMessage() {
-        this.id = new ByteSerializableInteger(0);
+        this.id = 0;
     }
 
     /**
-     * Returns the ID for the control message.
+     * Returns the message ID.
+     *
+     * @return message id
+     */
+    public int getId() {
+        return id;
+    }
+
+    /**
+     * Returns the message ID in a serializable format.
      *
      * @return the message ID
      */
-    public ByteSerializableInteger getId() {
-        return id;
+    public ByteSerializableInteger getSerializableId() {
+        return new ByteSerializableInteger(id);
     }
 
     /**
@@ -38,7 +47,7 @@ public abstract class ControlMessage implements ByteSerializable {
             throw new IllegalArgumentException("Cannot set ID, because it is negative.");
         }
 
-        this.id = new ByteSerializableInteger(id);
+        this.id = id;
     }
 
     @Override
@@ -51,14 +60,14 @@ public abstract class ControlMessage implements ByteSerializable {
             return false;
         }
 
-        return c.getId().equals(id);
+        return super.equals(c) && id == c.id;
     }
 
     @Override
     public int hashCode() {
         int result = 17;
 
-        result = result * 31 + id.hashCode();
+        result = result * 31 + id;
 
         return result;
     }

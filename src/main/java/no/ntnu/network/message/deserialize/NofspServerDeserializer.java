@@ -8,10 +8,12 @@ import no.ntnu.network.message.common.ByteSerializableString;
 import no.ntnu.network.message.context.ServerContext;
 import no.ntnu.network.message.deserialize.component.NofspMessageDeserializer;
 import no.ntnu.network.message.request.*;
+import no.ntnu.network.message.response.ActuatorStateSetServerResponse;
 import no.ntnu.network.message.response.AdlUpdatedResponse;
 import no.ntnu.network.message.response.HeartbeatResponse;
 import no.ntnu.network.message.response.VirtualActuatorUpdatedResponse;
 import no.ntnu.network.message.response.error.AdlUpdateRejectedError;
+import no.ntnu.network.message.response.error.DeviceInteractionFailedError;
 import no.ntnu.network.message.response.error.NoSuchVirtualDeviceError;
 import no.ntnu.network.message.serialize.NofspSerializationConstants;
 import no.ntnu.network.message.serialize.tool.DataTypeConverter;
@@ -45,6 +47,7 @@ public class NofspServerDeserializer extends NofspMessageDeserializer<ServerCont
         addRequestMessageDeserialization(NofspSerializationConstants.SUBSCRIBE_TO_FIELD_NODE_COMMAND, this::getSubscribeToFieldNodeRequest);
         addRequestMessageDeserialization(NofspSerializationConstants.FIELD_NODE_POOL_PULL_COMMAND, this::getFieldNodePoolPullRequest);
         addRequestMessageDeserialization(NofspSerializationConstants.ACTUATOR_NOTIFICATION_COMMAND, this::getActuatorNotificationRequest);
+        addRequestMessageDeserialization(NofspSerializationConstants.ACTIVATE_ACTUATOR_COMMAND, this::getServerActivateActuatorRequest);
 
         // responses
         addResponseMessageDeserialization(NofspSerializationConstants.HEART_BEAT_CODE, this::getHeartBeatResponse);
@@ -52,6 +55,8 @@ public class NofspServerDeserializer extends NofspMessageDeserializer<ServerCont
         addResponseMessageDeserialization(NofspSerializationConstants.ADL_UPDATE_REJECTED_CODE, this::getAdlUpdateRejectedError);
         addResponseMessageDeserialization(NofspSerializationConstants.VIRTUAL_ACTUATOR_UPDATED_CODE, this::getVirtualActuatorUpdatedResponse);
         addResponseMessageDeserialization(NofspSerializationConstants.NO_SUCH_VIRTUAL_DEVICE_CODE, this::getNoSuchVirtualDeviceError);
+        addResponseMessageDeserialization(NofspSerializationConstants.ACTUATOR_STATE_SET_CODE, this::getActuatorStateSetServerResponse);
+        addResponseMessageDeserialization(NofspSerializationConstants.DEVICE_INTERACTION_FAILED, this::getDeviceInteractionFailedError);
     }
 
     /**
@@ -270,6 +275,62 @@ public class NofspServerDeserializer extends NofspMessageDeserializer<ServerCont
         String description = getRegularString(parameterReader.readNextTlv());
 
         response = new NoSuchVirtualDeviceError(messageId, description);
+
+        return response;
+    }
+
+    /**
+     * Deserializes a {@code ServerActivateActuatorRequest}.
+     *
+     * @param messageId the message id
+     * @param parameterReader a TlvReader holding the parameter tlvs
+     * @return the deserialized request
+     * @throws IOException thrown if an I/O exception occurs
+     */
+    private ServerActivateActuatorRequest getServerActivateActuatorRequest(int messageId, TlvReader parameterReader) throws IOException {
+        ServerActivateActuatorRequest request = null;
+
+        // deserializes the field node address
+        int fieldNodeAddress = getRegularInt(parameterReader.readNextTlv());
+
+        // deserializes the actuator address
+        int actuatorAddress = getRegularInt(parameterReader.readNextTlv());
+
+        // deserializes the new state
+        int newState = getRegularInt(parameterReader.readNextTlv());
+
+        request = new ServerActivateActuatorRequest(messageId, fieldNodeAddress, actuatorAddress, newState);
+
+        return request;
+    }
+
+    /**
+     * Deserializes a {@code ActuatorStateSetServerResponse}.
+     *
+     * @param messageId the message id
+     * @param parameterReader a TlvReader holding the parameter tlvs
+     * @return the deserialized response
+     * @throws IOException thrown if an I/O exception occurs
+     */
+    private ActuatorStateSetServerResponse getActuatorStateSetServerResponse(int messageId, TlvReader parameterReader) throws IOException {
+        return new ActuatorStateSetServerResponse(messageId);
+    }
+
+    /**
+     * Deserializes a {@code DeviceInteractionFailedError}.
+     *
+     * @param messageId the message id
+     * @param parameterReader a TlvReader holding the parameter tlvs
+     * @return the deserialized response
+     * @throws IOException thrown if an I/O exception occurs
+     */
+    private DeviceInteractionFailedError getDeviceInteractionFailedError(int messageId, TlvReader parameterReader) throws IOException {
+        DeviceInteractionFailedError response = null;
+
+        // deserializes the error description
+        String description = getRegularString(parameterReader.readNextTlv());
+
+        response = new DeviceInteractionFailedError(messageId, description);
 
         return response;
     }
