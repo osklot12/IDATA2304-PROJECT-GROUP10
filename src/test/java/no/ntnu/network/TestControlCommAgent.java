@@ -10,12 +10,23 @@ import java.io.IOException;
  * It can be difficult and sometimes impossible to test real communication agents, and this class provides means
  * to test without having a proper agent.
  */
-public class TestAgent implements CommunicationAgent {
-    private RequestMessage requestSent = null;
-    private ResponseMessage responseSent = null;
-    private boolean responseAccepted = false;
-    private int clientNodeAddress = -1;
-    private boolean closed = false;
+public class TestControlCommAgent implements ControlCommAgent, DataCommAgentProvider {
+    private final DataCommAgent dataCommAgent;
+    private RequestMessage requestSent;
+    private ResponseMessage responseSent;
+    private int clientNodeAddress;
+    private boolean closed;
+
+    /**
+     * Creates a new TestControlCommAgent.
+     */
+    public TestControlCommAgent() {
+        this.dataCommAgent = new TestDataCommAgent();
+        this.requestSent = null;
+        this.responseSent = null;
+        this.clientNodeAddress = -1;
+        this.closed = false;
+    }
 
     @Override
     public void sendRequest(RequestMessage request) throws IOException {
@@ -28,8 +39,8 @@ public class TestAgent implements CommunicationAgent {
     }
 
     @Override
-    public boolean acceptResponse(ResponseMessage responseMessage) {
-        return responseAccepted = true;
+    public RequestMessage acceptResponse(ResponseMessage responseMessage) {
+        return requestSent;
     }
 
     @Override
@@ -71,20 +82,16 @@ public class TestAgent implements CommunicationAgent {
     }
 
     /**
-     * Returns whether the last response was accepted or not.
-     *
-     * @return true if last response was accepted
-     */
-    public boolean responseAccepted() {
-        return responseAccepted;
-    }
-
-    /**
      * Returns whether the agent is closed or not.
      *
      * @return true if closed
      */
     public boolean isClosed() {
         return closed;
+    }
+
+    @Override
+    public DataCommAgent getDataCommAgent(int portNumber) throws IOException {
+        return dataCommAgent;
     }
 }

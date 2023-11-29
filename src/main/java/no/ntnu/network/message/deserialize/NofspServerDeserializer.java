@@ -6,7 +6,10 @@ import no.ntnu.network.message.common.ByteSerializableMap;
 import no.ntnu.network.message.common.ByteSerializableSet;
 import no.ntnu.network.message.common.ByteSerializableString;
 import no.ntnu.network.message.context.ServerContext;
+import no.ntnu.network.message.deserialize.component.DeviceLookupTable;
 import no.ntnu.network.message.deserialize.component.NofspMessageDeserializer;
+import no.ntnu.network.message.deserialize.component.NofspSensorDataDeserializer;
+import no.ntnu.network.message.deserialize.component.SensorDataMessageDeserializer;
 import no.ntnu.network.message.request.*;
 import no.ntnu.network.message.response.ActuatorStateSetServerResponse;
 import no.ntnu.network.message.response.AdlUpdatedResponse;
@@ -15,6 +18,8 @@ import no.ntnu.network.message.response.VirtualActuatorUpdatedResponse;
 import no.ntnu.network.message.response.error.AdlUpdateRejectedError;
 import no.ntnu.network.message.response.error.DeviceInteractionFailedError;
 import no.ntnu.network.message.response.error.NoSuchVirtualDeviceError;
+import no.ntnu.network.message.sensordata.SduSensorDataMessage;
+import no.ntnu.network.message.sensordata.SensorDataMessage;
 import no.ntnu.network.message.serialize.NofspSerializationConstants;
 import no.ntnu.network.message.serialize.tool.DataTypeConverter;
 import no.ntnu.network.message.serialize.tool.tlv.Tlv;
@@ -27,14 +32,22 @@ import java.util.Map;
 /**
  * A deserializer for the central server, deserializing server-specific messages.
  */
-public class NofspServerDeserializer extends NofspMessageDeserializer<ServerContext> {
+public class NofspServerDeserializer extends NofspMessageDeserializer<ServerContext> implements SensorDataMessageDeserializer {
+    private final NofspSensorDataDeserializer sensorDataDeserializer;
+
     /**
      * Creates a new NofspServerDeserializer.
+     *
+     * @param lookupTable the lookup table for device classes
      */
-    public NofspServerDeserializer() {
-        super();
-
+    public NofspServerDeserializer(DeviceLookupTable lookupTable) {
+        this.sensorDataDeserializer = new NofspSensorDataDeserializer(lookupTable);
         initializeDeserializationMethods();
+    }
+
+    @Override
+    public SensorDataMessage deserializeSensorData(Tlv tlv) throws IOException {
+        return sensorDataDeserializer.deserializeMessage(tlv);
     }
 
     /**
@@ -48,6 +61,7 @@ public class NofspServerDeserializer extends NofspMessageDeserializer<ServerCont
         addRequestMessageDeserialization(NofspSerializationConstants.FIELD_NODE_POOL_PULL_COMMAND, this::getFieldNodePoolPullRequest);
         addRequestMessageDeserialization(NofspSerializationConstants.ACTUATOR_NOTIFICATION_COMMAND, this::getActuatorNotificationRequest);
         addRequestMessageDeserialization(NofspSerializationConstants.ACTIVATE_ACTUATOR_COMMAND, this::getServerActivateActuatorRequest);
+        addRequestMessageDeserialization(NofspSerializationConstants.UNSUBSCRIBE_FROM_FIELD_NODE_COMMAND, this::getUnsubscribeFromFieldNodeRequest);
 
         // responses
         addResponseMessageDeserialization(NofspSerializationConstants.HEART_BEAT_CODE, this::getHeartBeatResponse);
@@ -149,7 +163,10 @@ public class NofspServerDeserializer extends NofspMessageDeserializer<ServerCont
         Tlv compatibilityListTlv = parameterReader.readNextTlv();
         ByteSerializableSet<ByteSerializableString> serializableCompatibilityList = getSetOfType(compatibilityListTlv, ByteSerializableString.class);
 
-        request = new RegisterControlPanelRequest(messageId, DataTypeConverter.getCompatibilityList(serializableCompatibilityList));
+        // deserializes data sink port number
+        int dataSinkPortNumber = getRegularInt(parameterReader.readNextTlv());
+
+        request = new RegisterControlPanelRequest(messageId, DataTypeConverter.getCompatibilityList(serializableCompatibilityList), dataSinkPortNumber);
 
         return request;
     }
@@ -310,9 +327,8 @@ public class NofspServerDeserializer extends NofspMessageDeserializer<ServerCont
      * @param messageId the message id
      * @param parameterReader a TlvReader holding the parameter tlvs
      * @return the deserialized response
-     * @throws IOException thrown if an I/O exception occurs
      */
-    private ActuatorStateSetServerResponse getActuatorStateSetServerResponse(int messageId, TlvReader parameterReader) throws IOException {
+    private ActuatorStateSetServerResponse getActuatorStateSetServerResponse(int messageId, TlvReader parameterReader) {
         return new ActuatorStateSetServerResponse(messageId);
     }
 
@@ -333,5 +349,24 @@ public class NofspServerDeserializer extends NofspMessageDeserializer<ServerCont
         response = new DeviceInteractionFailedError(messageId, description);
 
         return response;
+    }
+
+    /**
+     * Deserializes a {@code UnsubscribeFromFieldNodeRequest}.
+     *
+     * @param messageId the message id
+     * @param parameterReader a TlvReader holding the parameter tlvs
+     * @return the deserialized request
+     * @throws IOException thrown if an I/O exception occurs
+     */
+    private UnsubscribeFromFieldNodeRequest getUnsubscribeFromFieldNodeRequest(int messageId, TlvReader parameterReader) throws IOException {
+        UnsubscribeFromFieldNodeRequest request = null;
+
+        // deserializes the field node address
+        int fieldNodeAddress = getRegularInt(parameterReader.readNextTlv());
+
+        request = new UnsubscribeFromFieldNodeRequest(messageId, fieldNodeAddress);
+
+        return request;
     }
 }

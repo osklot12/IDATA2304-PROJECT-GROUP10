@@ -6,10 +6,11 @@ import no.ntnu.network.message.deserialize.component.MessageDeserializer;
 import no.ntnu.network.message.request.RequestMessage;
 import no.ntnu.network.message.response.ResponseMessage;
 import no.ntnu.network.message.serialize.visitor.ByteSerializerVisitor;
-import no.ntnu.tools.ClientLogger;
-import no.ntnu.tools.Logger;
+import no.ntnu.tools.logger.ClientLogger;
+import no.ntnu.tools.logger.Logger;
 
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.Socket;
 
 /**
@@ -41,6 +42,19 @@ public abstract class Client<C extends ClientContext> extends ControlProcessAgen
         }
 
         return success;
+    }
+
+    /**
+     * Returns the InetAddress for the server.
+     *
+     * @return inet address for the server
+     */
+    protected InetAddress getServerInetAddress() {
+        if (socket == null) {
+            throw new IllegalStateException("Cannot get server inet address, because socket is not established.");
+        }
+
+        return socket.getInetAddress();
     }
 
     /**

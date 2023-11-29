@@ -60,7 +60,7 @@ public abstract class ControlMessage implements ByteSerializable {
             return false;
         }
 
-        return super.equals(c) && id == c.id;
+        return id == c.id;
     }
 
     @Override

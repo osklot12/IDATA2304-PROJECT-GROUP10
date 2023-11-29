@@ -24,7 +24,7 @@ public class LuminositySensor extends SDUSensor {
         }
 
         this.sensorData = readAndProcessLuminosity();
-        dataBroker.notifyListeners(this);
+        dataBroker.notifyListeners(getSensorData());
     }
 
     private double readAndProcessLuminosity() {

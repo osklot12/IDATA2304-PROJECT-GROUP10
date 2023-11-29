@@ -1,14 +1,12 @@
 package no.ntnu.fieldnode;
 
-import no.ntnu.broker.ActuatorStateBroker;
 import no.ntnu.broker.FieldNodeEventBroker;
 import no.ntnu.fieldnode.device.Device;
 import no.ntnu.fieldnode.device.DeviceClass;
 import no.ntnu.fieldnode.device.actuator.Actuator;
 import no.ntnu.fieldnode.device.actuator.ActuatorListener;
-import no.ntnu.fieldnode.device.sensor.SDUSensor;
 import no.ntnu.fieldnode.device.sensor.Sensor;
-import no.ntnu.fieldnode.device.sensor.SensorListener;
+import no.ntnu.fieldnode.device.sensor.SduSensorListener;
 import no.ntnu.environment.Environment;
 import no.ntnu.exception.ActuatorInteractionFailedException;
 
@@ -18,7 +16,7 @@ import java.util.*;
  * A class responsible for the logic of the field node in the network.
  * A field node is a subsystem in the network consisting of sensors and actuators.
  */
-public class FieldNode implements SensorListener, ActuatorListener {
+public class FieldNode implements SduSensorListener, ActuatorListener {
     private static final String STANDARD_NAME = "FieldNode";
     private Environment environment;
     private final Map<Integer, Device> devices;
@@ -160,55 +158,23 @@ public class FieldNode implements SensorListener, ActuatorListener {
 
         if (!(devices.containsValue(device))) {
             address = generateNewDeviceAddress();
-            if (connectDevice(device, address)) {
-                devices.put(address, device);
-            } else {
-                disconnectDevice(device);
-            }
+            connectDevice(device, address);
+            devices.put(address, device);
         }
 
         return address;
     }
 
-    private boolean connectDevice(Device device, int address) {
-        boolean success = true;
-
+    private void connectDevice(Device device, int address) {
         device.setEnvironment(environment);
 
         if (device instanceof Sensor sensor) {
-            success = connectSensor(sensor);
-        }
-
-        if (device instanceof Actuator actuator) {
-            connectActuator(actuator, address);
-            success = true;
-        }
-
-        return success;
-    }
-
-    private boolean connectSensor(Sensor sensor) {
-        boolean success = false;
-
-        if (sensor.addListener(this)) {
+            sensor.addListener(this, address);
             sensor.start();
-            success = true;
-        };
-
-        return success;
-    }
-
-    private void connectActuator(Actuator actuator, int address) {
-        actuator.addListener(this, address);
-    }
-
-    private void disconnectDevice(Device device) {
-        if (device instanceof Sensor sensor) {
-            sensor.removeListener(this);
         }
 
         if (device instanceof Actuator actuator) {
-            actuator.removeListener(this);
+            actuator.addListener(this, address);
         }
     }
 
@@ -258,11 +224,6 @@ public class FieldNode implements SensorListener, ActuatorListener {
         return getActuators().get(actuatorAddress).getState();
     }
 
-    @Override
-    public void sensorDataCaptured(Sensor sensor) {
-        sensor.pushData(this);
-    }
-
     /**
      * Returns the latest sdu sensor data.
      *
@@ -273,10 +234,8 @@ public class FieldNode implements SensorListener, ActuatorListener {
     }
 
     @Override
-    public void receiveSensorData(Sensor sensor) {
-        if (sensor instanceof SDUSensor sdusensor) {
-            latestSensorData = sdusensor.getSensorData();
-        }
+    public void sduDataCaptured(int sensorAddress, double data) {
+        eventBroker.notifySduSensorDataCapture(sensorAddress, data);
     }
 
     @Override

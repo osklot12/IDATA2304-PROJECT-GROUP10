@@ -1,10 +1,7 @@
 package no.ntnu.fieldnode.device.sensor;
 
-import no.ntnu.broker.SensorDataBroker;
+import no.ntnu.broker.SduSensorDataBroker;
 import no.ntnu.environment.Environment;
-import no.ntnu.exception.EnvironmentNotSupportedException;
-import no.ntnu.exception.NoEnvironmentSetException;
-import no.ntnu.fieldnode.FieldNode;
 import no.ntnu.fieldnode.device.DeviceClass;
 
 import java.util.Timer;
@@ -17,8 +14,9 @@ public abstract class SDUSensor implements Sensor {
     protected final DeviceClass deviceClass;
     protected final String unit;
     protected final int sensorNoise;
-    protected final SensorDataBroker dataBroker;
-    protected Timer captureTimer;
+    protected final SduSensorDataBroker dataBroker;
+    private Timer captureTimer;
+    private static final int CAPTURE_INTERVAL = 5000;
     protected double sensorData;
     protected Environment environment;
 
@@ -41,7 +39,7 @@ public abstract class SDUSensor implements Sensor {
         this.deviceClass = deviceClass;
         this.unit = unit;
         this.sensorNoise = sensorNoise;
-        this.dataBroker = new SensorDataBroker();
+        this.dataBroker = new SduSensorDataBroker();
     }
 
     /**
@@ -53,9 +51,9 @@ public abstract class SDUSensor implements Sensor {
         this.captureTimer.schedule(new TimerTask() {
             @Override
             public void run() {
-                if (!(null == environment)) captureData();
+                if (null != environment) captureData();
             }
-        }, 0, 1000);
+        }, CAPTURE_INTERVAL, CAPTURE_INTERVAL);
     }
 
     /**
@@ -64,7 +62,6 @@ public abstract class SDUSensor implements Sensor {
     @Override
     public void stop() {
         if (captureTimer != null) {
-            captureTimer.cancel();
             captureTimer.cancel();
         }
     }
@@ -83,12 +80,7 @@ public abstract class SDUSensor implements Sensor {
     }
 
     protected double addNoise(double value) {
-        return SDUSensorNoiseGenerator.generateNoise(value, sensorNoise);
-    }
-
-    @Override
-    public void pushData(SensorListener listener) {
-        listener.receiveSensorData(this);
+        return SduSensorNoiseGenerator.generateNoise(value, sensorNoise);
     }
 
     @Override
@@ -102,12 +94,12 @@ public abstract class SDUSensor implements Sensor {
     }
 
     @Override
-    public boolean addListener(SensorListener sensorListener) {
-        return dataBroker.addSubscriber(sensorListener);
+    public void addListener(SduSensorListener listener, int fieldNodeAddress) {
+        dataBroker.put(listener, fieldNodeAddress);
     }
 
     @Override
-    public boolean removeListener(SensorListener sensorListener) {
-        return dataBroker.removeSubscriber(sensorListener);
+    public void removeListener(SduSensorListener listener) {
+        dataBroker.remove(listener);
     }
 }

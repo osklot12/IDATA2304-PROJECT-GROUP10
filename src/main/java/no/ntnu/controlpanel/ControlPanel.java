@@ -2,77 +2,54 @@ package no.ntnu.controlpanel;
 
 import no.ntnu.controlpanel.virtual.*;
 import no.ntnu.fieldnode.device.DeviceClass;
+import no.ntnu.network.message.deserialize.component.DeviceLookupTable;
+import no.ntnu.network.message.sensordata.SensorDataReceiver;
 
 import java.util.*;
 
 /**
- * A class responsible for the logic of the control panel in the network.
+ * A class representing a control panel.
  * The control panel stores data about field nodes, such as the sensor data they capture or the status of the
  * actuators.
  */
-public class ControlPanel implements VirtualFieldNodeListener {
-    private final Set<DeviceClass> compatibilityList = new HashSet<>();
+public class ControlPanel implements SensorDataReceiver, VirtualFieldNodeListener, DeviceLookupTable {
     private final Map<Integer, VirtualFieldNode> fieldNodes;
+    private Set<DeviceClass> compatibilityList = new HashSet<>();
 
     /**
      * Creates a new ControlPanel.
      */
     public ControlPanel() {
+        this.compatibilityList = CompatibilityListCreator.getCompleteCompatibilityList();
         this.fieldNodes = new HashMap<>();
-        compatibilityList.add(DeviceClass.A1);
     }
-
 
     /**
      * Adds a new virtual field node to the control panel.
      *
      * @param fieldNode virtual field node to add
-     * @return the address assigned to the virtual field node, -1 on error
+     * @param address the address pf the field node
      */
-    public int addVirtualFieldNode(VirtualFieldNode fieldNode) {
-        int address = -1;
-
-        if ((null != fieldNode) && !(fieldNodes.containsValue(fieldNode))) {
-            address = generateNewFieldNodeAddress();
-            fieldNodes.put(address, fieldNode);
+    public void addVirtualFieldNode(VirtualFieldNode fieldNode, int address) {
+        if (fieldNode == null) {
+            throw new IllegalArgumentException("Cannot add virtual field node, because fieldNode is null.");
         }
 
-        return address;
-    }
-
-    private int generateNewFieldNodeAddress() {
-        int currentCheck = 0;
-
-        while (fieldNodes.containsKey(currentCheck)) {
-            currentCheck++;
+        if (fieldNodes.containsKey(address)) {
+            throw new IllegalArgumentException("Cannot add virtual field node, because a virtual field node with" +
+                    "address " + address + " already exists.");
         }
 
-        return currentCheck;
-    }
-
-    private int getFieldNodeAddress(VirtualFieldNode fieldNode) {
-        int address = -1;
-
-        Iterator<Map.Entry<Integer, VirtualFieldNode>> fieldNodeIterator = fieldNodes.entrySet().iterator();
-
-        while (address == -1 && fieldNodeIterator.hasNext()) {
-            Map.Entry<Integer, VirtualFieldNode> entry = fieldNodeIterator.next();
-
-            if (fieldNode.equals(entry.getValue())) {
-                address = entry.getKey();
-            }
-        }
-
-        return address;
+        fieldNodes.put(address, fieldNode);
     }
 
     /**
-     * Returns a collection of all virtual field nodes for the control panel.
+     * Removes a virtual field node.
      *
-     * @return collection of virtual field nodes
+     * @param fieldNodeAddress the address of the virtual field node to remove
      */
-    public Collection<VirtualFieldNode> getVirtualFieldNodes() {
-        return fieldNodes.values();
+    public void removeVirtualFieldNode(int fieldNodeAddress) {
+        fieldNodes.remove(fieldNodeAddress);
     }
 
     /**
@@ -86,6 +63,15 @@ public class ControlPanel implements VirtualFieldNodeListener {
     }
 
     /**
+     * Returns a collection of all virtual field nodes for the control panel.
+     *
+     * @return collection of virtual field nodes
+     */
+    public Collection<VirtualFieldNode> getVirtualFieldNodes() {
+        return fieldNodes.values();
+    }
+
+    /**
      * Returns the compatibility list for the control panel.
      *
      * @return the compatibility list
@@ -96,15 +82,35 @@ public class ControlPanel implements VirtualFieldNodeListener {
 
     @Override
     public void virtualActuatorStateChanged(VirtualFieldNode fieldNode, int actuatorAddress, boolean global) {
-        int fieldNodeAddress = getFieldNodeAddress(fieldNode);
 
-        if (fieldNodeAddress != -1) {
-
-        }
     }
 
     @Override
     public void newSDUData(VirtualSDUSensor virtualSDUSensor) {
 
+    }
+
+    @Override
+    public void receiveSduData(int fieldNodeAddress, int sensorAddress, double data) {
+        VirtualFieldNode virtualFieldNode = fieldNodes.get(fieldNodeAddress);
+        if (virtualFieldNode != null) {
+            virtualFieldNode.addSDUSensorData(sensorAddress, data);
+        }
+    }
+
+    @Override
+    public DeviceClass lookup(int clientAddress, int deviceAddress) {
+        DeviceClass deviceClass = null;
+
+        VirtualFieldNode virtualFieldNode = getVirtualFieldNode(clientAddress);
+        if (virtualFieldNode != null) {
+            VirtualDevice virtualDevice = virtualFieldNode.getVirtualDevice(deviceAddress);
+
+            if (virtualDevice != null) {
+                deviceClass = virtualDevice.getDeviceClass();
+            }
+        }
+
+        return deviceClass;
     }
 }

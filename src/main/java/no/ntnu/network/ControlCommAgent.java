@@ -6,14 +6,13 @@ import no.ntnu.network.message.response.ResponseMessage;
 import java.io.IOException;
 
 /**
- * An agent responsible for communication with another peer.
+ * An agent responsible for communicating control messages with another entity in the network.
  */
-public interface CommunicationAgent {
+public interface ControlCommAgent {
     /**
      * Sends a request message to the remote peer.
      *
      * @param request request message to send
-     * @return the assigned message id for the request
      * @throws IOException thrown if an I/O exception is thrown
      */
     void sendRequest(RequestMessage request) throws IOException;

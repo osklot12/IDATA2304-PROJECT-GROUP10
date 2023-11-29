@@ -16,7 +16,13 @@ public class FieldNodeEventBroker extends SubscriberList<FieldNodeListener> {
         getSubscribers().forEach(subscriber -> subscriber.actuatorStateChange(actuatorAddress, newState));
     }
 
-    public void notifySensorDataCapture(int sensorAddress, double data) {
-
+    /**
+     * Notifies the listeners about the capture of SDU sensor data.
+     *
+     * @param sensorAddress the sensor that captured the data
+     * @param data the sdu data
+     */
+    public void notifySduSensorDataCapture(int sensorAddress, double data) {
+        getSubscribers().forEach(subscriber -> subscriber.sensorDataCapture(sensorAddress, data));
     }
 }

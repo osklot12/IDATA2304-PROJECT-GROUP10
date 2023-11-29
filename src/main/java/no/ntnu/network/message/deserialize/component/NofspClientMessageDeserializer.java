@@ -51,6 +51,7 @@ public abstract class NofspClientMessageDeserializer<C extends ClientContext> ex
 
         // deserializes the node address
         int nodeAddress = getRegularInt(parameterReader.readNextTlv());
+
         response = new RegistrationConfirmationResponse<>(messageId, nodeAddress);
 
         return response;

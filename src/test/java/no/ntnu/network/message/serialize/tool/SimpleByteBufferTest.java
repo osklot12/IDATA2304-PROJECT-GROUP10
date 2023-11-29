@@ -1,6 +1,5 @@
 package no.ntnu.network.message.serialize.tool;
 
-import no.ntnu.tools.Logger;
 import org.junit.Before;
 import org.junit.Test;
 

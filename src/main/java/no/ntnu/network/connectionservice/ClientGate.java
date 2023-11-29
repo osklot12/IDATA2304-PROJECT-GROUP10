@@ -1,7 +1,7 @@
 package no.ntnu.network.connectionservice;
 
-import no.ntnu.network.CommunicationAgent;
-import no.ntnu.tools.ServerLogger;
+import no.ntnu.network.ControlCommAgent;
+import no.ntnu.tools.logger.ServerLogger;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -13,7 +13,7 @@ import java.util.concurrent.TimeUnit;
  * actually used, not wasting resources on useless connections.
  */
 public class ClientGate implements ConnectionService {
-    private final CommunicationAgent agent;
+    private final ControlCommAgent agent;
     private final long acceptancePhase;
     private ScheduledExecutorService scheduler;
 
@@ -23,7 +23,7 @@ public class ClientGate implements ConnectionService {
      * @param agent the communication agent to possibly close
      * @param acceptancePhase the amount of time to wait before closing the connection, in milliseconds
      */
-    public ClientGate(CommunicationAgent agent, long acceptancePhase) {
+    public ClientGate(ControlCommAgent agent, long acceptancePhase) {
         if (agent == null) {
             throw new IllegalArgumentException("Cannot create ClientGate, because client is null.");
         }

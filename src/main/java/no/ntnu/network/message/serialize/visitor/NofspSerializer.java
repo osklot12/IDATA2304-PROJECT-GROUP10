@@ -4,11 +4,13 @@ import no.ntnu.exception.SerializationException;
 import no.ntnu.network.message.common.*;
 import no.ntnu.network.message.request.*;
 import no.ntnu.network.message.response.ResponseMessage;
+import no.ntnu.network.message.sensordata.SensorDataMessage;
 import no.ntnu.network.message.serialize.NofspSerializationConstants;
 import no.ntnu.network.message.serialize.ByteSerializable;
 import no.ntnu.network.message.serialize.tool.SimpleByteBuffer;
 import no.ntnu.network.message.serialize.tool.ByteHandler;
 
+import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
@@ -17,11 +19,11 @@ import java.util.Map;
  * described by NOFSP.
  */
 public class NofspSerializer implements ByteSerializerVisitor {
-
     /**
      * Creates a new NofspSerializer.
      */
-    public NofspSerializer() {}
+    public NofspSerializer() {
+    }
 
     @Override
     public byte[] serialize(ByteSerializable serializable) throws SerializationException {
@@ -32,11 +34,26 @@ public class NofspSerializer implements ByteSerializerVisitor {
     public byte[] visitInteger(ByteSerializableInteger integer) throws SerializationException {
         byte[] typeField = NofspSerializationConstants.INTEGER_BYTES;
         byte[] lengthField = null;
-        byte[] valueBytes = ByteHandler.intToBytes(integer.getInteger());
+        byte[] valueField = ByteHandler.intToBytes(integer.getInteger());
 
-        lengthField = createLengthField(valueBytes.length);
+        lengthField = createLengthField(valueField.length);
 
-        return createTlv(typeField, lengthField, valueBytes);
+        return createTlv(typeField, lengthField, valueField);
+    }
+
+    @Override
+    public byte[] visitDouble(ByteSerializableDouble theDouble) throws SerializationException {
+        byte[] typeField = NofspSerializationConstants.DOUBLE_BYTES;
+        byte[] lengthField = null;
+        byte[] valueField = null;
+
+        ByteBuffer buffer = ByteBuffer.allocate(Double.BYTES);
+        buffer.putDouble(theDouble.getDouble());
+        valueField = buffer.array();
+
+        lengthField = createLengthField(valueField.length);
+
+        return createTlv(typeField, lengthField, valueField);
     }
 
     @Override
@@ -134,9 +151,17 @@ public class NofspSerializer implements ByteSerializerVisitor {
 
     @Override
     public byte[] visitResponseMessage(ResponseMessage response) throws SerializationException {
-       byte[] commonResponseMessageBytes = getCommonResponseMessageBytes(response);
+        byte[] commonResponseMessageBytes = getCommonResponseMessageBytes(response);
 
-       return packInResponseFrame(commonResponseMessageBytes);
+        return packInResponseFrame(commonResponseMessageBytes);
+    }
+
+    @Override
+    public byte[] visitSensorDataMessage(SensorDataMessage message, byte[] data) throws SerializationException {
+        byte[] clientNodeAddressTlv = serialize(message.getSerializableClientNodeAddress());
+        byte[] sensorAddressTlv = serialize(message.getSerializableSensorAddress());
+
+        return packInSensorDataFrame(clientNodeAddressTlv, sensorAddressTlv, data);
     }
 
     /**
@@ -258,24 +283,27 @@ public class NofspSerializer implements ByteSerializerVisitor {
     }
 
     /**
-     * Returns a serialized TLV containing the version of NOFSP.
+     * Packs the content of a sensor data message into a standard message frame for NOFSP, serializes it and
+     * returns it in bytes.
      *
-     * @return a serialized version tlv
+     * @param tlvs the tlvs to pack into the value field for the message frame
+     * @return a serialized sensor data frame
      * @throws SerializationException thrown if serialization fails
      */
-    private byte[] getProtocolVersionTlv() throws SerializationException {
-        String versionString = NofspSerializationConstants.VERSION;
-        ByteSerializableString serializableString = new ByteSerializableString(versionString);
+    private static byte[] packInSensorDataFrame(byte[]... tlvs) throws SerializationException {
+        byte[] valueField = ByteHandler.combineBytes(tlvs);
+        byte[] typeField = NofspSerializationConstants.SENSOR_DATA_BYTES;
+        byte[] lengthField = createLengthField(valueField.length);
 
-        return serializableString.accept(this);
+        return createTlv(typeField, lengthField, valueField);
     }
 
     /**
      * Creates a TLV of three fields - type field, length field and value field.
      *
-     * @param typeField field describing type of data
+     * @param typeField   field describing type of data
      * @param lengthField field indicating the length of data
-     * @param valueBytes the actual data itself
+     * @param valueBytes  the actual data itself
      * @return serialized TLV
      */
     private static byte[] createTlv(byte[] typeField, byte[] lengthField, byte[] valueBytes) {
@@ -289,7 +317,7 @@ public class NofspSerializer implements ByteSerializerVisitor {
      */
     private static byte[] createNullValueTlv() {
         return createTlv(NofspSerializationConstants.NULL_BYTES,
-                ByteHandler.addLeadingPadding(ByteHandler.intToBytes(0), NofspSerializationConstants.TLV_FRAME.lengthFieldLength()), new byte[] {});
+                ByteHandler.addLeadingPadding(ByteHandler.intToBytes(0), NofspSerializationConstants.TLV_FRAME.lengthFieldLength()), new byte[]{});
     }
 
     /**

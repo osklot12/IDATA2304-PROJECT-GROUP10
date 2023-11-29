@@ -6,7 +6,7 @@ import java.util.Random;
  * A class responsible for generating noise to a data reading for a sensor, simulating somewhat a realistic
  * data capture.
  */
-public class SDUSensorNoiseGenerator {
+public class SduSensorNoiseGenerator {
     /**
      * Adds noise to a captured sensor data double value.
      *

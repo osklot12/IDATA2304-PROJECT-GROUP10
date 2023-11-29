@@ -53,7 +53,7 @@ public class SubscribeToFieldNodeRequest extends StandardProcessingRequestMessag
         if (context.isClientRegistered()) {
             try {
                 FieldNodeClientProxy fieldNodeProxy = context.subscribeToFieldNode(fieldNodeAddress);
-                response = new SubscribedToFieldNodeResponse(fieldNodeProxy.getFNST(), fieldNodeProxy.getFNSM(), fieldNodeProxy.getName());
+                response = new SubscribedToFieldNodeResponse(fieldNodeAddress, fieldNodeProxy.getFNST(), fieldNodeProxy.getFNSM(), fieldNodeProxy.getName());
             } catch (SubscriptionException e) {
                 response = new SubscriptionError<>(e.getMessage());
             }

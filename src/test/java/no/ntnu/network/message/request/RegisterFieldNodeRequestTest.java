@@ -1,7 +1,7 @@
 package no.ntnu.network.message.request;
 
 import no.ntnu.fieldnode.device.DeviceClass;
-import no.ntnu.network.TestAgent;
+import no.ntnu.network.TestControlCommAgent;
 import no.ntnu.network.centralserver.centralhub.CentralHub;
 import no.ntnu.network.message.context.ServerContext;
 import org.junit.Before;
@@ -17,7 +17,7 @@ import static org.junit.Assert.*;
  * JUnit testing for the RegisterFieldNodeRequest class.
  */
 public class RegisterFieldNodeRequestTest {
-    TestAgent agent;
+    TestControlCommAgent agent;
     CentralHub hub;
     ServerContext context;
     Map<Integer, DeviceClass> fnst;
@@ -30,9 +30,9 @@ public class RegisterFieldNodeRequestTest {
      */
     @Before
     public void setup() {
-        agent = new TestAgent();
+        agent = new TestControlCommAgent();
         hub = new CentralHub();
-        context = new ServerContext(agent, hub);
+        context = new ServerContext(agent, agent, hub);
 
         fnst = new HashMap<>();
         fnst.put(1, DeviceClass.A2);

@@ -1,6 +1,6 @@
 package no.ntnu.network.centralserver.centralhub.clientproxy;
 
-import no.ntnu.network.CommunicationAgent;
+import no.ntnu.network.ControlCommAgent;
 
 /**
  * A proxy for a remote client using the services of the server.
@@ -9,14 +9,14 @@ import no.ntnu.network.CommunicationAgent;
  * {@code CommunicationAgent} interface.
  */
 public abstract class ClientProxy {
-    private final CommunicationAgent agent;
+    private final ControlCommAgent agent;
 
     /**
      * Creates a new ClientProxy.
      *
      * @param agent the communication agent for the remote client
      */
-    protected ClientProxy(CommunicationAgent agent) {
+    protected ClientProxy(ControlCommAgent agent) {
         if (agent == null) {
             throw new IllegalArgumentException("Cannot create ClientProxy, because communication agent is null.");
         }
@@ -29,7 +29,7 @@ public abstract class ClientProxy {
      *
      * @return the communication agent
      */
-    public CommunicationAgent getAgent() {
+    public ControlCommAgent getAgent() {
         return agent;
     }
 

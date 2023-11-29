@@ -1,5 +1,7 @@
 package no.ntnu.network.message.deserialize.component;
 
+import no.ntnu.exception.SerializationException;
+import no.ntnu.fieldnode.device.DeviceClass;
 import no.ntnu.network.message.Message;
 import no.ntnu.network.message.context.MessageContext;
 import no.ntnu.network.message.serialize.NofspSerializationConstants;
@@ -9,6 +11,7 @@ import no.ntnu.network.message.serialize.tool.tlv.TlvFrame;
 import no.ntnu.network.message.serialize.tool.tlv.TlvReader;
 
 import java.io.IOException;
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -56,26 +59,40 @@ public abstract class NofspMessageDeserializer<C extends MessageContext> extends
     /**
      * A functional interface for deserializing control messages.
      *
-     * @param <C> the message context to deserialize for
+     * @param <C> the message context used for processing
      */
     @FunctionalInterface
     protected interface ControlMessageDeserializerMethod<C extends MessageContext> {
         Message<C> deserialize(int messageId, TlvReader parameterReader) throws IOException;
     }
 
+    /**
+     * A functional interface for deserializing sensor data messages.
+     *
+     * @param <C> the message context used for processing
+     */
+    @FunctionalInterface
+    protected interface SensorDataDeserializationMethod<C extends MessageContext> {
+        Message<C> deserialize(int clientNodeAddress, int sensorAddress, Tlv dataTlv) throws IOException;
+    }
+
     // lookup table for message frame types
-    protected final Map<String, MessageDeserializerMethod<C>> messageDeserializerMap = new HashMap<>();
+    protected final Map<String, MessageDeserializerMethod<C>> messageDeserializerMap;
 
     // lookup table for request messages commands
-    protected final Map<String, ControlMessageDeserializerMethod<C>> requestDeserializerMap = new HashMap<>();
+    protected final Map<String, ControlMessageDeserializerMethod<C>> requestDeserializerMap;
 
     // lookup table for response message status codes
-    protected final Map<Integer, ControlMessageDeserializerMethod<C>> responseDeserializerMap = new HashMap<>();
+    protected final Map<Integer, ControlMessageDeserializerMethod<C>> responseDeserializerMap;
 
     /**
      * Creates a new NofspMessageDeserializer.
      */
     protected NofspMessageDeserializer() {
+        this.messageDeserializerMap = new HashMap<>();
+        this.requestDeserializerMap = new HashMap<>();
+        this.responseDeserializerMap = new HashMap<>();
+
         initializeMessageDeserializerMap();
     }
 
@@ -158,10 +175,10 @@ public abstract class NofspMessageDeserializer<C extends MessageContext> extends
         TlvReader parameterReader = getParameterReader(messageFieldReader.readNextTlv());
 
         // gets the appropriate request deserialization method identified by the request command
-        ControlMessageDeserializerMethod<C> deserializerMethod = requestDeserializerMap.get(command);
+        ControlMessageDeserializerMethod<C> deserializationMethod = requestDeserializerMap.get(command);
 
-        if (deserializerMethod != null) {
-            result = deserializerMethod.deserialize(messageId, parameterReader);
+        if (deserializationMethod != null) {
+            result = deserializationMethod.deserialize(messageId, parameterReader);
         } else {
             throw new IOException("Cannot deserialize message, because no deserialization method was found" +
                     " for request command: " + command);
@@ -190,10 +207,10 @@ public abstract class NofspMessageDeserializer<C extends MessageContext> extends
         TlvReader parameterReader = getParameterReader(messageFieldReader.readNextTlv());
 
         // gets the appropriate request deserialization method identified by the response status code
-        ControlMessageDeserializerMethod<C> deserializerMethod = responseDeserializerMap.get(statusCode);
+        ControlMessageDeserializerMethod<C> deserializationMethod = responseDeserializerMap.get(statusCode);
 
-        if (deserializerMethod != null) {
-            result = deserializerMethod.deserialize(messageId, parameterReader);
+        if (deserializationMethod != null) {
+            result = deserializationMethod.deserialize(messageId, parameterReader);
         } else {
             throw new IOException("Cannot deserialize message, because no deserialization method was found for" +
                     " response status code: " + statusCode);

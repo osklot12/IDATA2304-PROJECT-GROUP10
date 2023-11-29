@@ -1,9 +1,9 @@
 package no.ntnu.network.message.response;
 
 import no.ntnu.exception.SerializationException;
-import no.ntnu.network.message.Message;
 import no.ntnu.network.message.common.ByteSerializableInteger;
 import no.ntnu.network.message.context.ClientContext;
+import no.ntnu.network.message.request.RequestMessage;
 import no.ntnu.network.message.serialize.NofspSerializationConstants;
 import no.ntnu.network.message.serialize.visitor.ByteSerializerVisitor;
 
@@ -12,7 +12,7 @@ import no.ntnu.network.message.serialize.visitor.ByteSerializerVisitor;
  * registered successfully.
  */
 public class RegistrationConfirmationResponse<C extends ClientContext> extends StandardProcessingResponseMessage<C> {
-    private final ByteSerializableInteger nodeAddress;
+    private final int nodeAddress;
 
     /**
      * Creates a new RegistrationConfirmationResponse.
@@ -22,7 +22,7 @@ public class RegistrationConfirmationResponse<C extends ClientContext> extends S
     public RegistrationConfirmationResponse(int nodeAddress) {
         super(NofspSerializationConstants.NODE_REGISTRATION_CONFIRMED_CODE);
 
-        this.nodeAddress = new ByteSerializableInteger(nodeAddress);
+        this.nodeAddress = nodeAddress;
     }
 
     /**
@@ -38,22 +38,22 @@ public class RegistrationConfirmationResponse<C extends ClientContext> extends S
     }
 
     /**
-     * Returns the node address.
+     * Returns the node address assigned to the client.
      *
      * @return the node address
      */
-    public ByteSerializableInteger getNodeAddress() {
+    public int getNodeAddress() {
         return nodeAddress;
     }
 
     @Override
     public byte[] accept(ByteSerializerVisitor visitor) throws SerializationException {
-        return visitor.visitResponseMessage(this, nodeAddress);
+        return visitor.visitResponseMessage(this, new ByteSerializableInteger(nodeAddress));
     }
 
     @Override
     protected void handleResponseProcessing(C context) {
-        context.setClientNodeAddress(getNodeAddress().getInteger());
+        context.setClientNodeAddress(nodeAddress);
     }
 
     @Override
@@ -66,14 +66,14 @@ public class RegistrationConfirmationResponse<C extends ClientContext> extends S
             return false;
         }
 
-        return super.equals(r) && r.getNodeAddress().equals(nodeAddress);
+        return super.equals(r) && nodeAddress == r.nodeAddress;
     }
 
     @Override
     public int hashCode() {
         int result = super.hashCode();
 
-        result = result * 31 + nodeAddress.hashCode();
+        result = result * 31 + nodeAddress;;
 
         return result;
     }

@@ -2,6 +2,7 @@ package no.ntnu.network.message.response;
 
 import no.ntnu.network.message.Message;
 import no.ntnu.network.message.context.MessageContext;
+import no.ntnu.network.message.request.RequestMessage;
 
 /**
  * The class provides standard response message processing for any class extending it.
@@ -22,8 +23,9 @@ public abstract class StandardProcessingResponseMessage<C extends MessageContext
 
     @Override
     public void process(C context) {
+        RequestMessage associatedRequest = context.acceptResponse(this);
         // only acknowledges the response if the response is accepted
-        if (context.acceptResponse(this)) {
+        if (associatedRequest != null) {
             context.logReceivingResponse(this);
             handleResponseProcessing(context);
         }

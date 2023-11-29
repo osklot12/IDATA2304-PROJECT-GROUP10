@@ -10,6 +10,7 @@ import no.ntnu.network.message.serialize.tool.tlv.TlvFrame;
 import no.ntnu.network.message.serialize.tool.tlv.TlvReader;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
@@ -117,7 +118,7 @@ public abstract class NofspDeserializer {
     }
 
     /**
-     * Returns an integer Tlv as a regular int.
+     * Converts an integer Tlv as a regular int.
      *
      * @param intTlv the integer tlv to deserialize
      * @return a regular int
@@ -128,6 +129,34 @@ public abstract class NofspDeserializer {
         }
 
         return getInteger(intTlv).getInteger();
+    }
+
+    /**
+     * Deserializes a TLV of bytes into a {@code ByteSerializableDouble}.
+     *
+     * @param doubleTlv the double tlv
+     * @return the corresponding double
+     */
+    protected ByteSerializableDouble getDouble(Tlv doubleTlv) {
+        ByteBuffer buffer = ByteBuffer.allocate(Double.BYTES);
+        buffer.put(doubleTlv.valueField());
+        buffer.flip();
+
+        return new ByteSerializableDouble(buffer.getDouble());
+    }
+
+    /**
+     * Converts a double Tlv to a regular double.
+     *
+     * @param doubleTlv the double tlv
+     * @return a regular double
+     */
+    protected double getRegularDouble(Tlv doubleTlv) {
+        if (doubleTlv == null) {
+            throw new IllegalArgumentException("Cannot deserialize TLV, because doubleTlv is null.");
+        }
+
+        return getDouble(doubleTlv).getDouble();
     }
 
     /**

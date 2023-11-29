@@ -1,7 +1,7 @@
 package no.ntnu.network.connectionservice;
 
 import no.ntnu.broker.ConnectionServiceShutdownBroker;
-import no.ntnu.network.CommunicationAgent;
+import no.ntnu.network.ControlCommAgent;
 import no.ntnu.network.message.request.HeartbeatRequest;
 
 import java.io.IOException;
@@ -14,7 +14,7 @@ import java.util.concurrent.TimeUnit;
  * The heartbeat requests are sent periodically at a given interval.
  */
 public class HeartBeater implements ConnectionService {
-    private final CommunicationAgent agent;
+    private final ControlCommAgent agent;
     private final long interval;
     private final ConnectionServiceShutdownBroker shutdownBroker;
     private ScheduledExecutorService scheduler;
@@ -25,7 +25,7 @@ public class HeartBeater implements ConnectionService {
      * @param agent the communication agent to send heartbeats to
      * @param interval the interval between the requests sent
      */
-    public HeartBeater(CommunicationAgent agent, long interval) {
+    public HeartBeater(ControlCommAgent agent, long interval) {
         this.agent = agent;
         this.interval = interval;
         this.shutdownBroker = new ConnectionServiceShutdownBroker();

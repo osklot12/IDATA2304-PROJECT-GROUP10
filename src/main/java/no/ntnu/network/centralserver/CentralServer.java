@@ -1,11 +1,14 @@
 package no.ntnu.network.centralserver;
 
 import no.ntnu.network.centralserver.centralhub.CentralHub;
-import no.ntnu.tools.Logger;
+import no.ntnu.network.message.deserialize.NofspServerDeserializer;
+import no.ntnu.network.message.serialize.visitor.ByteSerializerVisitor;
+import no.ntnu.network.message.serialize.visitor.NofspSerializer;
+import no.ntnu.network.sensordataprocess.UdpDatagramReceiver;
+import no.ntnu.tools.logger.Logger;
 
 import java.io.IOException;
-import java.net.ServerSocket;
-import java.net.Socket;
+import java.net.*;
 
 /**
  * The CentralServer serves as a hub for managing and routing communication between various field nodes and
@@ -28,16 +31,22 @@ import java.net.Socket;
  * </ul>
  */
 public class CentralServer {
-    public static final int PORT_NUMBER = 60005;
+    public static final int CONTROL_PORT_NUMBER = 60005;
+    public static final int DATA_PORT_NUMBER = 60006;
     private final CentralHub centralHub;
+    private final ByteSerializerVisitor serializer;
+    private final NofspServerDeserializer deserializer;
     private volatile boolean running;
     private ServerSocket serverSocket;
+    private UdpDatagramReceiver datagramReceiver;
 
     /**
      * Creates a new CentralServer.
      */
     public CentralServer() {
         this.centralHub = new CentralHub();
+        this.serializer = new NofspSerializer();
+        this.deserializer = new NofspServerDeserializer(centralHub);
         this.running = false;
     }
 
@@ -49,17 +58,28 @@ public class CentralServer {
             throw new IllegalStateException("Cannot run server, because server is already running.");
         }
 
+        running = true;
+        if (startHandlingIncomingSensorData()) {
+                Logger.info("Server listening for incoming UDP sensor data messages on port " + DATA_PORT_NUMBER + "...");
+            if (startHandlingIncomingClients()) {
+                Logger.info("Server listening for incoming client TPC connections on port " + CONTROL_PORT_NUMBER + "...");
+            }
+        }
+    }
+
+    private boolean startHandlingIncomingClients() {
+        boolean success = false;
+
         serverSocket = openListeningSocket();
 
         if (serverSocket != null) {
-            running = true;
-
-            Thread listeningThread = new Thread(() -> {
-                while (!serverSocket.isClosed()) {
+            success = true;
+            Thread incomingClientListeningThread = new Thread(() -> {
+                while (running) {
                     Socket clientSocket = acceptNextClient();
 
                     if (clientSocket != null) {
-                        ClientHandler clientHandler = new ClientHandler(clientSocket, centralHub);
+                        ClientHandler clientHandler = new ClientHandler(clientSocket, centralHub, serializer, deserializer);
                         clientHandler.run();
                     }
                 }
@@ -67,7 +87,56 @@ public class CentralServer {
                 running = false;
             });
 
-            listeningThread.start();
+            incomingClientListeningThread.start();
+        } else {
+            stop();
+        }
+
+        return success;
+    }
+
+    private boolean startHandlingIncomingSensorData() {
+        boolean success = false;
+
+        if (establishUdpMessageReceiver()) {
+            Thread datagramReceivingThread = new Thread(() -> {
+                while (running) {
+                    handleNextReceivedDatagram();
+                }
+            });
+
+            datagramReceivingThread.start();
+            success = true;
+        } else {
+            stop();
+        }
+
+        return success;
+    }
+
+    private boolean establishUdpMessageReceiver() {
+        boolean success = false;
+
+        try {
+            DatagramSocket datagramSocket = new DatagramSocket(DATA_PORT_NUMBER);
+            datagramReceiver = new UdpDatagramReceiver(datagramSocket, 1024);
+            success = true;
+        } catch (IOException e) {
+            Logger.error("Could not establish datagram socket: " + e.getMessage());
+        }
+
+        return success;
+    }
+
+    private void handleNextReceivedDatagram() {
+        try {
+            DatagramPacket receivedDatagram = datagramReceiver.getNextDatagramPacket();
+            if (receivedDatagram != null) {
+                ServerDatagramHandler datagramHandler = new ServerDatagramHandler(receivedDatagram, centralHub, deserializer);
+                datagramHandler.run();
+            }
+        } catch (IOException e) {
+            Logger.error("Could not receive datagram packet: " + e.getMessage());
         }
     }
 
@@ -80,7 +149,9 @@ public class CentralServer {
         }
 
         try {
+            running = false;
             serverSocket.close();
+            Logger.info("Server has been shut down.");
         } catch (IOException e) {
             if (serverSocket.isClosed()) {
                 running = false;
@@ -88,8 +159,6 @@ public class CentralServer {
                 Logger.error("Cannot stop server: " + e.getMessage());
             }
         }
-
-        running = false;
     }
 
     /**
@@ -120,7 +189,6 @@ public class CentralServer {
 
         try {
             socket = new ServerSocket(60005);
-            Logger.info("Server listening on port " + PORT_NUMBER + "...");
         } catch (IOException e) {
             Logger.error("Cannot open server socket: " + e.getMessage());
         }

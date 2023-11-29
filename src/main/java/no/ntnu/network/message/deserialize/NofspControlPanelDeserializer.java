@@ -1,18 +1,21 @@
 package no.ntnu.network.message.deserialize;
 
 import no.ntnu.fieldnode.device.DeviceClass;
-import no.ntnu.network.message.common.ByteSerializableFieldNodePool;
 import no.ntnu.network.message.common.ByteSerializableInteger;
 import no.ntnu.network.message.common.ByteSerializableMap;
 import no.ntnu.network.message.common.ByteSerializableString;
 import no.ntnu.network.message.context.ControlPanelContext;
+import no.ntnu.network.message.deserialize.component.DeviceLookupTable;
 import no.ntnu.network.message.deserialize.component.NofspClientMessageDeserializer;
+import no.ntnu.network.message.deserialize.component.NofspSensorDataDeserializer;
+import no.ntnu.network.message.deserialize.component.SensorDataMessageDeserializer;
 import no.ntnu.network.message.request.ServerFnsmNotificationRequest;
 import no.ntnu.network.message.response.ActuatorStateSetControlPanelResponse;
-import no.ntnu.network.message.response.ActuatorStateSetServerResponse;
 import no.ntnu.network.message.response.FieldNodePoolResponse;
 import no.ntnu.network.message.response.SubscribedToFieldNodeResponse;
+import no.ntnu.network.message.response.UnsubscribedFromFieldNodeResponse;
 import no.ntnu.network.message.response.error.FieldNodeUnreachableError;
+import no.ntnu.network.message.sensordata.SensorDataMessage;
 import no.ntnu.network.message.serialize.NofspSerializationConstants;
 import no.ntnu.network.message.serialize.tool.DataTypeConverter;
 import no.ntnu.network.message.serialize.tool.tlv.Tlv;
@@ -24,14 +27,22 @@ import java.util.Map;
 /**
  * A deserializer for deserializing control panel messages.
  */
-public class NofspControlPanelDeserializer extends NofspClientMessageDeserializer<ControlPanelContext> {
+public class NofspControlPanelDeserializer extends NofspClientMessageDeserializer<ControlPanelContext> implements SensorDataMessageDeserializer {
+    private final NofspSensorDataDeserializer sensorDataDeserializer;
+
     /**
      * Creates a new NofspControlPanelDeserializer.
      */
-    public NofspControlPanelDeserializer() {
+    public NofspControlPanelDeserializer(DeviceLookupTable lookupTable) {
         super();
 
+        this.sensorDataDeserializer = new NofspSensorDataDeserializer(lookupTable);
         initializeDeserializationMethods();
+    }
+
+    @Override
+    public SensorDataMessage deserializeSensorData(Tlv tlv) throws IOException {
+        return sensorDataDeserializer.deserializeMessage(tlv);
     }
 
     /**
@@ -43,9 +54,10 @@ public class NofspControlPanelDeserializer extends NofspClientMessageDeserialize
 
         // responses
         addResponseMessageDeserialization(NofspSerializationConstants.FIELD_NODE_POOL_CODE, this::getFieldNodePoolResponse);
-        addResponseMessageDeserialization(NofspSerializationConstants.SUBSCRIBED_TO_FIELD_NODE_CODE, this::getSubscribeToFieldNodeResponse);
+        addResponseMessageDeserialization(NofspSerializationConstants.SUBSCRIBED_TO_FIELD_NODE_CODE, this::getSubscribedToFieldNodeResponse);
         addResponseMessageDeserialization(NofspSerializationConstants.ACTUATOR_STATE_SET_CODE, this::getActuatorStateSetControlPanelResponse);
         addResponseMessageDeserialization(NofspSerializationConstants.FIELD_NODE_UNREACHABLE_CODE, this::getFieldNodeUnreachableError);
+        addResponseMessageDeserialization(NofspSerializationConstants.UNSUBSCRIBED_FROM_FIELD_NODE_CODE, this::getUnsubscribedFromFieldNodeResponse);
     }
 
     /**
@@ -78,8 +90,11 @@ public class NofspControlPanelDeserializer extends NofspClientMessageDeserialize
      * @return the deserialized response
      * @throws IOException thrown if an I/O exception occurs
      */
-    private SubscribedToFieldNodeResponse getSubscribeToFieldNodeResponse(int messageId, TlvReader parameterReader) throws IOException {
+    private SubscribedToFieldNodeResponse getSubscribedToFieldNodeResponse(int messageId, TlvReader parameterReader) throws IOException {
         SubscribedToFieldNodeResponse response = null;
+
+        // deserializes the field node address
+        int fieldNodeAddress = getRegularInt(parameterReader.readNextTlv());
 
         // deserializes FNST
         ByteSerializableMap<ByteSerializableInteger, ByteSerializableString> serializableFnst
@@ -94,7 +109,7 @@ public class NofspControlPanelDeserializer extends NofspClientMessageDeserialize
         // deserializes name
         String name = getRegularString(parameterReader.readNextTlv());
 
-        response = new SubscribedToFieldNodeResponse(messageId, fnst, fnsm, name);
+        response = new SubscribedToFieldNodeResponse(messageId, fieldNodeAddress, fnst, fnsm, name);
 
         return response;
     }
@@ -151,6 +166,24 @@ public class NofspControlPanelDeserializer extends NofspClientMessageDeserialize
         String description = getRegularString(parameterReader.readNextTlv());
 
         response = new FieldNodeUnreachableError(messageId, description);
+
+        return response;
+    }
+
+    /**
+     * Deserializes a {@code UnsubscribedFromFieldNodeResponse}.
+     *
+     * @param messageId the message id
+     * @param parameterReader a TlvReader holding the message parameters
+     * @return the deserialized response
+     */
+    private UnsubscribedFromFieldNodeResponse getUnsubscribedFromFieldNodeResponse(int messageId, TlvReader parameterReader) throws IOException {
+        UnsubscribedFromFieldNodeResponse response = null;
+
+        // deserializes the field node address
+        int fieldNodeAddress = getRegularInt(parameterReader.readNextTlv());
+
+        response = new UnsubscribedFromFieldNodeResponse(messageId, fieldNodeAddress);
 
         return response;
     }

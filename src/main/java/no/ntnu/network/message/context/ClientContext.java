@@ -1,11 +1,9 @@
 package no.ntnu.network.message.context;
 
-import no.ntnu.network.CommunicationAgent;
+import no.ntnu.network.ControlCommAgent;
 import no.ntnu.network.message.request.RequestMessage;
 import no.ntnu.network.message.response.ResponseMessage;
-import no.ntnu.tools.ClientLogger;
-
-import java.io.IOException;
+import no.ntnu.tools.logger.ClientLogger;
 
 /**
  * A context for processing client messages.
@@ -16,7 +14,7 @@ public abstract class ClientContext extends MessageContext {
      *
      * @param agent the communication agent
      */
-    protected ClientContext(CommunicationAgent agent) {
+    protected ClientContext(ControlCommAgent agent) {
         super(agent);
     }
 
@@ -29,4 +27,5 @@ public abstract class ClientContext extends MessageContext {
     public void logReceivingResponse(ResponseMessage response) {
         ClientLogger.responseReceived(response);
     }
+
 }

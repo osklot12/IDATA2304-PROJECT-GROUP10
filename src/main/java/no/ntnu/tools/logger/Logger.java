@@ -1,4 +1,4 @@
-package no.ntnu.tools;
+package no.ntnu.tools.logger;
 
 import no.ntnu.network.message.request.RequestMessage;
 import no.ntnu.network.message.serialize.tool.ByteHandler;

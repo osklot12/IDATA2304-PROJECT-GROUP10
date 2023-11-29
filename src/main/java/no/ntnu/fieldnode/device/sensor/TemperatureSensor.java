@@ -1,14 +1,7 @@
 package no.ntnu.fieldnode.device.sensor;
 
-import no.ntnu.broker.SensorDataBroker;
-import no.ntnu.exception.EnvironmentNotSupportedException;
 import no.ntnu.exception.NoEnvironmentSetException;
-import no.ntnu.fieldnode.FieldNode;
 import no.ntnu.fieldnode.device.DeviceClass;
-import no.ntnu.environment.Environment;
-
-import java.util.Timer;
-import java.util.TimerTask;
 
 /**
  * A sensor for measuring temperatures in an environment.
@@ -31,7 +24,7 @@ public class TemperatureSensor extends SDUSensor {
         }
 
         this.sensorData = readAndProcessTemperature();
-        dataBroker.notifyListeners(this);
+        dataBroker.notifyListeners(getSensorData());
     }
 
     private double readAndProcessTemperature() {

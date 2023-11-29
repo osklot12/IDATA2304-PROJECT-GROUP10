@@ -3,10 +3,8 @@ package no.ntnu.network.message.request;
 import no.ntnu.exception.ClientRegistrationException;
 import no.ntnu.exception.SerializationException;
 import no.ntnu.fieldnode.device.DeviceClass;
-import no.ntnu.network.message.Message;
+import no.ntnu.network.message.common.ByteSerializableInteger;
 import no.ntnu.network.message.context.ServerContext;
-import no.ntnu.network.message.common.ByteSerializableSet;
-import no.ntnu.network.message.common.ByteSerializableString;
 import no.ntnu.network.message.response.RegistrationConfirmationResponse;
 import no.ntnu.network.message.response.ResponseMessage;
 import no.ntnu.network.message.response.error.RegistrationDeclinedError;
@@ -14,7 +12,6 @@ import no.ntnu.network.message.serialize.NofspSerializationConstants;
 import no.ntnu.network.message.serialize.tool.DataTypeConverter;
 import no.ntnu.network.message.serialize.visitor.ByteSerializerVisitor;
 
-import java.io.IOException;
 import java.util.Set;
 
 /**
@@ -22,29 +19,32 @@ import java.util.Set;
  */
 public class RegisterControlPanelRequest extends StandardProcessingRequestMessage<ServerContext> {
     private final Set<DeviceClass> compatibilityList;
+    private final int dataSinkPortNumber;
 
     /**
      * Creates a new RegisterControlPanelRequest.
      *
-     * @param compatibilityList the compatibility list for the control panel
+     * @param compatibilityList  the compatibility list for the control panel
+     * @param dataSinkPortNumber the port number of the sensor data sink service
      */
-    public RegisterControlPanelRequest(Set<DeviceClass> compatibilityList) {
+    public RegisterControlPanelRequest(Set<DeviceClass> compatibilityList, int dataSinkPortNumber) {
         super(NofspSerializationConstants.REGISTER_CONTROL_PANEL_COMMAND);
         if (compatibilityList == null) {
             throw new IllegalArgumentException("Cannot create RegisterControlPanelRequest, because compatibility list is null");
         }
 
         this.compatibilityList = compatibilityList;
+        this.dataSinkPortNumber = dataSinkPortNumber;
     }
 
     /**
      * Creates a new RegisterControlPanelRequest.
      *
-     * @param messageId the message id
+     * @param messageId         the message id
      * @param compatibilityList the compatibility list for the control panel
      */
-    public RegisterControlPanelRequest(int messageId, Set<DeviceClass> compatibilityList) {
-        this(compatibilityList);
+    public RegisterControlPanelRequest(int messageId, Set<DeviceClass> compatibilityList, int dataSinkPortNumber) {
+        this(compatibilityList, dataSinkPortNumber);
         setId(messageId);
     }
 
@@ -59,7 +59,9 @@ public class RegisterControlPanelRequest extends StandardProcessingRequestMessag
 
     @Override
     public byte[] accept(ByteSerializerVisitor visitor) throws SerializationException {
-        return visitor.visitRequestMessage(this, DataTypeConverter.getSerializableCompatibilityList(compatibilityList));
+        return visitor.visitRequestMessage(this,
+                DataTypeConverter.getSerializableCompatibilityList(compatibilityList),
+                new ByteSerializableInteger(dataSinkPortNumber));
     }
 
     @Override
@@ -67,7 +69,7 @@ public class RegisterControlPanelRequest extends StandardProcessingRequestMessag
         ResponseMessage response = null;
 
         try {
-            int clientAddress = context.registerControlPanel(compatibilityList);
+            int clientAddress = context.registerControlPanelClient(compatibilityList, dataSinkPortNumber);
             response = new RegistrationConfirmationResponse<>(clientAddress);
         } catch (ClientRegistrationException e) {
             response = new RegistrationDeclinedError<>(e.getMessage());

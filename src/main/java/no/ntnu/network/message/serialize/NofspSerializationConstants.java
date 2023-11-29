@@ -20,6 +20,7 @@ public class NofspSerializationConstants {
     // TLV type-fields (bytes)
     public static final byte[] INTEGER_BYTES = new byte[] {0, 0};
     public static final byte[] STRING_BYTES = new byte[] {0, 1};
+    public static final byte[] DOUBLE_BYTES = new byte[] {0, 3};
     public static final byte[] NULL_BYTES = new byte[] {0, 4};
     public static final byte[] SET_BYTES = new byte[] {0, 10};
     public static final byte[] LIST_BYTES = new byte[] {0, 11};
@@ -27,6 +28,7 @@ public class NofspSerializationConstants {
     public static final byte[] CONTAINER_TLV = new byte[] {0, 13};
     public static final byte[] REQUEST_BYTES = new byte[] {1, 0};
     public static final byte[] RESPONSE_BYTES = new byte[] {1, 1};
+    public static final byte[] SENSOR_DATA_BYTES = new byte[] {2, 0};
 
     // request commands (UTF-8 String)
     public static final String HEART_BEAT = "HBEAT";
@@ -34,6 +36,7 @@ public class NofspSerializationConstants {
     public static final String REGISTER_CONTROL_PANEL_COMMAND = "REGCP";
     public static final String FIELD_NODE_POOL_PULL_COMMAND = "PPULL";
     public static final String SUBSCRIBE_TO_FIELD_NODE_COMMAND = "FNSUB";
+    public static final String UNSUBSCRIBE_FROM_FIELD_NODE_COMMAND = "FNUNSUB";
     public static final String ADL_UPDATE_COMMAND = "ADLUPD";
     public static final String ACTUATOR_NOTIFICATION_COMMAND = "ACTNOT";
     public static final String FNSM_NOTIFICATION_COMMAND = "FNSMNOT";
@@ -44,6 +47,7 @@ public class NofspSerializationConstants {
     public static final int HEART_BEAT_CODE = 0;
     public static final int NODE_REGISTRATION_CONFIRMED_CODE = 1;
     public static final int SUBSCRIBED_TO_FIELD_NODE_CODE = 2;
+    public static final int UNSUBSCRIBED_FROM_FIELD_NODE_CODE = 3;
     public static final int FIELD_NODE_POOL_CODE = 10;
     public static final int ADL_UPDATED_CODE = 20;
     public static final int SERVER_FNSM_UPDATED_CODE = 25;

@@ -10,7 +10,7 @@ import no.ntnu.network.message.deserialize.component.MessageDeserializer;
 import no.ntnu.network.message.request.RequestMessage;
 import no.ntnu.network.message.response.ResponseMessage;
 import no.ntnu.network.message.serialize.visitor.ByteSerializerVisitor;
-import no.ntnu.tools.Logger;
+import no.ntnu.tools.logger.Logger;
 
 import java.io.IOException;
 import java.net.Socket;
@@ -30,10 +30,10 @@ import java.util.List;
  *
  * @param <C> the type of message processing context to use
  */
-public abstract class ControlProcessAgent<C extends MessageContext> implements CommunicationAgent, RequestTimeoutListener {
+public abstract class ControlProcessAgent<C extends MessageContext> implements ControlCommAgent, RequestTimeoutListener {
     private static final long PENDING_REQUEST_TTL = 3000;
     private final List<ConnectionService> connectionServices;
-    private Socket socket;
+    protected Socket socket;
     private TCPControlProcess<C> controlProcess;
     protected RequestManager requestManager;
     private volatile boolean connected;

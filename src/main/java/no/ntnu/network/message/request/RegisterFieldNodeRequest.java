@@ -3,9 +3,6 @@ package no.ntnu.network.message.request;
 import no.ntnu.exception.ClientRegistrationException;
 import no.ntnu.exception.SerializationException;
 import no.ntnu.fieldnode.device.DeviceClass;
-import no.ntnu.network.message.Message;
-import no.ntnu.network.message.common.ByteSerializableInteger;
-import no.ntnu.network.message.common.ByteSerializableMap;
 import no.ntnu.network.message.common.ByteSerializableString;
 import no.ntnu.network.message.context.ServerContext;
 import no.ntnu.network.message.response.RegistrationConfirmationResponse;
@@ -15,7 +12,6 @@ import no.ntnu.network.message.serialize.NofspSerializationConstants;
 import no.ntnu.network.message.serialize.tool.DataTypeConverter;
 import no.ntnu.network.message.serialize.visitor.ByteSerializerVisitor;
 
-import java.io.IOException;
 import java.util.Map;
 
 /**
@@ -98,7 +94,7 @@ public class RegisterFieldNodeRequest extends StandardProcessingRequestMessage<S
         ResponseMessage response = null;
 
         try {
-            int clientAddress = context.registerFieldNode(fnst, fnsm, name);
+            int clientAddress = context.registerFieldNodeClient(fnst, fnsm, name);
             response = new RegistrationConfirmationResponse<>(clientAddress);
         } catch (ClientRegistrationException e) {
             response = new RegistrationDeclinedError<>(e.getMessage());

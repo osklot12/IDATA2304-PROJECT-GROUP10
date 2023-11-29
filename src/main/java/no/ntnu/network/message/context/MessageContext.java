@@ -1,6 +1,6 @@
 package no.ntnu.network.message.context;
 
-import no.ntnu.network.CommunicationAgent;
+import no.ntnu.network.ControlCommAgent;
 import no.ntnu.network.message.request.RequestMessage;
 import no.ntnu.network.message.response.ResponseMessage;
 
@@ -12,14 +12,14 @@ import java.io.IOException;
  * for this processing.
  */
 public abstract class MessageContext {
-    protected final CommunicationAgent agent;
+    protected final ControlCommAgent agent;
 
     /**
      * Creates a new MessageContext.
      *
      * @param agent the communication agent
      */
-    protected MessageContext(CommunicationAgent agent) {
+    protected MessageContext(ControlCommAgent agent) {
         if (agent == null) {
             throw new IllegalArgumentException("Cannot create MessageContext, because agent is null.");
         }
@@ -43,16 +43,17 @@ public abstract class MessageContext {
     }
 
     /**
-     * Indicates whether the response is accepted or not.
+     * Asks for the response to be accepted, and returns the associated request message if so.
      *
-     * @return true if accepted, false otherwise
+     * @param response response message to accept
+     * @return the associated request message, null if not accepted
      */
-    public boolean acceptResponse(ResponseMessage response) {
+    public RequestMessage acceptResponse(ResponseMessage response) {
         if (response == null) {
             throw new IllegalArgumentException("Cannot accept response, because response is null.");
         }
 
-        return agent.acceptResponse(response) != null;
+        return agent.acceptResponse(response);
     }
 
     /**

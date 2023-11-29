@@ -1,6 +1,8 @@
 package no.ntnu.network.message.deserialize;
 
 import no.ntnu.fieldnode.device.DeviceClass;
+import no.ntnu.network.centralserver.CentralHubTestFactory;
+import no.ntnu.network.centralserver.centralhub.CentralHub;
 import no.ntnu.network.message.Message;
 import no.ntnu.network.message.common.ControlMessage;
 import no.ntnu.network.message.context.ServerContext;
@@ -13,6 +15,7 @@ import no.ntnu.network.message.response.VirtualActuatorUpdatedResponse;
 import no.ntnu.network.message.response.error.AdlUpdateRejectedError;
 import no.ntnu.network.message.response.error.DeviceInteractionFailedError;
 import no.ntnu.network.message.response.error.NoSuchVirtualDeviceError;
+import no.ntnu.network.message.sensordata.SduSensorDataMessage;
 import no.ntnu.network.message.serialize.NofspSerializationConstants;
 import no.ntnu.network.message.serialize.tool.tlv.Tlv;
 import no.ntnu.network.message.serialize.tool.tlv.TlvReader;
@@ -35,7 +38,8 @@ import static org.junit.Assert.*;
  */
 public class NofspServerDeserializerTest {
     ByteSerializerVisitor serializer;
-    MessageDeserializer<ServerContext> deserializer;
+    CentralHub centralHub;
+    NofspServerDeserializer deserializer;
 
     /**
      * Setting up for the following test methods.
@@ -43,7 +47,8 @@ public class NofspServerDeserializerTest {
     @Before
     public void setup() {
         this.serializer = new NofspSerializer();
-        this.deserializer = new NofspServerDeserializer();
+        this.centralHub = CentralHubTestFactory.getPopulatedHub();
+        this.deserializer = new NofspServerDeserializer(centralHub);
     }
 
     /**
@@ -79,7 +84,7 @@ public class NofspServerDeserializerTest {
         Set<DeviceClass> compatibilityList = new HashSet<>();
         compatibilityList.add(DeviceClass.A1);
         compatibilityList.add(DeviceClass.S3);
-        ControlMessage request = new RegisterControlPanelRequest(compatibilityList);
+        ControlMessage request = new RegisterControlPanelRequest(compatibilityList, 60005);
 
         byte[] bytes = serializer.serialize(request);
         Tlv tlv = TlvReader.constructTlv(bytes, NofspSerializationConstants.TLV_FRAME);
@@ -251,5 +256,35 @@ public class NofspServerDeserializerTest {
         Tlv tlv = TlvReader.constructTlv(bytes, NofspSerializationConstants.TLV_FRAME);
 
         assertEquals(response, deserializer.deserializeMessage(tlv));
+    }
+
+    /**
+     * Tests the serialization of the {@code SduSensorDataMessageSerialization}.
+     *
+     * @throws IOException thrown if an I/O exception occurs
+     */
+    @Test
+    public void testSduSensorDataMessageSerialization() throws IOException {
+        SduSensorDataMessage message = new SduSensorDataMessage(1, 3, 34.9);
+
+        byte[] bytes = serializer.serialize(message);
+        Tlv tlv = TlvReader.constructTlv(bytes, NofspSerializationConstants.TLV_FRAME);
+
+        assertEquals(message, deserializer.deserializeSensorData(tlv));
+    }
+
+    /**
+     * Tests the serialization of the {@code UnsubscribeFromFieldNodeRequest}.
+     *
+     * @throws IOException thrown if an I/O exception occurs
+     */
+    @Test
+    public void testUnsubscribeFromFieldNodeRequestSerialization() throws IOException {
+        UnsubscribeFromFieldNodeRequest request = new UnsubscribeFromFieldNodeRequest(2);
+
+        byte[] bytes = serializer.serialize(request);
+        Tlv tlv = TlvReader.constructTlv(bytes, NofspSerializationConstants.TLV_FRAME);
+
+        assertEquals(request, deserializer.deserializeMessage(tlv));
     }
 }

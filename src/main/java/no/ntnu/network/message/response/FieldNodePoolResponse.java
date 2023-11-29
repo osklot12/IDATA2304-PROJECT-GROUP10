@@ -4,6 +4,7 @@ import no.ntnu.exception.SerializationException;
 import no.ntnu.fieldnode.device.DeviceClass;
 import no.ntnu.network.message.Message;
 import no.ntnu.network.message.context.ControlPanelContext;
+import no.ntnu.network.message.request.RequestMessage;
 import no.ntnu.network.message.serialize.NofspSerializationConstants;
 import no.ntnu.network.message.serialize.tool.DataTypeConverter;
 import no.ntnu.network.message.serialize.visitor.ByteSerializerVisitor;

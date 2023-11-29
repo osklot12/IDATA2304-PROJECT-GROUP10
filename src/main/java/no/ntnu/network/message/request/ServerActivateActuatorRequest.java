@@ -29,7 +29,7 @@ public class ServerActivateActuatorRequest extends StandardProcessingRequestMess
      * @param newState         the new state to set
      */
     public ServerActivateActuatorRequest(int fieldNodeAddress, int actuatorAddress, int newState) {
-        super(NofspSerializationConstants.ACTUATOR_NOTIFICATION_COMMAND);
+        super(NofspSerializationConstants.ACTIVATE_ACTUATOR_COMMAND);
 
         this.fieldNodeAddress = fieldNodeAddress;
         this.actuatorAddress = actuatorAddress;

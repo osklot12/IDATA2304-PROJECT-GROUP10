@@ -1,6 +1,6 @@
 package no.ntnu.network.message.request;
 
-import no.ntnu.network.TestAgent;
+import no.ntnu.network.TestControlCommAgent;
 import no.ntnu.network.centralserver.CentralHubTestFactory;
 import no.ntnu.network.centralserver.centralhub.CentralHub;
 import no.ntnu.network.message.context.ServerContext;
@@ -18,7 +18,7 @@ import static org.junit.Assert.*;
  * JUnit testing for the {@code ActuatorNotificationRequest} class.
  */
 public class ActuatorNotificationRequestTest {
-    TestAgent agent;
+    TestControlCommAgent agent;
     CentralHub hub;
     ServerContext context;
     ActuatorNotificationRequest request;
@@ -28,9 +28,9 @@ public class ActuatorNotificationRequestTest {
      */
     @Before
     public void setup() {
-        agent = new TestAgent();
+        agent = new TestControlCommAgent();
         hub = CentralHubTestFactory.getPopulatedHub();
-        context = new ServerContext(agent, hub);
+        context = new ServerContext(agent, agent, hub);
     }
 
     /**

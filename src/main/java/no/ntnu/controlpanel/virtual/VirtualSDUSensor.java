@@ -4,6 +4,7 @@ import javafx.beans.Observable;
 import no.ntnu.broker.VirtualSDUDataBroker;
 import no.ntnu.fieldnode.device.DeviceClass;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -12,8 +13,7 @@ import java.util.List;
  */
 public class VirtualSDUSensor extends VirtualDevice {
     private final VirtualSDUDataBroker dataBroker;
-    private final double[] dataBuffer;
-    private int bufferTail;
+    private final ArrayDeque<Double> dataBuffer;
 
     /**
      * Creates a new VirtualSDUSensor.
@@ -29,8 +29,7 @@ public class VirtualSDUSensor extends VirtualDevice {
         }
 
         this.dataBroker = new VirtualSDUDataBroker();
-        this.dataBuffer = new double[bufferSize + 1];
-        this.bufferTail = 0;
+        this.dataBuffer = new ArrayDeque<>();
     }
 
     /**
@@ -39,36 +38,7 @@ public class VirtualSDUSensor extends VirtualDevice {
      * @param data sdu data to add
      */
     public void addSensorData(double data) {
-        shiftBuffer();
-        dataBuffer[0] = data;
-        incrementBufferTail();
-    }
-
-    private void incrementBufferTail() {
-        if (bufferTail < dataBuffer.length) {
-            bufferTail++;
-        }
-    }
-
-    private void shiftBuffer() {
-        for (int i = bufferTail; i > 0; i--) {
-            dataBuffer[i] = dataBuffer[i - 1];
-        }
-    }
-
-    /**
-     * Returns a list of all data held by the virtual SDU sensor.
-     *
-     * @return list of sdu data
-     */
-    public List<Double> getDataList() {
-        List<Double> result = new ArrayList<>();
-
-        for (int i = 0; i < bufferTail; i++) {
-            result.add(dataBuffer[i]);
-        }
-
-        return result;
+        dataBuffer.add(data);
     }
 
     /**

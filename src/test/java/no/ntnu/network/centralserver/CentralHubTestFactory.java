@@ -1,7 +1,7 @@
 package no.ntnu.network.centralserver;
 
 import no.ntnu.fieldnode.device.DeviceClass;
-import no.ntnu.network.TestAgent;
+import no.ntnu.network.TestControlCommAgent;
 import no.ntnu.network.centralserver.centralhub.CentralHub;
 
 import java.util.HashMap;
@@ -39,7 +39,7 @@ public class CentralHubTestFactory {
         fnsm.put(2, 3);
         fnsm.put(3, 0);
 
-        hub.registerFieldNode(fnst, fnsm, "Greenhouse node", new TestAgent());
+        hub.registerFieldNode(fnst, fnsm, "Greenhouse node", new TestControlCommAgent());
     }
 
     private static void addFieldNodeProxyTwo(CentralHub hub) {
@@ -53,6 +53,6 @@ public class CentralHubTestFactory {
         fnsm.put(1, 0);
         fnsm.put(3, 0);
 
-        hub.registerFieldNode(fnst, fnsm, "Outdoor node", new TestAgent());
+        hub.registerFieldNode(fnst, fnsm, "Outdoor node", new TestControlCommAgent());
     }
 }

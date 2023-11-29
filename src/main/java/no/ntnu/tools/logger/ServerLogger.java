@@ -1,7 +1,9 @@
-package no.ntnu.tools;
+package no.ntnu.tools.logger;
 
 import no.ntnu.network.message.request.RequestMessage;
 import no.ntnu.network.message.response.ResponseMessage;
+import no.ntnu.network.message.sensordata.SensorDataMessage;
+import no.ntnu.tools.TimeFormatter;
 
 /**
  * A class encapsulating logging for the central server.
@@ -59,6 +61,16 @@ public class ServerLogger {
      */
     public static void requestTimeout(RequestMessage request, String clientAddress) {
         Logger.error("[ TIMEOUT " + TimeFormatter.now() + " ] REQUEST ( " + request.getSerializableId() + " ): " + request.toString() + " -> " + clientAddress);
+    }
+
+    /**
+     * Log the receiving of sensor data.
+     *
+     * @param message the sensor data message received
+     * @param clientAddress the source address of the message
+     */
+    public static void sensorDataReceived(SensorDataMessage message, String clientAddress) {
+        Logger.info("[ RECEIVED " + TimeFormatter.now() + " ] SENSOR DATA: " + message.toString() + " -> " + clientAddress);
     }
 
     /**

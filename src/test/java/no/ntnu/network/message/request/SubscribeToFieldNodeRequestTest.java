@@ -1,7 +1,7 @@
 package no.ntnu.network.message.request;
 
 import no.ntnu.fieldnode.device.DeviceClass;
-import no.ntnu.network.TestAgent;
+import no.ntnu.network.TestControlCommAgent;
 import no.ntnu.network.centralserver.centralhub.CentralHub;
 import no.ntnu.network.centralserver.CentralHubTestFactory;
 import no.ntnu.network.message.context.ServerContext;
@@ -21,7 +21,7 @@ import static org.junit.Assert.*;
  * JUnit testing for the {@code SubscribeToFieldNodeRequest} class.
  */
 public class SubscribeToFieldNodeRequestTest {
-    TestAgent agent;
+    TestControlCommAgent agent;
     CentralHub hub;
     ServerContext context;
     SubscribeToFieldNodeRequest request;
@@ -32,9 +32,9 @@ public class SubscribeToFieldNodeRequestTest {
      */
     @Before
     public void setup() {
-        agent = new TestAgent();
+        agent = new TestControlCommAgent();
         hub = CentralHubTestFactory.getPopulatedHub();
-        context = new ServerContext(agent, hub);
+        context = new ServerContext(agent, agent, hub);
         compatibilityList = new HashSet<>();
         compatibilityList.add(DeviceClass.A1);
     }
@@ -47,7 +47,7 @@ public class SubscribeToFieldNodeRequestTest {
     @Test
     public void testSuccessfulRequest() throws IOException {
         // the requesting agent needs to be registered as a control panel
-        int clientAddress = hub.registerControlPanel(compatibilityList, agent);
+        int clientAddress = hub.registerControlPanel(compatibilityList, agent, agent.getDataCommAgent(1023));
         agent.setClientNodeAddress(clientAddress);
 
         request = new SubscribeToFieldNodeRequest(0);
@@ -75,7 +75,7 @@ public class SubscribeToFieldNodeRequestTest {
     @Test
     public void testSubscribingToNonExistingFieldNode() throws IOException {
         // the requesting agent needs to be registered as a control panel
-        int clientAddress = hub.registerControlPanel(compatibilityList, agent);
+        int clientAddress = hub.registerControlPanel(compatibilityList, agent, agent.getDataCommAgent(1203));
         agent.setClientNodeAddress(clientAddress);
 
         request = new SubscribeToFieldNodeRequest(20);

@@ -3,6 +3,7 @@ package no.ntnu.network.message.response.error;
 import no.ntnu.exception.SerializationException;
 import no.ntnu.network.message.common.ByteSerializableString;
 import no.ntnu.network.message.context.MessageContext;
+import no.ntnu.network.message.request.RequestMessage;
 import no.ntnu.network.message.response.RegistrationConfirmationResponse;
 import no.ntnu.network.message.response.ResponseMessage;
 import no.ntnu.network.message.response.StandardProcessingResponseMessage;

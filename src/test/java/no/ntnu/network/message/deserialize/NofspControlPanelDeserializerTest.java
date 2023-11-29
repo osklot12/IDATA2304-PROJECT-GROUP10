@@ -1,5 +1,6 @@
 package no.ntnu.network.message.deserialize;
 
+import no.ntnu.controlpanel.ControlPanel;
 import no.ntnu.fieldnode.device.DeviceClass;
 import no.ntnu.network.message.context.ControlPanelContext;
 import no.ntnu.network.message.deserialize.component.MessageDeserializer;
@@ -8,6 +9,7 @@ import no.ntnu.network.message.request.ServerFnsmNotificationRequest;
 import no.ntnu.network.message.response.ActuatorStateSetControlPanelResponse;
 import no.ntnu.network.message.response.FieldNodePoolResponse;
 import no.ntnu.network.message.response.SubscribedToFieldNodeResponse;
+import no.ntnu.network.message.response.UnsubscribedFromFieldNodeResponse;
 import no.ntnu.network.message.response.error.FieldNodeUnreachableError;
 import no.ntnu.network.message.serialize.NofspSerializationConstants;
 import no.ntnu.network.message.serialize.tool.tlv.Tlv;
@@ -27,6 +29,7 @@ import static org.junit.Assert.*;
  * JUnit testing for the NofspControlPanelDeserializer class.
  */
 public class NofspControlPanelDeserializerTest {
+    ControlPanel controlPanel;
     ByteSerializerVisitor serializer;
     MessageDeserializer<ControlPanelContext> deserializer;
 
@@ -35,8 +38,9 @@ public class NofspControlPanelDeserializerTest {
      */
     @Before
     public void setup() {
+        controlPanel = new ControlPanel();
         serializer = new NofspSerializer();
-        deserializer = new NofspControlPanelDeserializer();
+        deserializer = new NofspControlPanelDeserializer(controlPanel);
     }
 
     /**
@@ -90,7 +94,7 @@ public class NofspControlPanelDeserializerTest {
 
         String name = "Test field node";
 
-        SubscribedToFieldNodeResponse response = new SubscribedToFieldNodeResponse(fnst, fnsm, name);
+        SubscribedToFieldNodeResponse response = new SubscribedToFieldNodeResponse(1, fnst, fnsm, name);
 
         byte[] bytes = serializer.serialize(response);
         Tlv tlv = TlvReader.constructTlv(bytes, NofspSerializationConstants.TLV_FRAME);
@@ -136,6 +140,21 @@ public class NofspControlPanelDeserializerTest {
     @Test
     public void testFieldNodeUnreachableError() throws IOException {
         FieldNodeUnreachableError response = new FieldNodeUnreachableError("TestDescription");
+
+        byte[] bytes = serializer.serialize(response);
+        Tlv tlv = TlvReader.constructTlv(bytes, NofspSerializationConstants.TLV_FRAME);
+
+        assertEquals(response, deserializer.deserializeMessage(tlv));
+    }
+
+    /**
+     * Tests the serialization of {@code UnsubscribedFromFieldNodeResponse}.
+     *
+     * @throws IOException thrown if an I/O exception occurs
+     */
+    @Test
+    public void testUnsubscribedFromFieldNodeResponseSerialization() throws IOException {
+        UnsubscribedFromFieldNodeResponse response = new UnsubscribedFromFieldNodeResponse(3);
 
         byte[] bytes = serializer.serialize(response);
         Tlv tlv = TlvReader.constructTlv(bytes, NofspSerializationConstants.TLV_FRAME);

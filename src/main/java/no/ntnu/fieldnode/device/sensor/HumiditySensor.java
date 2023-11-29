@@ -24,7 +24,7 @@ public class HumiditySensor extends SDUSensor {
         }
 
         this.sensorData = readAndProcessHumidity();
-        dataBroker.notifyListeners(this);
+        dataBroker.notifyListeners(getSensorData());
     }
 
     private double readAndProcessHumidity() {

@@ -2,14 +2,16 @@ package no.ntnu.network.centralserver.centralhub;
 
 import no.ntnu.exception.*;
 import no.ntnu.fieldnode.device.DeviceClass;
-import no.ntnu.network.CommunicationAgent;
+import no.ntnu.network.ControlCommAgent;
+import no.ntnu.network.DataCommAgent;
 import no.ntnu.network.centralserver.centralhub.clientproxy.ClientProxy;
 import no.ntnu.network.centralserver.centralhub.clientproxy.ControlPanelClientProxy;
 import no.ntnu.network.centralserver.centralhub.clientproxy.FieldNodeClientProxy;
+import no.ntnu.network.message.deserialize.component.DeviceLookupTable;
 import no.ntnu.network.message.request.AdlUpdateRequest;
-import no.ntnu.network.message.request.FieldNodeActivateActuatorRequest;
 import no.ntnu.network.message.request.ServerFnsmNotificationRequest;
-import no.ntnu.tools.Logger;
+import no.ntnu.network.message.sensordata.SensorDataMessage;
+import no.ntnu.tools.logger.Logger;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -22,7 +24,7 @@ import java.util.Set;
  * Although the class does handle client communication, it is not dependent on a concrete communication implementation,
  * and can therefore handle client communication of any type.
  */
-public class CentralHub {
+public class CentralHub implements DeviceLookupTable {
     private final Map<Integer, FieldNodeClientProxy> fieldNodes;
     private final Map<Integer, ControlPanelClientProxy> controlPanels;
     private final Map<Integer, Set<Integer>> sensorDataRoutingTable;
@@ -46,7 +48,7 @@ public class CentralHub {
      * @return the assigned address for the field node
      * @throws ClientRegistrationException thrown if registration fails
      */
-    public int registerFieldNode(Map<Integer, DeviceClass> fnst, Map<Integer, Integer> fnsm, String name, CommunicationAgent agent) throws ClientRegistrationException {
+    public int registerFieldNode(Map<Integer, DeviceClass> fnst, Map<Integer, Integer> fnsm, String name, ControlCommAgent agent) throws ClientRegistrationException {
         if (fnst == null) {
             throw new IllegalArgumentException("Cannot register field node, because fnst is null.");
         }
@@ -80,20 +82,21 @@ public class CentralHub {
      * Registers a control panel client.
      *
      * @param compatibilityList the compatibility list
-     * @param agent the associated communication agent
+     * @param controlAgent the control communication agent for the control panel client
+     * @param dataAgent the sensor data communication agent for the control panel client
      * @return the assigned address for the control panel
      * @throws ClientRegistrationException thrown if registration fails
      */
-    public int registerControlPanel(Set<DeviceClass> compatibilityList, CommunicationAgent agent) throws ClientRegistrationException {
+    public int registerControlPanel(Set<DeviceClass> compatibilityList, ControlCommAgent controlAgent, DataCommAgent dataAgent) throws ClientRegistrationException {
         if (compatibilityList == null) {
             throw new IllegalArgumentException("Cannot register control panel, because compatibility list is null.");
         }
 
-        if (agent == null) {
+        if (controlAgent == null) {
             throw new IllegalArgumentException("Cannot register control panel, because agent is null.");
         }
 
-        ControlPanelClientProxy clientProxy = new ControlPanelClientProxy(agent, compatibilityList);
+        ControlPanelClientProxy clientProxy = new ControlPanelClientProxy(controlAgent, dataAgent, compatibilityList);
         int clientAddress = registerClient(clientProxy, controlPanels);
         // checks if address is -1, which indicates that the client is already registered
         if (clientAddress == -1) {
@@ -160,16 +163,16 @@ public class CentralHub {
      * @return the corresponding field node client proxy
      * @throws SubscriptionException thrown if subscribing fails
      */
-    public FieldNodeClientProxy subscribeToFieldNode(CommunicationAgent subscriber, int fieldNodeAddress) throws SubscriptionException{
+    public FieldNodeClientProxy subscribeToFieldNode(ControlCommAgent subscriber, int fieldNodeAddress) throws SubscriptionException{
         if (subscriber == null) {
-            throw new IllegalArgumentException("Cannot subscribe to field node with address" + fieldNodeAddress +
-                    ", because subscriber is null.");
+            throw new IllegalArgumentException("Cannot subscribe to field node because subscriber is null.");
         }
 
         FieldNodeClientProxy fieldNodeProxy = null;
+        int subscriberAddress = subscriber.getClientNodeAddress();
         // checks if the given field node address is valid
         if (sensorDataRoutingTable.containsKey(fieldNodeAddress)) {
-            fieldNodeProxy = handleFieldNodeSubscription(subscriber, fieldNodeAddress);
+            fieldNodeProxy = handleFieldNodeSubscription(subscriberAddress, fieldNodeAddress);
         } else {
             throw new SubscriptionException("Cannot subscribe to field node with address " + fieldNodeAddress +
                     ", because no such field node exists.");
@@ -179,33 +182,43 @@ public class CentralHub {
     }
 
     /**
-     * Handles the subscription of a field node.
+     * Handles the subscription to a field node.
+     * As for now, control panels are the only clients that can subscribe to field nodes.
+     * This method can be modified to allow new clients to also subscribe to fields nodes.
      *
-     * @param subscriber the subscriber
-     * @param fieldNodeAddress the node address for the field node to subscribe to
+     * @param subscriberAddress the node address of the subscriber
+     * @param fieldNodeAddress the node address of the field node to subscribe to
      * @return the client proxy for the field node subscribed to
      * @throws SubscriptionException thrown if subscription fails
      */
-    private FieldNodeClientProxy handleFieldNodeSubscription(CommunicationAgent subscriber, int fieldNodeAddress) throws SubscriptionException {
+    private FieldNodeClientProxy handleFieldNodeSubscription(int subscriberAddress, int fieldNodeAddress) throws SubscriptionException {
         FieldNodeClientProxy fieldNodeProxy = null;
 
-        int subscriberAddress = subscriber.getClientNodeAddress();
         // checks if the control panel is registered
         if (controlPanels.containsKey(subscriberAddress)) {
+
             // checks if control panel is already subscribed
-            if (sensorDataRoutingTable.get(fieldNodeAddress).contains(subscriberAddress)) {
+            if (getFieldNodeSubscribers(fieldNodeAddress).contains(subscriberAddress)) {
                 throw new SubscriptionException("Cannot subscribe to field node with address " + fieldNodeAddress +
                         ", because control panel is already subscribed.");
             }
+
+            Set<Integer> previousAdl = getAdlForFieldNode(fieldNodeAddress);
+
             // handles the routing configuration
             addFieldNodeSubscriber(subscriberAddress, fieldNodeAddress);
-            try {
-                sendAdlUpdate(fieldNodeAddress);
-            } catch (IOException e) {
-                // ensuring atomicity principle by removing subscriber in case of error
-                removeFieldNodeSubscriber(subscriberAddress, fieldNodeAddress);
-                throw new SubscriptionException("Cannot subscribe to field node with address " + fieldNodeAddress +
-                        ", because ADL update failed to send: " + e.getMessage());
+
+            Set<Integer> newAdl = getAdlForFieldNode(fieldNodeAddress);
+            // only trigger adl update if adl changes
+            if (!previousAdl.equals(newAdl)) {
+                try {
+                    sendAdlUpdate(fieldNodeAddress);
+                } catch (IOException e) {
+                    // ensuring atomicity principle by removing subscriber in case of error
+                    removeFieldNodeSubscriber(subscriberAddress, fieldNodeAddress);
+                    throw new SubscriptionException("Cannot subscribe to field node with address " + fieldNodeAddress +
+                            ", because ADL update failed to send: " + e.getMessage());
+                }
             }
             fieldNodeProxy = fieldNodes.get(fieldNodeAddress);
         } else {
@@ -214,6 +227,29 @@ public class CentralHub {
         }
 
         return fieldNodeProxy;
+    }
+
+    /**
+     * Unsubscribes a control panel from a field node.
+     *
+     * @param subscriber the communication agent for the control panel
+     * @param fieldNodeAddress the node address of the field node to unsubscribe from
+     * @throws SubscriptionException thrown if unsubscribing fails
+     */
+    public void unsubscribeFromFieldNode(ControlCommAgent subscriber, int fieldNodeAddress) throws SubscriptionException {
+        if (subscriber == null) {
+            throw new IllegalArgumentException("Cannot unsubscribe from field node with address "+ fieldNodeAddress +
+                    ", because subscriber is null.");
+        }
+
+        Set<Integer> subscribers = getFieldNodeSubscribers(fieldNodeAddress);
+        int subscriberAddress = subscriber.getClientNodeAddress();
+        if (subscribers != null && subscribers.contains(subscriberAddress)) {
+             subscribers.remove(subscriberAddress);
+        } else {
+            throw new SubscriptionException("Cannot unsubscribe from field node " + fieldNodeAddress + ", because " +
+                    "no such subscription exists.");
+        }
     }
 
     /**
@@ -255,7 +291,7 @@ public class CentralHub {
      */
     private void sendAdlUpdate(int fieldNodeAddress) throws IOException {
         Set<Integer> adl = getAdlForFieldNode(fieldNodeAddress);
-        CommunicationAgent fieldNodeAgent = fieldNodes.get(fieldNodeAddress).getAgent();
+        ControlCommAgent fieldNodeAgent = fieldNodes.get(fieldNodeAddress).getAgent();
         fieldNodeAgent.sendRequest(new AdlUpdateRequest(adl));
     }
 
@@ -348,13 +384,40 @@ public class CentralHub {
 
         getFieldNodeSubscribers(fieldNodeAddress).forEach(controlPanelAddress -> {
             ControlPanelClientProxy controlPanel = controlPanels.get(controlPanelAddress);
-            CommunicationAgent agent = controlPanel.getAgent();
+            ControlCommAgent agent = controlPanel.getAgent();
 
             try {
                 agent.sendRequest(request);
             } catch (IOException e) {
                 Logger.error("Cannot notify " + agent.getRemoteEntityAsString() + " about the change of state for" +
                         "actuator " + actuatorAddress + " on field node " + fieldNodeAddress);
+            }
+        });
+    }
+
+    @Override
+    public DeviceClass lookup(int clientAddress, int deviceAddress) {
+        return fieldNodes.get(clientAddress).getFNST().get(deviceAddress);
+    }
+
+    /**
+     * Routes the sensor data message to the subscribers of the source client.
+     *
+     * @param message the sensor data message to route
+     */
+    public void routeSensorDataToSubscribers(SensorDataMessage message) {
+        if (message == null) {
+            throw new IllegalArgumentException("Cannot route sensor data message, because message is null.");
+        }
+
+        Set<Integer> subscribers = getFieldNodeSubscribers(message.getClientNodeAddress());
+        subscribers.forEach(subscriberAddress -> {
+            ControlPanelClientProxy controlPanel = controlPanels.get(subscriberAddress);
+            try {
+                controlPanel.sendSensorData(message);
+            } catch (IOException e) {
+                Logger.error("Cannot send sensor data to control panel with address " + subscriberAddress + ": " +
+                        e.getMessage());
             }
         });
     }

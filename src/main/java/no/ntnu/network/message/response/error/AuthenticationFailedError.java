@@ -22,7 +22,7 @@ public class AuthenticationFailedError<C extends ClientContext> extends ErrorMes
      * Creates a new AuthenticationFailedError.
      */
     public AuthenticationFailedError() {
-        this("cannot accept request, because client is not registered.");
+        this("Cannot accept request, because client is not registered.");
     }
 
     /**

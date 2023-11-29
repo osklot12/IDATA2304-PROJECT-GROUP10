@@ -1,20 +1,22 @@
 package no.ntnu.network.centralserver;
 
 import no.ntnu.network.ControlProcessAgent;
+import no.ntnu.network.DataCommAgent;
+import no.ntnu.network.DataCommAgentProvider;
 import no.ntnu.network.centralserver.centralhub.CentralHub;
 import no.ntnu.network.connectionservice.ClientGate;
 import no.ntnu.network.connectionservice.ConnServiceShutdownListener;
 import no.ntnu.network.connectionservice.HeartBeater;
 import no.ntnu.network.message.Message;
 import no.ntnu.network.message.context.ServerContext;
-import no.ntnu.network.message.deserialize.NofspServerDeserializer;
+import no.ntnu.network.message.deserialize.component.MessageDeserializer;
 import no.ntnu.network.message.request.RequestMessage;
 import no.ntnu.network.message.response.ResponseMessage;
 import no.ntnu.network.message.serialize.NofspSerializationConstants;
 import no.ntnu.network.message.serialize.visitor.ByteSerializerVisitor;
-import no.ntnu.network.message.serialize.visitor.NofspSerializer;
-import no.ntnu.tools.Logger;
-import no.ntnu.tools.ServerLogger;
+import no.ntnu.network.sensordataprocess.SensorDataPushingProcess;
+import no.ntnu.tools.logger.Logger;
+import no.ntnu.tools.logger.ServerLogger;
 
 import java.io.IOException;
 import java.net.Socket;
@@ -22,11 +24,11 @@ import java.net.Socket;
 /**
  * A class responsible for handling all communication for a server with a single client.
  */
-public class ClientHandler extends ControlProcessAgent<ServerContext> implements Runnable, ConnServiceShutdownListener {
-    private static final ByteSerializerVisitor SERIALIZER = new NofspSerializer();
-    private static final NofspServerDeserializer DESERIALIZER = new NofspServerDeserializer();
+public class ClientHandler extends ControlProcessAgent<ServerContext> implements Runnable, ConnServiceShutdownListener, DataCommAgentProvider {
     private static final long HEARTBEAT_INTERVAL = 30000;
     private static final long CLIENT_ACCEPTANCE_PHASE = 3000;
+    private final ByteSerializerVisitor serializer;
+    private final MessageDeserializer<ServerContext> deserializer;
     private ClientGate clientGate;
     private final ServerContext context;
 
@@ -36,15 +38,29 @@ public class ClientHandler extends ControlProcessAgent<ServerContext> implements
      * @param clientSocket the client to handle
      * @param centralHub the central hub
      */
-    public ClientHandler(Socket clientSocket, CentralHub centralHub) {
+    public ClientHandler(Socket clientSocket, CentralHub centralHub, ByteSerializerVisitor serializer, MessageDeserializer<ServerContext> deserializer) {
         super();
         if (clientSocket == null) {
             throw new IllegalArgumentException("Cannot create ClientHandler, because client socket is null.");
         }
 
+        if (centralHub == null) {
+            throw new IllegalArgumentException("Cannot create ClientHandler, because centralHub is null.");
+        }
+
+        if (serializer == null) {
+            throw new IllegalArgumentException("Cannot create ClientHandler, because serializer is null.");
+        }
+
+        if (deserializer == null) {
+            throw new IllegalArgumentException("Cannot create ClientHandler, because deserializer is null.");
+        }
+
+        this.serializer = serializer;
+        this.deserializer = deserializer;
         setSocket(clientSocket);
         establishConnectionServices();
-        this.context = new ServerContext(this, centralHub);
+        this.context = new ServerContext(this, this, centralHub);
     }
 
     /**
@@ -74,7 +90,7 @@ public class ClientHandler extends ControlProcessAgent<ServerContext> implements
 
     @Override
     public void run() {
-        if (establishConnection(SERIALIZER, DESERIALIZER)) {
+        if (establishConnection(serializer, deserializer)) {
             Logger.info("Successfully connected to client " + getRemoteSocketAddress());
         }
     }
@@ -139,5 +155,10 @@ public class ClientHandler extends ControlProcessAgent<ServerContext> implements
     public void setClientNodeAddress(int address) {
         super.setClientNodeAddress(address);
         clientGate.stop();
+    }
+
+    @Override
+    public DataCommAgent getDataCommAgent(int portNumber) throws IOException {
+        return new SensorDataPushingProcess(socket.getInetAddress(), portNumber, serializer);
     }
 }

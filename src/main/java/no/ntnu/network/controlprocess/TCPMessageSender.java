@@ -2,7 +2,7 @@ package no.ntnu.network.controlprocess;
 
 import no.ntnu.network.message.common.ControlMessage;
 import no.ntnu.network.message.serialize.visitor.ByteSerializerVisitor;
-import no.ntnu.tools.Logger;
+import no.ntnu.tools.logger.Logger;
 
 import java.io.IOException;
 import java.io.OutputStream;

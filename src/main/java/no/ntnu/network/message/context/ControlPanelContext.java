@@ -2,8 +2,13 @@ package no.ntnu.network.message.context;
 
 import no.ntnu.controlpanel.ControlPanel;
 import no.ntnu.controlpanel.virtual.VirtualFieldNode;
+import no.ntnu.controlpanel.virtual.VirtualSDUSensor;
 import no.ntnu.exception.NoSuchVirtualDeviceException;
-import no.ntnu.network.CommunicationAgent;
+import no.ntnu.fieldnode.device.DeviceClass;
+import no.ntnu.network.ControlCommAgent;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * A context for processing control panel messages.
@@ -17,13 +22,37 @@ public class ControlPanelContext extends ClientContext {
      * @param agent the communication agent
      * @param controlPanel the control panel to operate on
      */
-    public ControlPanelContext(CommunicationAgent agent, ControlPanel controlPanel) {
+    public ControlPanelContext(ControlCommAgent agent, ControlPanel controlPanel) {
         super(agent);
         if (controlPanel == null) {
             throw new IllegalArgumentException("Cannot create ControlPanelContext, because control panel is null");
         }
 
         this.controlPanel = controlPanel;
+    }
+
+    /**
+     * Adds a new virtual field node to the control panel.
+     *
+     * @param fieldNodeAddress the address of the field node
+     * @param fnst the field node system table
+     * @param fnsm the field node status map
+     * @param name the name of the field node
+     */
+    public void addVirtualFieldNode(int fieldNodeAddress, Map<Integer, DeviceClass> fnst, Map<Integer, Integer> fnsm, String name) {
+        VirtualFieldNode virtualFieldNode = new VirtualFieldNode(name);
+        virtualFieldNode.addVirtualDevicesFromFnst(fnst);
+        virtualFieldNode.setVirtualActuatorStatesFromFnsm(fnsm);
+        controlPanel.addVirtualFieldNode(virtualFieldNode, fieldNodeAddress);
+    }
+
+    /**
+     * Removes a virtual field node from the control panel.
+     *
+     * @param fieldNodeAddress the address of the field node to remove
+     */
+    public void removeVirtualFieldNode(int fieldNodeAddress) {
+        controlPanel.removeVirtualFieldNode(fieldNodeAddress);
     }
 
     /**

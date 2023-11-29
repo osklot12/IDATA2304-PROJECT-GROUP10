@@ -4,6 +4,7 @@ import no.ntnu.exception.SerializationException;
 import no.ntnu.network.message.common.*;
 import no.ntnu.network.message.request.*;
 import no.ntnu.network.message.response.ResponseMessage;
+import no.ntnu.network.message.sensordata.SensorDataMessage;
 import no.ntnu.network.message.serialize.ByteSerializable;
 
 /**
@@ -32,6 +33,15 @@ public interface ByteSerializerVisitor {
      * @throws SerializationException thrown if serialization fails
      */
     byte[] visitInteger(ByteSerializableInteger integer) throws SerializationException;
+
+    /**
+     * Serializes a {@code ByteSerializableDouble} object.
+     *
+     * @param theDouble double to serialize
+     * @return the serialized double
+     * @throws SerializationException thrown if serialization fails
+     */
+    byte[] visitDouble(ByteSerializableDouble theDouble) throws SerializationException;
 
     /**
      * Serializes a {@code ByteSerializableString} object.
@@ -110,4 +120,14 @@ public interface ByteSerializerVisitor {
      * @throws SerializationException thrown if serialization fails
      */
     byte[] visitResponseMessage(ResponseMessage response) throws SerializationException;
+
+    /**
+     * Serializes a {@code SensorDataMessage}.
+     *
+     * @param message the sensor data message to serialize
+     * @param data the data captured
+     * @return the serialized sensor data message
+     * @throws SerializationException thrown if serialization fails
+     */
+    byte[] visitSensorDataMessage(SensorDataMessage message, byte[] data) throws SerializationException;
 }

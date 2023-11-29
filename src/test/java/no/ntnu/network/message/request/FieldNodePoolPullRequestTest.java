@@ -1,6 +1,6 @@
 package no.ntnu.network.message.request;
 
-import no.ntnu.network.TestAgent;
+import no.ntnu.network.TestControlCommAgent;
 import no.ntnu.network.centralserver.centralhub.CentralHub;
 import no.ntnu.network.centralserver.CentralHubTestFactory;
 import no.ntnu.network.message.context.ServerContext;
@@ -17,7 +17,7 @@ import static org.junit.Assert.*;
  * JUnit testing for the {@code FieldNodePoolPullRequest} class.
  */
 public class FieldNodePoolPullRequestTest {
-    TestAgent agent;
+    TestControlCommAgent agent;
     CentralHub hub;
     ServerContext context;
     FieldNodePoolPullRequest request;
@@ -27,9 +27,9 @@ public class FieldNodePoolPullRequestTest {
      */
     @Before
     public void setup() {
-        agent = new TestAgent();
+        agent = new TestControlCommAgent();
         hub = CentralHubTestFactory.getPopulatedHub();
-        context = new ServerContext(agent, hub);
+        context = new ServerContext(agent, agent, hub);
         request = new FieldNodePoolPullRequest();
     }
 

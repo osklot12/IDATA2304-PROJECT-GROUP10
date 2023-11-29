@@ -4,13 +4,16 @@ import no.ntnu.exception.ClientRegistrationException;
 import no.ntnu.exception.NoSuchAddressException;
 import no.ntnu.exception.SubscriptionException;
 import no.ntnu.fieldnode.device.DeviceClass;
-import no.ntnu.network.CommunicationAgent;
+import no.ntnu.network.ControlCommAgent;
+import no.ntnu.network.DataCommAgent;
+import no.ntnu.network.DataCommAgentProvider;
+import no.ntnu.network.centralserver.CentralServer;
 import no.ntnu.network.centralserver.centralhub.CentralHub;
 import no.ntnu.network.centralserver.centralhub.clientproxy.FieldNodeClientProxy;
 import no.ntnu.network.message.request.FieldNodeActivateActuatorRequest;
 import no.ntnu.network.message.request.RequestMessage;
 import no.ntnu.network.message.response.ResponseMessage;
-import no.ntnu.tools.ServerLogger;
+import no.ntnu.tools.logger.ServerLogger;
 
 import java.io.IOException;
 import java.util.Map;
@@ -20,6 +23,7 @@ import java.util.Set;
  * A context for processing server messages.
  */
 public class ServerContext extends MessageContext {
+    private final DataCommAgentProvider dataAgentProvider;
     private final CentralHub centralHub;
 
     /**
@@ -28,12 +32,17 @@ public class ServerContext extends MessageContext {
      * @param agent the communication agent
      * @param centralHub the central hub to operate on
      */
-    public ServerContext(CommunicationAgent agent, CentralHub centralHub) {
+    public ServerContext(ControlCommAgent agent, DataCommAgentProvider dataAgentProvider, CentralHub centralHub) {
         super(agent);
+        if (dataAgentProvider == null) {
+            throw new IllegalStateException("Cannot create ServerContext, because dataAgentProvider is null.");
+        }
+
         if (centralHub == null) {
             throw new IllegalArgumentException("Cannot create ServerContext, because central hub is null.");
         }
 
+        this.dataAgentProvider = dataAgentProvider;
         this.centralHub = centralHub;
     }
 
@@ -46,7 +55,7 @@ public class ServerContext extends MessageContext {
      * @return the assigned address for the field node client
      * @throws ClientRegistrationException thrown if registration fails
      */
-    public int registerFieldNode(Map<Integer, DeviceClass> fnst, Map<Integer, Integer> fnsm, String name) throws ClientRegistrationException {
+    public int registerFieldNodeClient(Map<Integer, DeviceClass> fnst, Map<Integer, Integer> fnsm, String name) throws ClientRegistrationException {
         int clientAddress = centralHub.registerFieldNode(fnst, fnsm, name, agent);
         if (clientAddress != -1) {
             agent.setClientNodeAddress(clientAddress);
@@ -59,13 +68,21 @@ public class ServerContext extends MessageContext {
      * Registers a control panel client at the central server.
      *
      * @param compatibilityList the compatibility list for the control panel
+     * @param dataSinkPortNumber the port number for the control panel data sink
      * @return the assigned address for the control panel client
      * @throws ClientRegistrationException thrown if registration fails
      */
-    public int registerControlPanel(Set<DeviceClass> compatibilityList) throws ClientRegistrationException {
-        int clientAddress = centralHub.registerControlPanel(compatibilityList, agent);
-        if (clientAddress != -1) {
-            agent.setClientNodeAddress(clientAddress);
+    public int registerControlPanelClient(Set<DeviceClass> compatibilityList, int dataSinkPortNumber) throws ClientRegistrationException {
+        int clientAddress = -1;
+
+        try {
+            DataCommAgent dataAgent = dataAgentProvider.getDataCommAgent(dataSinkPortNumber);
+            clientAddress = centralHub.registerControlPanel(compatibilityList, agent, dataAgent);
+            if (clientAddress != -1) {
+                agent.setClientNodeAddress(clientAddress);
+            }
+        } catch (IOException e) {
+            throw new ClientRegistrationException(e.getMessage());
         }
 
         return clientAddress;
@@ -101,6 +118,16 @@ public class ServerContext extends MessageContext {
     }
 
     /**
+     * Unsubscribes a control panel from a field node.
+     *
+     * @param fieldNodeAddress the address of the field node to unsubscribe from
+     * @throws SubscriptionException thrown if unsubscribing fails
+     */
+    public void unsubscribeFromFieldNode(int fieldNodeAddress) throws SubscriptionException {
+        centralHub.unsubscribeFromFieldNode(agent, fieldNodeAddress);
+    }
+
+    /**
      * Updates the address for a given actuator for a given field node.
      * The information is updated locally at the central server, and does not provoke a request to the actual field
      * node.
@@ -126,7 +153,7 @@ public class ServerContext extends MessageContext {
         if (proxy != null) {
             // checks if the field node has an actuator with the given address
             if (proxy.getFNSM().containsKey(actuatorAddress)) {
-                CommunicationAgent agent = proxy.getAgent();
+                ControlCommAgent agent = proxy.getAgent();
                 agent.sendRequest(new FieldNodeActivateActuatorRequest(actuatorAddress, newState));
             } else {
                 throw new IOException("Cannot request actuator activation for actuator " +
@@ -147,6 +174,15 @@ public class ServerContext extends MessageContext {
      */
     public FieldNodeClientProxy getFieldNodeProxy(int fieldNodeAddress) {
         return centralHub.getFieldNodeProxy(fieldNodeAddress);
+    }
+
+    /**
+     * Returns the port number used for the sensor data process.
+     *
+     * @return sensor data service port number
+     */
+    public int getSensorDataServicePortNumber() {
+        return CentralServer.DATA_PORT_NUMBER;
     }
 
     @Override

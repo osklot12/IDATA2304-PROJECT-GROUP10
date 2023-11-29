@@ -2,6 +2,7 @@ package no.ntnu.network.message.response;
 
 import no.ntnu.exception.SerializationException;
 import no.ntnu.network.message.context.ServerContext;
+import no.ntnu.network.message.request.RequestMessage;
 import no.ntnu.network.message.serialize.NofspSerializationConstants;
 import no.ntnu.network.message.serialize.visitor.ByteSerializerVisitor;
 
@@ -36,5 +37,10 @@ public class VirtualActuatorUpdatedResponse extends StandardProcessingResponseMe
     @Override
     public byte[] accept(ByteSerializerVisitor visitor) throws SerializationException {
         return visitor.visitResponseMessage(this);
+    }
+
+    @Override
+    public String toString() {
+        return "virtual actuator has changed state successfully";
     }
 }

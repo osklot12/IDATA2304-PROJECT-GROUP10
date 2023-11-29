@@ -3,8 +3,11 @@ package no.ntnu.network.message.response;
 import no.ntnu.exception.SerializationException;
 import no.ntnu.fieldnode.device.DeviceClass;
 import no.ntnu.network.message.Message;
+import no.ntnu.network.message.common.ByteSerializableInteger;
 import no.ntnu.network.message.common.ByteSerializableString;
 import no.ntnu.network.message.context.ControlPanelContext;
+import no.ntnu.network.message.request.RequestMessage;
+import no.ntnu.network.message.request.SubscribeToFieldNodeRequest;
 import no.ntnu.network.message.serialize.NofspSerializationConstants;
 import no.ntnu.network.message.serialize.tool.DataTypeConverter;
 import no.ntnu.network.message.serialize.visitor.ByteSerializerVisitor;
@@ -17,6 +20,7 @@ import java.util.Map;
  * The response contains all the information the control panel needs about the field node.
  */
 public class SubscribedToFieldNodeResponse extends StandardProcessingResponseMessage<ControlPanelContext> {
+    private final int fieldNodeAddress;
     private final Map<Integer, DeviceClass> fnst;
     private final Map<Integer, Integer> fnsm;
     private final String name;
@@ -24,11 +28,12 @@ public class SubscribedToFieldNodeResponse extends StandardProcessingResponseMes
     /**
      * Creates a new SubscribedToFieldNodeResponse.
      *
+     * @param fieldNodeAddress the address of the field node
      * @param fnst the field node system table
      * @param fnsm the field node status map
      * @param name the name of the field node
      */
-    public SubscribedToFieldNodeResponse(Map<Integer, DeviceClass> fnst, Map<Integer, Integer> fnsm, String name) {
+    public SubscribedToFieldNodeResponse(int fieldNodeAddress, Map<Integer, DeviceClass> fnst, Map<Integer, Integer> fnsm, String name) {
         super(NofspSerializationConstants.SUBSCRIBED_TO_FIELD_NODE_CODE);
         if (fnst == null) {
             throw new IllegalArgumentException("Cannot create SubscribedToFieldNodeResponse, because fnst is null.");
@@ -42,6 +47,7 @@ public class SubscribedToFieldNodeResponse extends StandardProcessingResponseMes
             throw new IllegalArgumentException("Cannot create SubscribedToFieldNodeResponse, because name is null.");
         }
 
+        this.fieldNodeAddress = fieldNodeAddress;
         this.fnst = fnst;
         this.fnsm = fnsm;
         this.name = name;
@@ -51,25 +57,27 @@ public class SubscribedToFieldNodeResponse extends StandardProcessingResponseMes
      * Creates a new SubscribedToFieldNodeResponse.
      *
      * @param id the message id
+     * @param fieldNodeAddress the address of the field node
      * @param fnst the field node system table
      * @param fnsm the field node status map
      * @param name the name of the field node
      */
-    public SubscribedToFieldNodeResponse(int id, Map<Integer, DeviceClass> fnst, Map<Integer, Integer> fnsm, String name) {
-        this(fnst, fnsm, name);
+    public SubscribedToFieldNodeResponse(int id, int fieldNodeAddress, Map<Integer, DeviceClass> fnst, Map<Integer, Integer> fnsm, String name) {
+        this(fieldNodeAddress, fnst, fnsm, name);
 
         setId(id);
     }
 
     @Override
     protected void handleResponseProcessing(ControlPanelContext context) {
-        // TODO: handle processing
+        context.addVirtualFieldNode(fieldNodeAddress, fnst, fnsm, name);
     }
 
     @Override
     public byte[] accept(ByteSerializerVisitor visitor) throws SerializationException {
-        return visitor.visitResponseMessage(this, DataTypeConverter.getSerializableFnst(fnst),
-                DataTypeConverter.getSerializableFnsm(fnsm), new ByteSerializableString(name));
+        return visitor.visitResponseMessage(this, new ByteSerializableInteger(fieldNodeAddress),
+                DataTypeConverter.getSerializableFnst(fnst), DataTypeConverter.getSerializableFnsm(fnsm),
+                new ByteSerializableString(name));
     }
 
     @Override
