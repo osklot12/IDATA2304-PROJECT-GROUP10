@@ -12,7 +12,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 /**
  * Sends TCP (control) messages to another node in the network.
  */
-public class TCPMessageSender {
+public class TcpMessageSender {
     private final Socket socket;
     private final ConcurrentLinkedQueue<ControlMessage> queue;
     private final ByteSerializerVisitor serializer;
@@ -24,7 +24,7 @@ public class TCPMessageSender {
      * @param serializer the serializer to use for serialization of messages
      * @throws IOException thrown if an I/O exception occurs
      */
-    public TCPMessageSender(Socket socket, ByteSerializerVisitor serializer) throws IOException {
+    public TcpMessageSender(Socket socket, ByteSerializerVisitor serializer) throws IOException {
         if (socket == null) {
             throw new IllegalArgumentException("Cannot create TCPMessageSender, because socket is null.");
         }

@@ -33,6 +33,7 @@ public class UdpDatagramReceiver {
 
     /**
      * Returns the next received datagram packet.
+     * This method blocks until a datagram is received.
      *
      * @return next received datagram packet
      * @throws IOException thrown if an I/O exception occurs

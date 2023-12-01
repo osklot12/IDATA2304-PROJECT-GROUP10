@@ -33,7 +33,7 @@ import java.util.List;
 public abstract class ControlProcessAgent<C extends MessageContext> implements ControlCommAgent, RequestTimeoutListener {
     private static final long PENDING_REQUEST_TTL = 3000;
     private final List<ConnectionService> connectionServices;
-    private TCPControlProcess<C> controlProcess;
+    private TcpControlProcess<C> controlProcess;
     private volatile boolean connected;
     private volatile int clientNodeAddress;
     protected RequestManager requestManager;
@@ -112,7 +112,7 @@ public abstract class ControlProcessAgent<C extends MessageContext> implements C
         boolean success = false;
 
         try {
-            controlProcess = new TCPControlProcess<>(socket, serializer, deserializer);
+            controlProcess = new TcpControlProcess<>(socket, serializer, deserializer);
             success = true;
             Logger.info("Control process for " + getRemoteSocketAddress() + " has been established successfully.");
         } catch (IOException e) {

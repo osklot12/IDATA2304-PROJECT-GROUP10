@@ -13,7 +13,7 @@ import java.net.Socket;
 /**
  * Receives TCP (control) messages from another node in the network.
  */
-public class TCPMessageReceiver<C extends MessageContext> {
+public class TcpMessageReceiver<C extends MessageContext> {
     private final TlvReader socketReader;
     private final MessageDeserializer<C> deserializer;
 
@@ -23,7 +23,7 @@ public class TCPMessageReceiver<C extends MessageContext> {
      * @param socket the socket to receive messages from
      * @param deserializer the deserializer used to deserialize messages
      */
-    public TCPMessageReceiver(Socket socket, MessageDeserializer<C> deserializer) throws IOException {
+    public TcpMessageReceiver(Socket socket, MessageDeserializer<C> deserializer) throws IOException {
         if (socket == null) {
             throw new IllegalArgumentException("Cannot create TCPMessageReceiver, because socket is null");
         }

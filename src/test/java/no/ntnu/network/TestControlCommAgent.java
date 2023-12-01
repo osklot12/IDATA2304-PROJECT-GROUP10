@@ -2,7 +2,7 @@ package no.ntnu.network;
 
 import no.ntnu.network.message.request.RequestMessage;
 import no.ntnu.network.message.response.ResponseMessage;
-import no.ntnu.network.sensordataprocess.UdpDataSink;
+import no.ntnu.network.sensordataprocess.UdpDataCommAgentProvider;
 
 import java.io.IOException;
 
@@ -11,7 +11,7 @@ import java.io.IOException;
  * It can be difficult and sometimes impossible to test real communication agents, and this class provides means
  * to test without having a proper agent.
  */
-public class TestControlCommAgent implements ControlCommAgent, UdpDataSink {
+public class TestControlCommAgent implements ControlCommAgent, UdpDataCommAgentProvider {
     private final DataCommAgent dataCommAgent;
     private RequestMessage requestSent;
     private ResponseMessage responseSent;

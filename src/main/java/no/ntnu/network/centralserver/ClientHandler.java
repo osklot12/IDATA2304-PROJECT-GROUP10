@@ -2,7 +2,7 @@ package no.ntnu.network.centralserver;
 
 import no.ntnu.network.ControlProcessAgent;
 import no.ntnu.network.DataCommAgent;
-import no.ntnu.network.sensordataprocess.UdpDataSink;
+import no.ntnu.network.sensordataprocess.UdpDataCommAgentProvider;
 import no.ntnu.network.centralserver.centralhub.CentralHub;
 import no.ntnu.network.connectionservice.ClientGate;
 import no.ntnu.network.connectionservice.ConnServiceShutdownListener;
@@ -24,7 +24,7 @@ import java.net.Socket;
 /**
  * Responsible for handling all communication with a single client, acting as a communication agent for that client.
  */
-public class ClientHandler extends ControlProcessAgent<ServerContext> implements Runnable, ConnServiceShutdownListener, UdpDataSink {
+public class ClientHandler extends ControlProcessAgent<ServerContext> implements Runnable, ConnServiceShutdownListener, UdpDataCommAgentProvider {
     private static final long HEARTBEAT_INTERVAL = 30000;
     private static final long CLIENT_ACCEPTANCE_PHASE = 3000;
     private final ByteSerializerVisitor serializer;

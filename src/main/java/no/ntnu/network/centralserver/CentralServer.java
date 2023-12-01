@@ -1,10 +1,13 @@
 package no.ntnu.network.centralserver;
 
 import no.ntnu.network.centralserver.centralhub.CentralHub;
+import no.ntnu.network.connectionservice.sensordatarouter.SensorDataDestination;
+import no.ntnu.network.connectionservice.sensordatarouter.UdpSensorDataRouter;
 import no.ntnu.network.message.deserialize.NofspServerDeserializer;
+import no.ntnu.network.message.sensordata.SensorDataMessage;
 import no.ntnu.network.message.serialize.visitor.ByteSerializerVisitor;
 import no.ntnu.network.message.serialize.visitor.NofspSerializer;
-import no.ntnu.network.sensordataprocess.UdpDatagramReceiver;
+import no.ntnu.network.sensordataprocess.UdpSensorDataSink;
 import no.ntnu.tools.logger.Logger;
 
 import java.io.IOException;
@@ -38,7 +41,7 @@ public class CentralServer {
     private final NofspServerDeserializer deserializer;
     private volatile boolean running;
     private ServerSocket serverSocket;
-    private UdpDatagramReceiver datagramReceiver;
+    private UdpSensorDataRouter sensorDataRouter;
 
     /**
      * Creates a new CentralServer.
@@ -60,13 +63,18 @@ public class CentralServer {
 
         running = true;
         if (startHandlingIncomingSensorData()) {
-                Logger.info("Server listening for incoming UDP sensor data messages on port " + DATA_PORT_NUMBER + "...");
+            Logger.info("Server listening for incoming UDP sensor data messages on port " + DATA_PORT_NUMBER + "...");
             if (startHandlingIncomingClients()) {
                 Logger.info("Server listening for incoming client TPC connections on port " + CONTROL_PORT_NUMBER + "...");
             }
         }
     }
 
+    /**
+     * Starts handling incoming TCP client connections.
+     *
+     * @return true if successfully listening for incoming clients
+     */
     private boolean startHandlingIncomingClients() {
         boolean success = false;
 
@@ -95,49 +103,25 @@ public class CentralServer {
         return success;
     }
 
+    /**
+     * Starts handling incoming UDP sensor data.
+     *
+     * @return true if successfully listening for sensor data
+     */
     private boolean startHandlingIncomingSensorData() {
         boolean success = false;
 
-        if (establishUdpMessageReceiver()) {
-            Thread datagramReceivingThread = new Thread(() -> {
-                while (running) {
-                    handleNextReceivedDatagram();
-                }
-            });
-
-            datagramReceivingThread.start();
+        try {
+            UdpSensorDataSink sensorDataSink = new UdpSensorDataSink(deserializer, DATA_PORT_NUMBER);
+            sensorDataRouter = new UdpSensorDataRouter(sensorDataSink);
+            sensorDataRouter.addDestination(centralHub);
+            sensorDataRouter.start();
             success = true;
-        } else {
-            stop();
+        } catch (SocketException e) {
+            Logger.error("Could not start handling incoming sensor data: " + e.getMessage());
         }
 
         return success;
-    }
-
-    private boolean establishUdpMessageReceiver() {
-        boolean success = false;
-
-        try {
-            DatagramSocket datagramSocket = new DatagramSocket(DATA_PORT_NUMBER);
-            datagramReceiver = new UdpDatagramReceiver(datagramSocket, 1024);
-            success = true;
-        } catch (IOException e) {
-            Logger.error("Could not establish datagram socket: " + e.getMessage());
-        }
-
-        return success;
-    }
-
-    private void handleNextReceivedDatagram() {
-        try {
-            DatagramPacket receivedDatagram = datagramReceiver.getNextDatagramPacket();
-            if (receivedDatagram != null) {
-                ServerDatagramHandler datagramHandler = new ServerDatagramHandler(receivedDatagram, centralHub, deserializer);
-                datagramHandler.run();
-            }
-        } catch (IOException e) {
-            Logger.error("Could not receive datagram packet: " + e.getMessage());
-        }
     }
 
     /**
@@ -151,6 +135,7 @@ public class CentralServer {
         try {
             running = false;
             serverSocket.close();
+            sensorDataRouter.stop();
             Logger.info("Server has been shut down.");
         } catch (IOException e) {
             if (serverSocket.isClosed()) {

@@ -17,9 +17,9 @@ import java.net.Socket;
  *
  * @param <C> a message context used for message deserialization
  */
-public class TCPControlProcess<C extends MessageContext> {
-    private final TCPMessageSender messageSender;
-    private final TCPMessageReceiver<C> messageReceiver;
+public class TcpControlProcess<C extends MessageContext> {
+    private final TcpMessageSender messageSender;
+    private final TcpMessageReceiver<C> messageReceiver;
 
     /**
      * Creates a new TCPControlProcess.
@@ -28,7 +28,7 @@ public class TCPControlProcess<C extends MessageContext> {
      * @param serializer the serializer for serializing messages
      * @param deserializer the deserializer for deserializing messages
      */
-    public TCPControlProcess(Socket socket, ByteSerializerVisitor serializer, MessageDeserializer<C> deserializer) throws IOException {
+    public TcpControlProcess(Socket socket, ByteSerializerVisitor serializer, MessageDeserializer<C> deserializer) throws IOException {
         if (serializer == null) {
             throw new IllegalArgumentException("Cannot create TCPControlProcess, because serializer is null");
         }
@@ -37,8 +37,8 @@ public class TCPControlProcess<C extends MessageContext> {
             throw new IllegalArgumentException("Cannot create TCPControlProcess, because deserializer is null");
         }
 
-        this.messageSender = new TCPMessageSender(socket, serializer);
-        this.messageReceiver = new TCPMessageReceiver<>(socket, deserializer);
+        this.messageSender = new TcpMessageSender(socket, serializer);
+        this.messageReceiver = new TcpMessageReceiver<>(socket, deserializer);
     }
 
     /**

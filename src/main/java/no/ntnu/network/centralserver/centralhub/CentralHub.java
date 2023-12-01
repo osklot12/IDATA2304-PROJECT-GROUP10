@@ -7,6 +7,7 @@ import no.ntnu.network.DataCommAgent;
 import no.ntnu.network.centralserver.centralhub.clientproxy.ClientProxy;
 import no.ntnu.network.centralserver.centralhub.clientproxy.ControlPanelClientProxy;
 import no.ntnu.network.centralserver.centralhub.clientproxy.FieldNodeClientProxy;
+import no.ntnu.network.connectionservice.sensordatarouter.SensorDataDestination;
 import no.ntnu.network.message.deserialize.component.DeviceLookupTable;
 import no.ntnu.network.message.request.AdlUpdateRequest;
 import no.ntnu.network.message.request.ServerFnsmNotificationRequest;
@@ -22,7 +23,7 @@ import java.util.*;
  * Although the class does handle client communication, it is not dependent on a concrete communication implementation,
  * and can therefore handle client communication of any type.
  */
-public class CentralHub implements DeviceLookupTable {
+public class CentralHub implements SensorDataDestination, DeviceLookupTable {
     private final Map<Integer, FieldNodeClientProxy> fieldNodes;
     private final Map<Integer, ControlPanelClientProxy> controlPanels;
     private final Map<Integer, Set<Integer>> sensorDataRoutingTable;
@@ -400,21 +401,15 @@ public class CentralHub implements DeviceLookupTable {
         return fieldNodes.get(clientAddress).getFNST().get(deviceAddress);
     }
 
-    /**
-     * Routes the sensor data message to the subscribers of the source client.
-     *
-     * @param message the sensor data message to route
-     */
-    public void routeSensorDataToSubscribers(SensorDataMessage message) {
-        if (message == null) {
-            throw new IllegalArgumentException("Cannot route sensor data message, because message is null.");
-        }
+    @Override
+    public void receiveSensorData(SensorDataMessage sensorData) {
+        // further routes the sensor data to the subscribed control panels
+        Set<Integer> subscribers = getFieldNodeSubscribers(sensorData.getClientNodeAddress());
 
-        Set<Integer> subscribers = getFieldNodeSubscribers(message.getClientNodeAddress());
         subscribers.forEach(subscriberAddress -> {
             ControlPanelClientProxy controlPanel = controlPanels.get(subscriberAddress);
             try {
-                controlPanel.sendSensorData(message);
+                controlPanel.sendSensorData(sensorData);
             } catch (IOException e) {
                 Logger.error("Cannot send sensor data to control panel with address " + subscriberAddress + ": " +
                         e.getMessage());

@@ -2,29 +2,31 @@ package no.ntnu.network.client;
 
 import no.ntnu.controlpanel.ControlPanel;
 import no.ntnu.network.centralserver.CentralServer;
+import no.ntnu.network.connectionservice.sensordatarouter.SensorDataDestination;
+import no.ntnu.network.connectionservice.sensordatarouter.UdpSensorDataRouter;
 import no.ntnu.network.message.Message;
 import no.ntnu.network.message.context.ControlPanelContext;
 import no.ntnu.network.message.deserialize.NofspControlPanelDeserializer;
 import no.ntnu.network.message.request.*;
+import no.ntnu.network.message.sensordata.SensorDataMessage;
 import no.ntnu.network.message.serialize.visitor.ByteSerializerVisitor;
 import no.ntnu.network.message.serialize.visitor.NofspSerializer;
-import no.ntnu.network.sensordataprocess.UdpDatagramReceiver;
+import no.ntnu.network.sensordataprocess.UdpSensorDataSink;
 import no.ntnu.tools.logger.Logger;
 
 import java.io.IOException;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
+import java.net.SocketException;
 
 /**
  * A client for a control panel, connecting it to a central server using NOFSP.
  * The class is necessary for a control panel to be able to monitor and control field nodes in the network.
  */
-public class ControlPanelClient extends Client<ControlPanelContext> {
+public class ControlPanelClient extends Client<ControlPanelContext> implements SensorDataDestination {
     private final ControlPanel controlPanel;
     private final ControlPanelContext context;
     private final ByteSerializerVisitor serializer;
     private final NofspControlPanelDeserializer deserializer;
-    private UdpDatagramReceiver datagramReceiver;
+    private UdpSensorDataRouter sensorDataRouter;
     private volatile boolean running;
 
     /**
@@ -52,59 +54,31 @@ public class ControlPanelClient extends Client<ControlPanelContext> {
 
         running = true;
         if (startHandlingIncomingSensorData() && (connectToServer(serverAddress, CentralServer.CONTROL_PORT_NUMBER, serializer, deserializer))) {
-                registerControlPanel();
-                subscribeToFieldNode(0);
-            try {
-                Thread.sleep(10000);
-                sendRequest(new DisconnectRequest());
-            } catch (InterruptedException | IOException e) {
-                throw new RuntimeException(e);
-            }
+            registerControlPanel();
+            subscribeToFieldNode(0);
+
         }
     }
 
+    /**
+     * Starts handling incoming UDP sensor data.
+     *
+     * @return true if successfully listening for sensor data
+     */
     private boolean startHandlingIncomingSensorData() {
         boolean success = false;
 
-        if (establishUdpMessageReceiver()) {
-            Thread datagramReceivingThread = new Thread(() -> {
-                while (running) {
-                    handleNextReceivedDatagram();
-                }
-            });
-
-            datagramReceivingThread.start();
+        try {
+            UdpSensorDataSink sensorDataSink = new UdpSensorDataSink(deserializer);
+            sensorDataRouter = new UdpSensorDataRouter(sensorDataSink);
+            sensorDataRouter.addDestination(this);
+            sensorDataRouter.start();
             success = true;
+        } catch (SocketException e) {
+            Logger.error("Could not start handling incoming sensor data: " + e.getMessage());
         }
 
         return success;
-    }
-
-    private boolean establishUdpMessageReceiver() {
-        boolean success = false;
-
-        try {
-            DatagramSocket datagramSocket = new DatagramSocket();
-            datagramReceiver = new UdpDatagramReceiver(datagramSocket, 1024);
-            success = true;
-            Logger.info("Sensor data sink has been established on port " + datagramSocket.getLocalPort() + "...");
-        } catch (IOException e) {
-            Logger.error("Could not establish datagram socket: " + e.getMessage());
-        }
-
-        return success;
-    }
-
-    private void handleNextReceivedDatagram() {
-        try {
-            DatagramPacket receivedDatagram = datagramReceiver.getNextDatagramPacket();
-            if (receivedDatagram != null) {
-                ControlPanelDatagramHandler datagramHandler = new ControlPanelDatagramHandler(receivedDatagram, controlPanel, deserializer);
-                datagramHandler.run();
-            }
-        } catch (IOException e) {
-            Logger.error("Could not receive datagram packet: " + e.getMessage());
-        }
     }
 
     /**
@@ -112,7 +86,7 @@ public class ControlPanelClient extends Client<ControlPanelContext> {
      */
     private void registerControlPanel() {
         try {
-            sendRequest(new RegisterControlPanelRequest(controlPanel.getCompatibilityList(), datagramReceiver.getDatagramSocketPortNumber()));
+            sendRequest(new RegisterControlPanelRequest(controlPanel.getCompatibilityList(), sensorDataRouter.getLocalPortNumber()));
         } catch (IOException e) {
             Logger.error("Cannot send registration request: " + e.getMessage());
         }
@@ -155,5 +129,11 @@ public class ControlPanelClient extends Client<ControlPanelContext> {
         } catch (IOException e) {
             Logger.error("Cannot process received message: " + e.getMessage());
         }
+    }
+
+    @Override
+    public void receiveSensorData(SensorDataMessage sensorData) {
+        Logger.info(sensorData.toString());
+        sensorData.extractData(controlPanel);
     }
 }

@@ -7,8 +7,7 @@ import no.ntnu.fieldnode.device.DeviceClass;
 import no.ntnu.network.ControlCommAgent;
 import no.ntnu.network.DataCommAgent;
 import no.ntnu.network.representation.FieldNodeInformation;
-import no.ntnu.network.sensordataprocess.UdpDataSink;
-import no.ntnu.network.centralserver.CentralServer;
+import no.ntnu.network.sensordataprocess.UdpDataCommAgentProvider;
 import no.ntnu.network.centralserver.centralhub.CentralHub;
 import no.ntnu.network.centralserver.centralhub.clientproxy.FieldNodeClientProxy;
 import no.ntnu.network.message.request.FieldNodeActivateActuatorRequest;
@@ -24,7 +23,7 @@ import java.util.Set;
  * A message context for processing server messages.
  */
 public class ServerContext extends MessageContext {
-    private final UdpDataSink udpDataSink;
+    private final UdpDataCommAgentProvider udpDataSink;
     private final CentralHub centralHub;
 
     /**
@@ -34,7 +33,7 @@ public class ServerContext extends MessageContext {
      * @param udpDataSink the
      * @param centralHub the central hub to operate on
      */
-    public ServerContext(ControlCommAgent agent, UdpDataSink udpDataSink, CentralHub centralHub) {
+    public ServerContext(ControlCommAgent agent, UdpDataCommAgentProvider udpDataSink, CentralHub centralHub) {
         super(agent);
         if (udpDataSink == null) {
             throw new IllegalStateException("Cannot create ServerContext, because dataAgentProvider is null.");

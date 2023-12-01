@@ -7,7 +7,7 @@ import java.io.IOException;
 /**
  * Provides data communication agents for a network entity using UDP.
  */
-public interface UdpDataSink {
+public interface UdpDataCommAgentProvider {
     /**
      * Establishes and returns a data communication agent, which can be used to send sensor data.
      *
