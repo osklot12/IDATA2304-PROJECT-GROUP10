@@ -15,10 +15,7 @@ import no.ntnu.network.representation.FieldNodeInformation;
 import no.ntnu.tools.logger.Logger;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * The CentralHub is the 'logic class' for the central server, responsible for managing clients.
@@ -151,73 +148,65 @@ public class CentralHub implements DeviceLookupTable {
      *
      * @param subscriber the communication agent for the control panel
      * @param fieldNodeAddress the node address of the field node to subscribe to
-     * @return the corresponding field node client proxy
-     * @throws SubscriptionException thrown if subscribing fails
+     * @return an Optional containing the corresponding field node client proxy, or empty if subscription fails
+     * @throws SubscriptionException if subscribing fails
      */
-    public FieldNodeClientProxy subscribeToFieldNode(ControlCommAgent subscriber, int fieldNodeAddress) throws SubscriptionException{
-        if (subscriber == null) {
-            throw new IllegalArgumentException("Cannot subscribe to field node because subscriber is null.");
+    public FieldNodeClientProxy subscribeToFieldNode(ControlCommAgent subscriber, int fieldNodeAddress)
+            throws SubscriptionException {
+        Objects.requireNonNull(subscriber, "Cannot subscribe to field node because subscriber is null.");
+
+        if (!sensorDataRoutingTable.containsKey(fieldNodeAddress)) {
+            throw new SubscriptionException(formatExceptionMessage("no such field node exists", fieldNodeAddress));
         }
 
-        FieldNodeClientProxy fieldNodeProxy = null;
-        int subscriberAddress = subscriber.getClientNodeAddress();
-        // checks if the given field node address is valid
-        if (sensorDataRoutingTable.containsKey(fieldNodeAddress)) {
-            fieldNodeProxy = handleFieldNodeSubscription(subscriberAddress, fieldNodeAddress);
-        } else {
-            throw new SubscriptionException("Cannot subscribe to field node with address " + fieldNodeAddress +
-                    ", because no such field node exists.");
-        }
-
-        return fieldNodeProxy;
+        return handleFieldNodeSubscription(subscriber.getClientNodeAddress(), fieldNodeAddress);
     }
 
     /**
      * Handles the subscription to a field node.
-     * As for now, control panels are the only clients that can subscribe to field nodes.
-     * This method can be modified to allow new clients to also subscribe to fields nodes.
+     * Only control panels can currently subscribe to field nodes.
+     * This method can be extended to allow new clients to subscribe.
      *
      * @param subscriberAddress the node address of the subscriber
      * @param fieldNodeAddress the node address of the field node to subscribe to
-     * @return the client proxy for the field node subscribed to
-     * @throws SubscriptionException thrown if subscription fails
+     * @return the client proxy for the field node, or null if subscription is not successful
+     * @throws SubscriptionException if subscription fails
      */
-    private FieldNodeClientProxy handleFieldNodeSubscription(int subscriberAddress, int fieldNodeAddress) throws SubscriptionException {
-        FieldNodeClientProxy fieldNodeProxy = null;
-
-        // checks if the control panel is registered
-        if (controlPanels.containsKey(subscriberAddress)) {
-
-            // checks if control panel is already subscribed
-            if (getFieldNodeSubscribers(fieldNodeAddress).contains(subscriberAddress)) {
-                throw new SubscriptionException("Cannot subscribe to field node with address " + fieldNodeAddress +
-                        ", because control panel is already subscribed.");
-            }
-
-            Set<Integer> previousAdl = getAdlForFieldNode(fieldNodeAddress);
-
-            // handles the routing configuration
-            addFieldNodeSubscriber(subscriberAddress, fieldNodeAddress);
-
-            Set<Integer> newAdl = getAdlForFieldNode(fieldNodeAddress);
-            // only trigger adl update if adl changes
-            if (!previousAdl.equals(newAdl)) {
-                try {
-                    sendAdlUpdate(fieldNodeAddress);
-                } catch (IOException e) {
-                    // ensuring atomicity principle by removing subscriber in case of error
-                    removeFieldNodeSubscriber(subscriberAddress, fieldNodeAddress);
-                    throw new SubscriptionException("Cannot subscribe to field node with address " + fieldNodeAddress +
-                            ", because ADL update failed to send: " + e.getMessage());
-                }
-            }
-            fieldNodeProxy = fieldNodes.get(fieldNodeAddress);
-        } else {
-            throw new SubscriptionException("Cannot subscribe to field node with address " + fieldNodeAddress +
-                    ", because the control panel is not registered.");
+    private FieldNodeClientProxy handleFieldNodeSubscription(int subscriberAddress, int fieldNodeAddress)
+            throws SubscriptionException {
+        if (!validControlPanel(subscriberAddress)) {
+            throw new SubscriptionException(formatExceptionMessage("control panel is not registered", fieldNodeAddress));
         }
 
-        return fieldNodeProxy;
+        if (getFieldNodeSubscribers(fieldNodeAddress).contains(subscriberAddress)) {
+            throw new SubscriptionException(formatExceptionMessage("control panel is already subscribed", fieldNodeAddress));
+        }
+
+        Set<Integer> previousAdl = getAdlForFieldNode(fieldNodeAddress);
+        addFieldNodeSubscriber(subscriberAddress, fieldNodeAddress);
+
+        if (adlChanged(previousAdl, fieldNodeAddress)) {
+            try {
+                sendAdlUpdate(fieldNodeAddress);
+            } catch (IOException e) {
+                removeFieldNodeSubscriber(subscriberAddress, fieldNodeAddress);
+                throw new SubscriptionException("Cannot send ADL update request to field node: " + e.getMessage());
+            }
+        }
+
+        return fieldNodes.get(fieldNodeAddress);
+    }
+
+    private boolean adlChanged(Set<Integer> previousAdl, int fieldNodeAddress) {
+        return !previousAdl.equals(getAdlForFieldNode(fieldNodeAddress));
+    }
+
+    private boolean validControlPanel(int subscriberAddress) {
+        return controlPanels.containsKey(subscriberAddress);
+    }
+
+    private String formatExceptionMessage(String reason, int fieldNodeAddress) {
+        return String.format("Cannot subscribe to field node with address %d, because %s.", fieldNodeAddress, reason);
     }
 
     /**
