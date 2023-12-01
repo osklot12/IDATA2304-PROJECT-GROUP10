@@ -10,28 +10,31 @@ import java.net.InetAddress;
 import java.net.SocketException;
 
 /**
- * A sensor data process responsible for pushing sensor data messages to a given destination.
+ * A sensor data process responsible for pushing sensor data messages to a given destination using UDP.
  */
-public class SensorDataPushingProcess implements DataCommAgent {
+public class UdpSensorDataPusher implements DataCommAgent {
     private static final int MAX_DATAGRAM_SIZE = 1024;
     private final InetAddress destIpAddress;
     private final int destPortNumber;
-    private final UdpMessageSender messageSender;
+    private final UdpDatagramSender messageSender;
+    private final ByteSerializerVisitor serializer;
 
     /**
      * Creates a new SensorDataProcess.
      *
      * @throws SocketException thrown if socket establishment fails
      */
-    public SensorDataPushingProcess(InetAddress destIpAddress, int destPortNumber, ByteSerializerVisitor serializer) throws SocketException {
+    public UdpSensorDataPusher(InetAddress destIpAddress, int destPortNumber, ByteSerializerVisitor serializer) throws SocketException {
         this.destIpAddress = destIpAddress;
         this.destPortNumber = destPortNumber;
         DatagramSocket datagramSocket = new DatagramSocket();
-        messageSender = new UdpMessageSender(datagramSocket, serializer, MAX_DATAGRAM_SIZE);
+        this.messageSender = new UdpDatagramSender(datagramSocket, serializer, MAX_DATAGRAM_SIZE);
+        this.serializer = serializer;
     }
 
     @Override
     public void sendSensorData(SensorDataMessage sensorData) throws IOException {
-        messageSender.sendMessage(sensorData, destIpAddress, destPortNumber);
+        byte[] bytesToSend = serializer.serialize(sensorData);
+        messageSender.sendMessage(bytesToSend, destIpAddress, destPortNumber);
     }
 }

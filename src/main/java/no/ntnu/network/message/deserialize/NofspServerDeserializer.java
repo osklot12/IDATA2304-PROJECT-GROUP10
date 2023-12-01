@@ -24,6 +24,7 @@ import no.ntnu.network.message.serialize.NofspSerializationConstants;
 import no.ntnu.network.message.serialize.tool.DataTypeConverter;
 import no.ntnu.network.message.serialize.tool.tlv.Tlv;
 import no.ntnu.network.message.serialize.tool.tlv.TlvReader;
+import no.ntnu.network.representation.FieldNodeInformation;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -92,11 +93,13 @@ public class NofspServerDeserializer extends NofspMessageDeserializer<ServerCont
         Tlv fnsmTlv = parameterReader.readNextTlv();
         Map<Integer, Integer> fnsm = getFnsm(fnsmTlv);
 
-        // deserializes the name (only if one is found)
+        // deserializes the name
         Tlv nameTlv = parameterReader.readNextTlv();
         String name = getFieldNodeName(nameTlv);
 
-        request = new RegisterFieldNodeRequest(messageId, fnst, fnsm, name);
+        FieldNodeInformation fieldNodeInformation = new FieldNodeInformation(fnst, fnsm, name);
+
+        request = new RegisterFieldNodeRequest(messageId, fieldNodeInformation);
 
         return request;
     }

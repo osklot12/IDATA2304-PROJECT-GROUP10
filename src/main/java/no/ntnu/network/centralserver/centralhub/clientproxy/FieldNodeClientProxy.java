@@ -5,6 +5,7 @@ import no.ntnu.exception.NoSuchActuatorException;
 import no.ntnu.exception.NoSuchDeviceException;
 import no.ntnu.fieldnode.device.DeviceClass;
 import no.ntnu.network.ControlCommAgent;
+import no.ntnu.network.representation.FieldNodeInformation;
 
 import java.util.Map;
 
@@ -20,13 +21,14 @@ public class FieldNodeClientProxy extends ClientProxy {
      * Creates a new FieldNodeClientProxy.
      *
      * @param agent the client handler
+     * @param fieldNodeInformation information about the field node
      */
-    public FieldNodeClientProxy(ControlCommAgent agent, Map<Integer, DeviceClass> fnst, Map<Integer, Integer> fnsm, String name) {
+    public FieldNodeClientProxy(ControlCommAgent agent, FieldNodeInformation fieldNodeInformation) {
         super(agent);
 
-        this.fnst = fnst;
-        this.fnsm = fnsm;
-        this.name = name;
+        this.fnst = fieldNodeInformation.fnst();
+        this.fnsm = fieldNodeInformation.fnsm();
+        this.name = fieldNodeInformation.name();
     }
 
     /**

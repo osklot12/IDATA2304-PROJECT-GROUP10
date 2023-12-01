@@ -7,9 +7,8 @@ import no.ntnu.network.message.response.ResponseMessage;
 import java.io.IOException;
 
 /**
- * A context that can be used by messages for processing.
- * The MessageContext provides the message with necessary methods for processing, and encapsulates the means the logic
- * for this processing.
+ * A set of operations that are used by messages for processing, encapsulating the logic required.
+ * The class acts as an intermediate layer between the messages and the objects on which they operate on.
  */
 public abstract class MessageContext {
     protected final ControlCommAgent agent;
@@ -29,7 +28,6 @@ public abstract class MessageContext {
 
     /**
      * Responds to the remote peer.
-     * Used when processing a request.
      *
      * @param response the response message
      * @throws IOException thrown if an I/O exception is thrown

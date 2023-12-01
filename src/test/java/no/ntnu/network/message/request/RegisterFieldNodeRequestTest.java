@@ -4,6 +4,7 @@ import no.ntnu.fieldnode.device.DeviceClass;
 import no.ntnu.network.TestControlCommAgent;
 import no.ntnu.network.centralserver.centralhub.CentralHub;
 import no.ntnu.network.message.context.ServerContext;
+import no.ntnu.network.representation.FieldNodeInformation;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -45,7 +46,7 @@ public class RegisterFieldNodeRequestTest {
 
         name = "testFieldNode";
 
-        request = new RegisterFieldNodeRequest(fnst, fnsm, name);
+        request = new RegisterFieldNodeRequest(new FieldNodeInformation(fnst, fnsm, name));
     }
 
     /**

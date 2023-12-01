@@ -33,11 +33,11 @@ import java.util.List;
 public abstract class ControlProcessAgent<C extends MessageContext> implements ControlCommAgent, RequestTimeoutListener {
     private static final long PENDING_REQUEST_TTL = 3000;
     private final List<ConnectionService> connectionServices;
-    protected Socket socket;
     private TCPControlProcess<C> controlProcess;
-    protected RequestManager requestManager;
     private volatile boolean connected;
     private volatile int clientNodeAddress;
+    protected RequestManager requestManager;
+    protected Socket socket;
 
     /**
      * Creates a new CommunicationAgent.

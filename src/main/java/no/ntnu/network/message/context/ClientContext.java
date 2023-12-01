@@ -6,7 +6,7 @@ import no.ntnu.network.message.response.ResponseMessage;
 import no.ntnu.tools.logger.ClientLogger;
 
 /**
- * A context for processing client messages.
+ * A message context for processing client messages.
  */
 public abstract class ClientContext extends MessageContext {
     /**

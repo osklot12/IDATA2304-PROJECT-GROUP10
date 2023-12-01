@@ -13,7 +13,8 @@ import no.ntnu.network.message.sensordata.SduSensorDataMessage;
 import no.ntnu.network.message.sensordata.SensorDataMessage;
 import no.ntnu.network.message.serialize.visitor.ByteSerializerVisitor;
 import no.ntnu.network.message.serialize.visitor.NofspSerializer;
-import no.ntnu.network.sensordataprocess.SensorDataPushingProcess;
+import no.ntnu.network.representation.FieldNodeInformation;
+import no.ntnu.network.sensordataprocess.UdpSensorDataPusher;
 import no.ntnu.tools.logger.Logger;
 
 import java.io.IOException;
@@ -32,7 +33,7 @@ public class FieldNodeClient extends Client<FieldNodeContext> implements FieldNo
     private final FieldNode fieldNode;
     private final Set<Integer> adl;
     private final FieldNodeContext context;
-    private SensorDataPushingProcess sensorDataProcess;
+    private UdpSensorDataPusher sensorDataProcess;
 
     /**
      * Creates a new FieldNodeClient.
@@ -74,15 +75,17 @@ public class FieldNodeClient extends Client<FieldNodeContext> implements FieldNo
      * Registers the field node at the server.
      */
     private void registerFieldNode() {
+        FieldNodeInformation fieldNodeInformation =
+                new FieldNodeInformation(fieldNode.getFNST(), fieldNode.getFNSM(), fieldNode.getName());
         try {
-            sendRequest(new RegisterFieldNodeRequest(fieldNode.getFNST(), fieldNode.getFNSM(), fieldNode.getName()));
+            sendRequest(new RegisterFieldNodeRequest(fieldNodeInformation));
         } catch (IOException e) {
             Logger.error("Cannot send registration request: " + e.getMessage());
         }
     }
 
     private void establishSensorDataProcess() throws SocketException {
-        sensorDataProcess = new SensorDataPushingProcess(getServerInetAddress(), CentralServer.DATA_PORT_NUMBER, serializer);
+        sensorDataProcess = new UdpSensorDataPusher(getServerInetAddress(), CentralServer.DATA_PORT_NUMBER, serializer);
     }
 
 

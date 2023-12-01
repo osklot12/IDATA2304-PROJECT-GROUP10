@@ -11,7 +11,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * A context for processing control panel messages.
+ * A message context for processing control panel messages.
  */
 public class ControlPanelContext extends ClientContext {
     private final ControlPanel controlPanel;

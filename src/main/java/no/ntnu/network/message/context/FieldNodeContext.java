@@ -9,7 +9,7 @@ import java.util.Iterator;
 import java.util.Set;
 
 /**
- * A context for processing field node messages.
+ * A message context for processing field node messages.
  */
 public class FieldNodeContext extends ClientContext {
     private final FieldNode fieldNode;

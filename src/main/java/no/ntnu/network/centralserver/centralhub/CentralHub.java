@@ -11,6 +11,7 @@ import no.ntnu.network.message.deserialize.component.DeviceLookupTable;
 import no.ntnu.network.message.request.AdlUpdateRequest;
 import no.ntnu.network.message.request.ServerFnsmNotificationRequest;
 import no.ntnu.network.message.sensordata.SensorDataMessage;
+import no.ntnu.network.representation.FieldNodeInformation;
 import no.ntnu.tools.logger.Logger;
 
 import java.io.IOException;
@@ -41,31 +42,21 @@ public class CentralHub implements DeviceLookupTable {
     /**
      * Registers a field node client.
      *
-     * @param fnst the field node system table
-     * @param fnsm the field node status map
-     * @param name the name of the field node
+     * @param fieldNodeInformation information about the field node
      * @param agent the associated communication agent
      * @return the assigned address for the field node
      * @throws ClientRegistrationException thrown if registration fails
      */
-    public int registerFieldNode(Map<Integer, DeviceClass> fnst, Map<Integer, Integer> fnsm, String name, ControlCommAgent agent) throws ClientRegistrationException {
-        if (fnst == null) {
-            throw new IllegalArgumentException("Cannot register field node, because fnst is null.");
-        }
-
-        if (fnsm == null) {
-            throw new IllegalArgumentException("Cannot register field node, because fnsm is null.");
-        }
-
-        if (name == null) {
-            throw new IllegalArgumentException("Cannot register field node, because name is null.");
+    public int registerFieldNode(FieldNodeInformation fieldNodeInformation, ControlCommAgent agent) throws ClientRegistrationException {
+        if (fieldNodeInformation == null) {
+            throw new IllegalArgumentException("Cannot register field node, because fieldNodeInformation is null.");
         }
 
         if (agent == null) {
             throw new IllegalArgumentException("Cannot register field node, because agent is null.");
         }
 
-        FieldNodeClientProxy clientProxy = new FieldNodeClientProxy(agent, fnst, fnsm, name);
+        FieldNodeClientProxy clientProxy = new FieldNodeClientProxy(agent, fieldNodeInformation);
         int clientAddress = registerClient(clientProxy, fieldNodes);
         // checks if address is -1, which indicated that the client is already registered
         if (clientAddress == -1) {

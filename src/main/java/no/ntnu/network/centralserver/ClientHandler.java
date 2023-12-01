@@ -2,7 +2,7 @@ package no.ntnu.network.centralserver;
 
 import no.ntnu.network.ControlProcessAgent;
 import no.ntnu.network.DataCommAgent;
-import no.ntnu.network.DataCommAgentProvider;
+import no.ntnu.network.sensordataprocess.UdpDataSink;
 import no.ntnu.network.centralserver.centralhub.CentralHub;
 import no.ntnu.network.connectionservice.ClientGate;
 import no.ntnu.network.connectionservice.ConnServiceShutdownListener;
@@ -14,7 +14,7 @@ import no.ntnu.network.message.request.RequestMessage;
 import no.ntnu.network.message.response.ResponseMessage;
 import no.ntnu.network.message.serialize.NofspSerializationConstants;
 import no.ntnu.network.message.serialize.visitor.ByteSerializerVisitor;
-import no.ntnu.network.sensordataprocess.SensorDataPushingProcess;
+import no.ntnu.network.sensordataprocess.UdpSensorDataPusher;
 import no.ntnu.tools.logger.Logger;
 import no.ntnu.tools.logger.ServerLogger;
 
@@ -22,9 +22,9 @@ import java.io.IOException;
 import java.net.Socket;
 
 /**
- * A class responsible for handling all communication for a server with a single client.
+ * Responsible for handling all communication with a single client, acting as a communication agent for that client.
  */
-public class ClientHandler extends ControlProcessAgent<ServerContext> implements Runnable, ConnServiceShutdownListener, DataCommAgentProvider {
+public class ClientHandler extends ControlProcessAgent<ServerContext> implements Runnable, ConnServiceShutdownListener, UdpDataSink {
     private static final long HEARTBEAT_INTERVAL = 30000;
     private static final long CLIENT_ACCEPTANCE_PHASE = 3000;
     private final ByteSerializerVisitor serializer;
@@ -159,6 +159,6 @@ public class ClientHandler extends ControlProcessAgent<ServerContext> implements
 
     @Override
     public DataCommAgent getDataCommAgent(int portNumber) throws IOException {
-        return new SensorDataPushingProcess(socket.getInetAddress(), portNumber, serializer);
+        return new UdpSensorDataPusher(socket.getInetAddress(), portNumber, serializer);
     }
 }

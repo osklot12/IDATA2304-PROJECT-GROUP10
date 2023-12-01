@@ -11,6 +11,7 @@ import no.ntnu.network.message.response.error.RegistrationDeclinedError;
 import no.ntnu.network.message.serialize.NofspSerializationConstants;
 import no.ntnu.network.message.serialize.tool.DataTypeConverter;
 import no.ntnu.network.message.serialize.visitor.ByteSerializerVisitor;
+import no.ntnu.network.representation.FieldNodeInformation;
 
 import java.util.Map;
 
@@ -18,75 +19,42 @@ import java.util.Map;
  * A request to register a {@code FieldNode} at the central server.
  */
 public class RegisterFieldNodeRequest extends StandardProcessingRequestMessage<ServerContext> {
-    private final Map<Integer, DeviceClass> fnst;
-    private final Map<Integer, Integer> fnsm;
-    private final String name;
+    private final FieldNodeInformation fieldNodeInformation;
 
     /**
      * Creates a new RegisterFieldNodeRequest.
      *
-     * @param fnst the field node system table
-     * @param fnsm the field node status map
-     * @param name name of the field node
+     * @param fieldNodeInformation information about the field node
      */
-    public RegisterFieldNodeRequest(Map<Integer, DeviceClass> fnst, Map<Integer, Integer> fnsm, String name) {
+    public RegisterFieldNodeRequest(FieldNodeInformation fieldNodeInformation) {
         super(NofspSerializationConstants.REGISTER_FIELD_NODE_COMMAND);
-        if (fnst == null) {
-            throw new IllegalArgumentException("Cannot create RegisterFieldNodeRequest, because fnst is null.");
+        if (fieldNodeInformation == null) {
+            throw new IllegalArgumentException("Cannot create RegisterFieldNodeRequest, because fieldNodeInformation" +
+                    " is null.");
         }
 
-        if (fnsm == null) {
-            throw new IllegalArgumentException("Cannot create RegisterFieldNodeRequest, because fnsm is null.");
-        }
-
-        if (name == null) {
-            throw new IllegalArgumentException("Cannot create RegisterFieldNodeRequest, because name is null");
-        }
-
-        this.fnst = fnst;
-        this.fnsm = fnsm;
-        this.name = name;
+        this.fieldNodeInformation = fieldNodeInformation;
     }
 
     /**
      * Creates a new RegisterFieldNodeRequest.
      *
      * @param id the message id
-     * @param fnst the field node system table
-     * @param fnsm the field node status map
-     * @param name name of the field node
+     * @param fieldNodeInformation information about the field node
      */
-    public RegisterFieldNodeRequest(int id, Map<Integer, DeviceClass> fnst, Map<Integer, Integer> fnsm, String name) {
-        this(fnst, fnsm, name);
+    public RegisterFieldNodeRequest(int id, FieldNodeInformation fieldNodeInformation) {
+        this(fieldNodeInformation);
 
         setId(id);
     }
 
     /**
-     * Returns the FNST for the field node.
+     * Returns the field node information.
      *
-     * @return the fnst
+     * @return the field node information
      */
-    public Map<Integer, DeviceClass> getFnst() {
-        return fnst;
-    }
-
-    /**
-     * Returns the field node status map.
-     *
-     * @return the fnsm
-     */
-    public Map<Integer, Integer> getFnsm() {
-        return fnsm;
-    }
-
-    /**
-     * Returns the name for the field node.
-     *
-     * @return the name
-     */
-    public String getName() {
-        return name;
+    public FieldNodeInformation getFieldNodeInformation() {
+        return fieldNodeInformation;
     }
 
     @Override
@@ -94,7 +62,7 @@ public class RegisterFieldNodeRequest extends StandardProcessingRequestMessage<S
         ResponseMessage response = null;
 
         try {
-            int clientAddress = context.registerFieldNodeClient(fnst, fnsm, name);
+            int clientAddress = context.registerFieldNodeClient(fieldNodeInformation);
             response = new RegistrationConfirmationResponse<>(clientAddress);
         } catch (ClientRegistrationException e) {
             response = new RegistrationDeclinedError<>(e.getMessage());
@@ -105,8 +73,9 @@ public class RegisterFieldNodeRequest extends StandardProcessingRequestMessage<S
 
     @Override
     public byte[] accept(ByteSerializerVisitor visitor) throws SerializationException {
-        return visitor.visitRequestMessage(this, DataTypeConverter.getSerializableFnst(fnst),
-                DataTypeConverter.getSerializableFnsm(fnsm), new ByteSerializableString(name));
+        return visitor.visitRequestMessage(this, DataTypeConverter.getSerializableFnst(fieldNodeInformation.fnst()),
+                DataTypeConverter.getSerializableFnsm(fieldNodeInformation.fnsm()),
+                new ByteSerializableString(fieldNodeInformation.name()));
     }
 
     @Override
@@ -124,14 +93,14 @@ public class RegisterFieldNodeRequest extends StandardProcessingRequestMessage<S
             return false;
         }
 
-        return super.equals(r) && fnst.equals(r.getFnst()) && fnsm.equals(r.getFnsm()) && name.equals(r.getName());
+        return super.equals(r) && fieldNodeInformation.equals(r.fieldNodeInformation);
     }
 
     @Override
     public int hashCode() {
         int result = super.hashCode();
 
-        result = result * 31 + fnst.hashCode();
+        result = result * 31 + fieldNodeInformation.hashCode();
 
         return result;
     }

@@ -22,7 +22,6 @@ public class FieldNode implements SduSensorListener, ActuatorListener {
     private final Map<Integer, Device> devices;
     private final String name;
     private final FieldNodeEventBroker eventBroker;
-    private double latestSensorData;
 
     /**
      * Creates a new FieldNode.
@@ -222,15 +221,6 @@ public class FieldNode implements SduSensorListener, ActuatorListener {
         }
 
         return getActuators().get(actuatorAddress).getState();
-    }
-
-    /**
-     * Returns the latest sdu sensor data.
-     *
-     * @return latest sdu sensor data
-     */
-    public double getLatestSensorData() {
-        return latestSensorData;
     }
 
     @Override

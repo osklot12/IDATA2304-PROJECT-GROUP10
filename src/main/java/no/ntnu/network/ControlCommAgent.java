@@ -7,6 +7,7 @@ import java.io.IOException;
 
 /**
  * An agent responsible for communicating control messages with another entity in the network.
+ * The interface decouples the concrete implementations of data communication from the other parts of the application.
  */
 public interface ControlCommAgent {
     /**
@@ -26,10 +27,10 @@ public interface ControlCommAgent {
     void sendResponse(ResponseMessage response) throws IOException;
 
     /**
-     * Returns the related request for a response message.
+     * Alerts the agent that a response has been received, returning the request associated with a response.
      *
      * @param responseMessage the response message to accept
-     * @return the related request message, null if response was not accepted
+     * @return the related request message, null if no associated request exists
      */
     RequestMessage acceptResponse(ResponseMessage responseMessage);
 
@@ -42,6 +43,8 @@ public interface ControlCommAgent {
 
     /**
      * Returns the node address for the associated client.
+     * On the client side, the value returned is its own client node address.
+     * On the server side however, the value returned is the node address for the remote client.
      *
      * @return the address for the associated client, -1 if client is not registered
      */
@@ -49,6 +52,8 @@ public interface ControlCommAgent {
 
     /**
      * Sets the node address for the client agent.
+     * On the client side, the value set is its own client node address.
+     * On the server side however, the value set is the client node address for the remote client.
      *
      * @param address the client node address
      */

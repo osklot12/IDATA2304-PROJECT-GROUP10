@@ -6,7 +6,8 @@ import no.ntnu.exception.SubscriptionException;
 import no.ntnu.fieldnode.device.DeviceClass;
 import no.ntnu.network.ControlCommAgent;
 import no.ntnu.network.DataCommAgent;
-import no.ntnu.network.DataCommAgentProvider;
+import no.ntnu.network.representation.FieldNodeInformation;
+import no.ntnu.network.sensordataprocess.UdpDataSink;
 import no.ntnu.network.centralserver.CentralServer;
 import no.ntnu.network.centralserver.centralhub.CentralHub;
 import no.ntnu.network.centralserver.centralhub.clientproxy.FieldNodeClientProxy;
@@ -20,19 +21,20 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * A context for processing server messages.
+ * A message context for processing server messages.
  */
 public class ServerContext extends MessageContext {
-    private final DataCommAgentProvider dataAgentProvider;
+    private final UdpDataSink dataAgentProvider;
     private final CentralHub centralHub;
 
     /**
      * Creates a new CentralServerContext.
      *
      * @param agent the communication agent
+     * @param dataAgentProvider
      * @param centralHub the central hub to operate on
      */
-    public ServerContext(ControlCommAgent agent, DataCommAgentProvider dataAgentProvider, CentralHub centralHub) {
+    public ServerContext(ControlCommAgent agent, UdpDataSink dataAgentProvider, CentralHub centralHub) {
         super(agent);
         if (dataAgentProvider == null) {
             throw new IllegalStateException("Cannot create ServerContext, because dataAgentProvider is null.");
@@ -49,14 +51,12 @@ public class ServerContext extends MessageContext {
     /**
      * Registers a field node client at the central server.
      *
-     * @param fnst the field node system table for the field node
-     * @param fnsm the field node status map for the field node
-     * @param name the name of the field node
+     * @param fieldNodeInformation information about the field node
      * @return the assigned address for the field node client
      * @throws ClientRegistrationException thrown if registration fails
      */
-    public int registerFieldNodeClient(Map<Integer, DeviceClass> fnst, Map<Integer, Integer> fnsm, String name) throws ClientRegistrationException {
-        int clientAddress = centralHub.registerFieldNode(fnst, fnsm, name, agent);
+    public int registerFieldNodeClient(FieldNodeInformation fieldNodeInformation) throws ClientRegistrationException {
+        int clientAddress = centralHub.registerFieldNode(fieldNodeInformation, agent);
         if (clientAddress != -1) {
             agent.setClientNodeAddress(clientAddress);
         }
