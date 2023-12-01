@@ -4,6 +4,7 @@ import no.ntnu.network.message.context.FieldNodeContext;
 import no.ntnu.network.message.deserialize.component.MessageDeserializer;
 import no.ntnu.network.message.request.AdlUpdateRequest;
 import no.ntnu.network.message.request.FieldNodeActivateActuatorRequest;
+import no.ntnu.network.message.response.DisconnectionAllowedResponse;
 import no.ntnu.network.message.response.ServerFnsmUpdatedResponse;
 import no.ntnu.network.message.response.error.ServerFnsmUpdateRejectedError;
 import no.ntnu.network.message.serialize.NofspSerializationConstants;
@@ -95,5 +96,22 @@ public class NofspFieldNodeDeserializerTest {
         Tlv tlv = TlvReader.constructTlv(bytes, NofspSerializationConstants.TLV_FRAME);
 
         assertEquals(request, deserializer.deserializeMessage(tlv));
+    }
+
+    /**
+     * Tests the serialization of the {@code DisconnectionAllowedResponse}.
+     * This test covers the response for all clients, as it is implemented in the base class for client message
+     * deserialization.
+     *
+     * @throws IOException thrown if an I/O exception occurs
+     */
+    @Test
+    public void testDisconnectionAllowedResponseSerialization() throws IOException {
+        DisconnectionAllowedResponse<FieldNodeContext> response = new DisconnectionAllowedResponse<>();
+
+        byte[] bytes = serializer.serialize(response);
+        Tlv tlv = TlvReader.constructTlv(bytes, NofspSerializationConstants.TLV_FRAME);
+
+        assertEquals(response, deserializer.deserializeMessage(tlv));
     }
 }

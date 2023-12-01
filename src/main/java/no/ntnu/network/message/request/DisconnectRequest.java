@@ -3,7 +3,9 @@ package no.ntnu.network.message.request;
 import no.ntnu.exception.SerializationException;
 import no.ntnu.network.message.Message;
 import no.ntnu.network.message.context.ServerContext;
+import no.ntnu.network.message.response.DisconnectionAllowedResponse;
 import no.ntnu.network.message.response.ResponseMessage;
+import no.ntnu.network.message.response.error.AuthenticationFailedError;
 import no.ntnu.network.message.serialize.NofspSerializationConstants;
 import no.ntnu.network.message.serialize.visitor.ByteSerializerVisitor;
 
@@ -35,11 +37,25 @@ public class DisconnectRequest extends StandardProcessingRequestMessage<ServerCo
 
     @Override
     protected ResponseMessage executeAndCreateResponse(ServerContext context) {
-        return null;
+        ResponseMessage response = null;
+
+        if (context.isClientRegistered()) {
+            context.deregisterClient();
+            response = new DisconnectionAllowedResponse<>();
+        } else {
+            response = new AuthenticationFailedError<>();
+        }
+
+        return response;
     }
 
     @Override
     public byte[] accept(ByteSerializerVisitor visitor) throws SerializationException {
-        return new byte[0];
+        return visitor.visitRequestMessage(this);
+    }
+
+    @Override
+    public String toString() {
+        return "requesting to disconnect from the server";
     }
 }

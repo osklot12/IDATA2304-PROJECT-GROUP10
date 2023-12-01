@@ -2,6 +2,7 @@ package no.ntnu.network.message.deserialize.component;
 
 import no.ntnu.network.message.context.ClientContext;
 import no.ntnu.network.message.request.HeartbeatRequest;
+import no.ntnu.network.message.response.DisconnectionAllowedResponse;
 import no.ntnu.network.message.response.RegistrationConfirmationResponse;
 import no.ntnu.network.message.response.error.SubscriptionError;
 import no.ntnu.network.message.response.error.RegistrationDeclinedError;
@@ -36,6 +37,7 @@ public abstract class NofspClientMessageDeserializer<C extends ClientContext> ex
         addResponseMessageDeserialization(NofspSerializationConstants.NODE_REGISTRATION_CONFIRMED_CODE, this::getRegistrationConfirmedResponse);
         addResponseMessageDeserialization(NofspSerializationConstants.NODE_REGISTRATION_DECLINED_CODE, this::getRegistrationDeclinedError);
         addResponseMessageDeserialization(NofspSerializationConstants.SUBSCRIPTION_FAILED_CODE, this::getNoSuchNodeError);
+        addResponseMessageDeserialization(NofspSerializationConstants.DISCONNECTION_ALLOWED_CODE, this::getDisconnectionAllowedResponse);
     }
 
     /**
@@ -104,5 +106,16 @@ public abstract class NofspClientMessageDeserializer<C extends ClientContext> ex
         response = new SubscriptionError<>(messageId, description);
 
         return response;
+    }
+
+    /**
+     * Deserializes a {@code DisconnectionAllowedResponse}.
+     *
+     * @param messageId the message id
+     * @param parameterReader a TlvReader holding the response parameters
+     * @return the deserialized response
+     */
+    private DisconnectionAllowedResponse<C> getDisconnectionAllowedResponse(int messageId, TlvReader parameterReader) {
+        return new DisconnectionAllowedResponse<>(messageId);
     }
 }

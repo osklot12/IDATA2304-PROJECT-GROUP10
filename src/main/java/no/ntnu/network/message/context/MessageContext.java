@@ -76,4 +76,11 @@ public abstract class MessageContext {
      * @param response the received response
      */
     public abstract void logReceivingResponse(ResponseMessage response);
+
+    /**
+     * Closes the connection.
+     */
+    public void closeConnection() {
+        agent.close();
+    }
 }

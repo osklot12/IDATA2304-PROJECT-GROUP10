@@ -53,6 +53,7 @@ public class NofspSerializationConstants {
     public static final int SERVER_FNSM_UPDATED_CODE = 25;
     public static final int VIRTUAL_ACTUATOR_UPDATED_CODE = 27;
     public static final int ACTUATOR_STATE_SET_CODE = 30;
+    public static final int DISCONNECTION_ALLOWED_CODE = 50;
 
     // status codes - error
     public static final int AUTHENTICATION_FAILED_CODE = 100;

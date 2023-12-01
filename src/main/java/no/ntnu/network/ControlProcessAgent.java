@@ -173,8 +173,7 @@ public abstract class ControlProcessAgent<C extends MessageContext> implements C
         if (nextMessage != null) {
             processReceivedMessage(nextMessage);
         } else {
-            handleEndOfMessageStream();
-            close();
+            safelyClose();
         }
     }
 

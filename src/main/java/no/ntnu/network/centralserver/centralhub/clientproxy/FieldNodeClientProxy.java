@@ -113,4 +113,28 @@ public class FieldNodeClientProxy extends ClientProxy {
     public String getName() {
         return name;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == this) {
+            return true;
+        }
+
+        if (!(o instanceof FieldNodeClientProxy f)) {
+            return false;
+        }
+
+        return super.equals(f) && fnst.equals(f.fnst) && fnsm.equals(f.fnsm) && name.equals(f.name);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = super.hashCode();
+
+        result = result * 31 + fnst.hashCode();
+        result = result * 31 + fnsm.hashCode();
+        result = result * 31 + name.hashCode();
+
+        return result;
+    }
 }

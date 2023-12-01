@@ -53,4 +53,27 @@ public class ControlPanelClientProxy extends ClientProxy {
     public Set<DeviceClass> getCompatibilityList() {
         return compatibilityList;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == this) {
+            return true;
+        }
+
+        if (!(o instanceof ControlPanelClientProxy c)) {
+            return false;
+        }
+
+        return super.equals(c) && dataAgent.equals(c.dataAgent) && compatibilityList.equals(c.compatibilityList);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = super.hashCode();
+
+        result = result * 31 + dataAgent.hashCode();
+        result = result * 31 + compatibilityList.hashCode();
+
+        return result;
+    }
 }

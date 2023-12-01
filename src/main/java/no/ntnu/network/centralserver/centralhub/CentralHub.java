@@ -95,6 +95,17 @@ public class CentralHub implements DeviceLookupTable {
     }
 
     /**
+     * Deregisters a client.
+     *
+     * @param clientAddress the client address
+     * @return true if successfully deregistered, false if no such client address was found
+     */
+    public boolean deregisterClient(int clientAddress) {
+        removeSensorDataSubscriber(clientAddress);
+        return (fieldNodes.remove(clientAddress) != null) || (controlPanels.remove(clientAddress) != null);
+    }
+
+    /**
      * Registers a client in a register.
      *
      * @param client   the client to register
@@ -230,6 +241,15 @@ public class CentralHub implements DeviceLookupTable {
             throw new SubscriptionException("Cannot unsubscribe from field node " + fieldNodeAddress + ", because " +
                     "no such subscription exists.");
         }
+    }
+
+    /**
+     * Removes a client completely from the sensor data routing table.
+     *
+     * @param subscriberAddress the subscriber to remove
+     */
+    public void removeSensorDataSubscriber(int subscriberAddress) {
+        sensorDataRoutingTable.values().forEach(set -> set.remove(subscriberAddress));
     }
 
     /**

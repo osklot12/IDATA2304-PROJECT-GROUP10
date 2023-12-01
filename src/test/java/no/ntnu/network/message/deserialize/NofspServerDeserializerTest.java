@@ -21,6 +21,7 @@ import no.ntnu.network.message.serialize.tool.tlv.Tlv;
 import no.ntnu.network.message.serialize.tool.tlv.TlvReader;
 import no.ntnu.network.message.serialize.visitor.ByteSerializerVisitor;
 import no.ntnu.network.message.serialize.visitor.NofspSerializer;
+import no.ntnu.network.representation.FieldNodeInformation;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -65,7 +66,8 @@ public class NofspServerDeserializerTest {
         Map<Integer, Integer> fnsm = new HashMap<>();
         fnsm.put(2, 34);
         fnsm.put(1, 5);
-        RegisterFieldNodeRequest request = new RegisterFieldNodeRequest(fnst, fnsm, "test request");
+        FieldNodeInformation fieldNodeInformation = new FieldNodeInformation(fnst, fnsm, "test request");
+        RegisterFieldNodeRequest request = new RegisterFieldNodeRequest(fieldNodeInformation);
 
         byte[] bytes = serializer.serialize(request);
         Tlv tlv = TlvReader.constructTlv(bytes, NofspSerializationConstants.TLV_FRAME);
@@ -281,6 +283,21 @@ public class NofspServerDeserializerTest {
     @Test
     public void testUnsubscribeFromFieldNodeRequestSerialization() throws IOException {
         UnsubscribeFromFieldNodeRequest request = new UnsubscribeFromFieldNodeRequest(2);
+
+        byte[] bytes = serializer.serialize(request);
+        Tlv tlv = TlvReader.constructTlv(bytes, NofspSerializationConstants.TLV_FRAME);
+
+        assertEquals(request, deserializer.deserializeMessage(tlv));
+    }
+
+    /**
+     * Tests the serialization of the {@code DisconnectRequest}.
+     *
+     * @throws IOException thrown if an I/O exception occurs
+     */
+    @Test
+    public void testDisconnectRequestSerialization() throws IOException {
+        DisconnectRequest request = new DisconnectRequest();
 
         byte[] bytes = serializer.serialize(request);
         Tlv tlv = TlvReader.constructTlv(bytes, NofspSerializationConstants.TLV_FRAME);

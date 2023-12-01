@@ -63,6 +63,7 @@ public class NofspServerDeserializer extends NofspMessageDeserializer<ServerCont
         addRequestMessageDeserialization(NofspSerializationConstants.ACTUATOR_NOTIFICATION_COMMAND, this::getActuatorNotificationRequest);
         addRequestMessageDeserialization(NofspSerializationConstants.ACTIVATE_ACTUATOR_COMMAND, this::getServerActivateActuatorRequest);
         addRequestMessageDeserialization(NofspSerializationConstants.UNSUBSCRIBE_FROM_FIELD_NODE_COMMAND, this::getUnsubscribeFromFieldNodeRequest);
+        addRequestMessageDeserialization(NofspSerializationConstants.DISCONNECT_CLIENT_COMMAND, this::getDisconnectRequest);
 
         // responses
         addResponseMessageDeserialization(NofspSerializationConstants.HEART_BEAT_CODE, this::getHeartBeatResponse);
@@ -371,5 +372,16 @@ public class NofspServerDeserializer extends NofspMessageDeserializer<ServerCont
         request = new UnsubscribeFromFieldNodeRequest(messageId, fieldNodeAddress);
 
         return request;
+    }
+
+    /**
+     * Deserializes a {@code DisconnectRequest}.
+     *
+     * @param messageId the message id
+     * @param parameterReader a TlvReader holding the parameter tlvs
+     * @return the deserialized request
+     */
+    private DisconnectRequest getDisconnectRequest(int messageId, TlvReader parameterReader) {
+        return new DisconnectRequest(messageId);
     }
 }

@@ -89,6 +89,18 @@ public class ServerContext extends MessageContext {
     }
 
     /**
+     * Deregisters the connected client.
+     */
+    public void deregisterClient() {
+        if (!isClientRegistered()) {
+            throw new IllegalStateException("Cannot deregister client, because client is not registered.");
+        }
+
+        centralHub.deregisterClient(agent.getClientNodeAddress());
+        setClientNodeAddress(-1);
+    }
+
+    /**
      * Returns whether the client is registered or not.
      *
      * @return true if registered

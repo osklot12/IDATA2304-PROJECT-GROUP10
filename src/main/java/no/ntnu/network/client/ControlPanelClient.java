@@ -5,10 +5,7 @@ import no.ntnu.network.centralserver.CentralServer;
 import no.ntnu.network.message.Message;
 import no.ntnu.network.message.context.ControlPanelContext;
 import no.ntnu.network.message.deserialize.NofspControlPanelDeserializer;
-import no.ntnu.network.message.request.FieldNodePoolPullRequest;
-import no.ntnu.network.message.request.RegisterControlPanelRequest;
-import no.ntnu.network.message.request.SubscribeToFieldNodeRequest;
-import no.ntnu.network.message.request.UnsubscribeFromFieldNodeRequest;
+import no.ntnu.network.message.request.*;
 import no.ntnu.network.message.serialize.visitor.ByteSerializerVisitor;
 import no.ntnu.network.message.serialize.visitor.NofspSerializer;
 import no.ntnu.network.sensordataprocess.UdpDatagramReceiver;
@@ -59,7 +56,7 @@ public class ControlPanelClient extends Client<ControlPanelContext> {
                 subscribeToFieldNode(0);
             try {
                 Thread.sleep(10000);
-                sendRequest(new UnsubscribeFromFieldNodeRequest(3));
+                sendRequest(new DisconnectRequest());
             } catch (InterruptedException | IOException e) {
                 throw new RuntimeException(e);
             }
