@@ -4,6 +4,7 @@ import no.ntnu.network.message.Message;
 import no.ntnu.network.message.common.ControlMessage;
 import no.ntnu.network.message.context.MessageContext;
 import no.ntnu.network.message.deserialize.component.MessageDeserializer;
+import no.ntnu.network.message.serialize.tool.tlv.Tlv;
 import no.ntnu.network.message.serialize.visitor.ByteSerializerVisitor;
 
 import java.io.IOException;
@@ -18,14 +19,16 @@ import java.net.Socket;
  * @param <C> a message context used for message deserialization
  */
 public class TcpControlProcess<C extends MessageContext> {
-    private final TcpMessageSender messageSender;
-    private final TcpMessageReceiver<C> messageReceiver;
+    private final TcpTlvSender tlvSender;
+    private final TcpTlvReceiver tlvReceiver;
+    private final ByteSerializerVisitor serializer;
+    private final MessageDeserializer<C> deserializer;
 
     /**
      * Creates a new TCPControlProcess.
      *
-     * @param socket the socket used for TCP communication
-     * @param serializer the serializer for serializing messages
+     * @param socket       the socket used for TCP communication
+     * @param serializer   the serializer for serializing messages
      * @param deserializer the deserializer for deserializing messages
      */
     public TcpControlProcess(Socket socket, ByteSerializerVisitor serializer, MessageDeserializer<C> deserializer) throws IOException {
@@ -37,8 +40,10 @@ public class TcpControlProcess<C extends MessageContext> {
             throw new IllegalArgumentException("Cannot create TCPControlProcess, because deserializer is null");
         }
 
-        this.messageSender = new TcpMessageSender(socket, serializer);
-        this.messageReceiver = new TcpMessageReceiver<>(socket, deserializer);
+        this.tlvSender = new TcpTlvSender(socket);
+        this.tlvReceiver = new TcpTlvReceiver(socket, deserializer.getTlvFrame());
+        this.serializer = serializer;
+        this.deserializer = deserializer;
     }
 
     /**
@@ -46,8 +51,9 @@ public class TcpControlProcess<C extends MessageContext> {
      *
      * @param message message to send
      */
-    public void sendMessage(ControlMessage message) {
-        messageSender.enqueueMessage(message);
+    public void sendMessage(ControlMessage message) throws IOException {
+        Tlv serializedMessage = serializer.serialize(message);
+        tlvSender.sendTlv(serializedMessage);
     }
 
     /**
@@ -58,6 +64,7 @@ public class TcpControlProcess<C extends MessageContext> {
      * @throws IOException thrown if an I/O exception occurs
      */
     public Message<C> getNextMessage() throws IOException {
-        return messageReceiver.getNextMessage();
+        Tlv serializedMessage = tlvReceiver.getNextTlv();
+        return deserializer.deserializeMessage(serializedMessage);
     }
 }

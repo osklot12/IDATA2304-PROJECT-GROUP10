@@ -1,14 +1,16 @@
 package no.ntnu.network.message.request;
 
 import no.ntnu.exception.NoSuchVirtualDeviceException;
-import no.ntnu.exception.SerializationException;
 import no.ntnu.network.message.common.ByteSerializableInteger;
 import no.ntnu.network.message.context.ControlPanelContext;
 import no.ntnu.network.message.response.ResponseMessage;
 import no.ntnu.network.message.response.VirtualActuatorUpdatedResponse;
 import no.ntnu.network.message.response.error.NoSuchVirtualDeviceError;
 import no.ntnu.network.message.serialize.NofspSerializationConstants;
+import no.ntnu.network.message.serialize.tool.tlv.Tlv;
 import no.ntnu.network.message.serialize.visitor.ByteSerializerVisitor;
+
+import java.io.IOException;
 
 /**
  * A request sent from the central server to a control panel, requesting it to update its state for a virtual
@@ -63,7 +65,7 @@ public class ServerFnsmNotificationRequest extends StandardProcessingRequestMess
     }
 
     @Override
-    public byte[] accept(ByteSerializerVisitor visitor) throws SerializationException {
+    public Tlv accept(ByteSerializerVisitor visitor) throws IOException {
         return visitor.visitRequestMessage(this, new ByteSerializableInteger(fieldNodeAddress),
                 new ByteSerializableInteger(actuatorAddress), new ByteSerializableInteger(newState));
     }

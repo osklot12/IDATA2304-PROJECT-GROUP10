@@ -1,9 +1,11 @@
 package no.ntnu.network.message.sensordata;
 
-import no.ntnu.exception.SerializationException;
 import no.ntnu.network.message.common.ByteSerializableInteger;
 import no.ntnu.network.message.serialize.ByteSerializable;
+import no.ntnu.network.message.serialize.tool.tlv.Tlv;
 import no.ntnu.network.message.serialize.visitor.ByteSerializerVisitor;
+
+import java.io.IOException;
 
 /**
  * A message containing data captured by a sensor.
@@ -24,17 +26,17 @@ public abstract class SensorDataMessage implements ByteSerializable {
     }
 
     @Override
-    public byte[] accept(ByteSerializerVisitor visitor) throws SerializationException {
-        return visitor.visitSensorDataMessage(this, getDataBytes(visitor));
+    public Tlv accept(ByteSerializerVisitor visitor) throws IOException {
+        return visitor.visitSensorDataMessage(this, getDataTlv(visitor));
     }
 
     /**
-     * Returns the sensor data in bytes.
+     * Returns the sensor data as a TLV.
      *
      * @param visitor the serializer visitor
      * @return sensor data in bytes
      */
-    protected abstract byte[] getDataBytes(ByteSerializerVisitor visitor) throws SerializationException;
+    protected abstract Tlv getDataTlv(ByteSerializerVisitor visitor) throws IOException;
 
     /**
      * Returns the address of the client that sent the data.

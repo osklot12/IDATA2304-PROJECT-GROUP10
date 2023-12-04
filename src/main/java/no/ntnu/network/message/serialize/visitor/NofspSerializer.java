@@ -1,6 +1,5 @@
 package no.ntnu.network.message.serialize.visitor;
 
-import no.ntnu.exception.SerializationException;
 import no.ntnu.network.message.common.*;
 import no.ntnu.network.message.request.*;
 import no.ntnu.network.message.response.ResponseMessage;
@@ -9,13 +8,19 @@ import no.ntnu.network.message.serialize.NofspSerializationConstants;
 import no.ntnu.network.message.serialize.ByteSerializable;
 import no.ntnu.network.message.serialize.tool.SimpleByteBuffer;
 import no.ntnu.network.message.serialize.tool.ByteHandler;
+import no.ntnu.network.message.serialize.tool.tlv.Tlv;
+import no.ntnu.network.message.serialize.tool.tlv.TlvReader;
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 
 /**
- * A serializer that handles serialization of {@code ByteSerializable} objects using the serialization technique
+ * A serializer that handles serialization of {@code ByteSerializable} objects using the serialization techniques
  * described by NOFSP.
  */
 public class NofspSerializer implements ByteSerializerVisitor {
@@ -26,85 +31,70 @@ public class NofspSerializer implements ByteSerializerVisitor {
     }
 
     @Override
-    public byte[] serialize(ByteSerializable serializable) throws SerializationException {
+    public Tlv serialize(ByteSerializable serializable) throws IOException {
         return serializable.accept(this);
     }
 
     @Override
-    public byte[] visitInteger(ByteSerializableInteger integer) throws SerializationException {
+    public Tlv visitInteger(ByteSerializableInteger integer) throws IOException {
         byte[] typeField = NofspSerializationConstants.INTEGER_BYTES;
-        byte[] lengthField = null;
         byte[] valueField = ByteHandler.intToBytes(integer.getInteger());
-
-        lengthField = createLengthField(valueField.length);
-
-        return createTlv(typeField, lengthField, valueField);
+        return createTlv(typeField, valueField);
     }
 
     @Override
-    public byte[] visitDouble(ByteSerializableDouble theDouble) throws SerializationException {
+    public Tlv visitDouble(ByteSerializableDouble theDouble) throws IOException {
         byte[] typeField = NofspSerializationConstants.DOUBLE_BYTES;
-        byte[] lengthField = null;
         byte[] valueField = null;
 
         ByteBuffer buffer = ByteBuffer.allocate(Double.BYTES);
         buffer.putDouble(theDouble.getDouble());
         valueField = buffer.array();
 
-        lengthField = createLengthField(valueField.length);
-
-        return createTlv(typeField, lengthField, valueField);
+        return createTlv(typeField, valueField);
     }
 
     @Override
-    public byte[] visitString(ByteSerializableString string) throws SerializationException {
+    public Tlv visitString(ByteSerializableString string) throws IOException {
         byte[] typeField = NofspSerializationConstants.STRING_BYTES;
-        byte[] lengthField = null;
         byte[] valueField = string.getString().getBytes(StandardCharsets.UTF_8);
 
-        lengthField = createLengthField(valueField.length);
-
-        return createTlv(typeField, lengthField, valueField);
+        return createTlv(typeField, valueField);
     }
 
     @Override
-    public <T extends ByteSerializable> byte[] visitList(ByteSerializableList<T> list) throws SerializationException {
+    public <T extends ByteSerializable> Tlv visitList(ByteSerializableList<T> list) throws IOException {
         byte[] typeField = NofspSerializationConstants.LIST_BYTES;
-        byte[] lengthField = null;
         byte[] valueField = null;
 
         SimpleByteBuffer valueBuffer = new SimpleByteBuffer();
         for (ByteSerializable item : list) {
-            valueBuffer.addBytes(item.accept(this));
+            valueBuffer.addTlv(item.accept(this));
         }
 
         valueField = valueBuffer.toArray();
-        lengthField = createLengthField(valueField.length);
 
-        return createTlv(typeField, lengthField, valueField);
+        return createTlv(typeField, valueField);
     }
 
     @Override
-    public <T extends ByteSerializable> byte[] visitSet(ByteSerializableSet<T> set) throws SerializationException {
+    public <T extends ByteSerializable> Tlv visitSet(ByteSerializableSet<T> set) throws IOException {
         byte[] typeField = NofspSerializationConstants.SET_BYTES;
-        byte[] lengthField = null;
         byte[] valueField = null;
 
         SimpleByteBuffer valueBuffer = new SimpleByteBuffer();
         for (ByteSerializable item : set) {
-            valueBuffer.addBytes(item.accept(this));
+            valueBuffer.addTlv(item.accept(this));
         }
 
         valueField = valueBuffer.toArray();
-        lengthField = createLengthField(valueField.length);
 
-        return createTlv(typeField, lengthField, valueField);
+        return createTlv(typeField, valueField);
     }
 
     @Override
-    public <K extends ByteSerializable, V extends ByteSerializable> byte[] visitMap(ByteSerializableMap<K, V> map) throws SerializationException {
+    public <K extends ByteSerializable, V extends ByteSerializable> Tlv visitMap(ByteSerializableMap<K, V> map) throws IOException {
         byte[] typeField = NofspSerializationConstants.MAP_BYTES;
-        byte[] lengthField = null;
         byte[] valueField = null;
 
         SimpleByteBuffer valueBuffer = new SimpleByteBuffer();
@@ -112,56 +102,51 @@ public class NofspSerializer implements ByteSerializerVisitor {
             K key = entry.getKey();
             V value = entry.getValue();
 
-            valueBuffer.addBytes(key.accept(this));
+            valueBuffer.addTlv(key.accept(this));
             if (value != null) {
-                valueBuffer.addBytes(value.accept(this));
+                valueBuffer.addTlv(value.accept(this));
             } else {
-                valueBuffer.addBytes(createNullValueTlv());
+                valueBuffer.addTlv(createNullValueTlv());
             }
         }
 
         valueField = valueBuffer.toArray();
-        lengthField = createLengthField(valueField.length);
 
-        return createTlv(typeField, lengthField, valueField);
+        return createTlv(typeField, valueField);
     }
 
     @Override
-    public byte[] visitRequestMessage(RequestMessage request, ByteSerializable... parameters) throws SerializationException {
-        byte[] commonRequestMessageBytes = getCommonRequestMessageBytes(request);
-        byte[] parameterTlv = createContainerTlv(parameters);
-
-        return packInRequestFrame(commonRequestMessageBytes, parameterTlv);
+    public Tlv visitRequestMessage(RequestMessage request, ByteSerializable... parameters) throws IOException {
+        List<Tlv> tlvList = getCommonRequestMessageTlvs(request);
+        tlvList.add(createContainerTlv(parameters));
+        return packInRequestFrame(tlvList);
     }
 
     @Override
-    public byte[] visitRequestMessage(RequestMessage request) throws SerializationException {
-        byte[] commonRequestMessageBytes = getCommonRequestMessageBytes(request);
-
-        return packInRequestFrame(commonRequestMessageBytes);
+    public Tlv visitRequestMessage(RequestMessage request) throws IOException {
+        List<Tlv> commonRequestMessageTlvs = getCommonRequestMessageTlvs(request);
+        return packInRequestFrame(commonRequestMessageTlvs);
     }
 
     @Override
-    public byte[] visitResponseMessage(ResponseMessage response, ByteSerializable... parameters) throws SerializationException {
-        byte[] commonResponseMessageBytes = getCommonResponseMessageBytes(response);
-        byte[] parameterTlv = createContainerTlv(parameters);
-
-        return packInResponseFrame(commonResponseMessageBytes, parameterTlv);
+    public Tlv visitResponseMessage(ResponseMessage response, ByteSerializable... parameters) throws IOException {
+        List<Tlv> tlvList = getCommonResponseMessageTlvs(response);
+        tlvList.add(createContainerTlv(parameters));
+        return packInResponseFrame(tlvList);
     }
 
     @Override
-    public byte[] visitResponseMessage(ResponseMessage response) throws SerializationException {
-        byte[] commonResponseMessageBytes = getCommonResponseMessageBytes(response);
-
+    public Tlv visitResponseMessage(ResponseMessage response) throws IOException {
+        List<Tlv> commonResponseMessageBytes = getCommonResponseMessageTlvs(response);
         return packInResponseFrame(commonResponseMessageBytes);
     }
 
     @Override
-    public byte[] visitSensorDataMessage(SensorDataMessage message, byte[] data) throws SerializationException {
-        byte[] clientNodeAddressTlv = serialize(message.getSerializableClientNodeAddress());
-        byte[] sensorAddressTlv = serialize(message.getSerializableSensorAddress());
+    public Tlv visitSensorDataMessage(SensorDataMessage message, Tlv data) throws IOException {
+        Tlv clientNodeAddressTlv = serialize(message.getSerializableClientNodeAddress());
+        Tlv sensorAddressTlv = serialize(message.getSerializableSensorAddress());
 
-        return packInSensorDataFrame(clientNodeAddressTlv, sensorAddressTlv, data);
+        return packInSensorDataFrame(createTlvList(clientNodeAddressTlv, sensorAddressTlv, data));
     }
 
     /**
@@ -169,145 +154,161 @@ public class NofspSerializer implements ByteSerializerVisitor {
      *
      * @param serializables the serializable objects to put in container
      * @return the container TLV
-     * @throws SerializationException thrown if serialization fails
+     * @throws IOException thrown if serialization fails
      */
-    private byte[] createContainerTlv(ByteSerializable... serializables) throws SerializationException {
-        byte[] valueField = serializeAll(serializables);
+    private Tlv createContainerTlv(ByteSerializable... serializables) throws IOException {
+        List<Tlv> valueField = serializeAll(serializables);
         byte[] typeField = NofspSerializationConstants.CONTAINER_TLV;
-        byte[] lengthField = createLengthField(valueField.length);
 
-        return createTlv(typeField, lengthField, valueField);
+        return createTlv(typeField, valueField);
     }
 
     /**
-     * Serializes a series of {@code ByteSerializable} objects, and puts them after one another as TLVs of bytes.
+     * Serializes a series of {@code ByteSerializable} objects, and returns them as a list of TLVs.
      *
      * @param serializables the serializable objects to serialize
-     * @return an array of bytes representing the serialized objects
-     * @throws SerializationException thrown if serialization fails
+     * @return a list of the serialized tlvs
+     * @throws IOException thrown if serialization fails
      */
-    private byte[] serializeAll(ByteSerializable... serializables) throws SerializationException {
-        SimpleByteBuffer byteBuffer = new SimpleByteBuffer();
-
+    private List<Tlv> serializeAll(ByteSerializable... serializables) throws IOException {
+        List<Tlv> tlvs = new ArrayList<>();
         for (ByteSerializable serializable : serializables) {
-            byteBuffer.addBytes(serialize(serializable));
+            tlvs.add(serialize(serializable));
         }
-
-        return byteBuffer.toArray();
+        return tlvs;
     }
 
     /**
-     * Returns the common TLVs for all {@code RequestMessage} objects in bytes.
+     * Returns the common TLVs for all {@code RequestMessage} objects.
      *
      * @param request the request message
-     * @return the serialized bytes
-     * @throws SerializationException thrown if serialization fails
+     * @return a list of tlvs
+     * @throws IOException thrown if serialization fails
      */
-    private byte[] getCommonRequestMessageBytes(RequestMessage request) throws SerializationException {
+    private List<Tlv> getCommonRequestMessageTlvs(RequestMessage request) throws IOException {
         // first TLV contains common bytes for all control messages
-        byte[] commonControlMessageBytes = getCommonControlMessageBytes(request);
+        List<Tlv> commonControlMessageTlvs = getCommonControlMessageTlvs(request);
 
         // second TLV contains the command for the request
-        byte[] commandTlv = getCommandTlv(request);
+        Tlv commandTlv = getCommandTlv(request);
 
-        return ByteHandler.combineBytes(commonControlMessageBytes, commandTlv);
+        List<Tlv> tlvs = new ArrayList<>(commonControlMessageTlvs);
+        tlvs.add(commandTlv);
+
+        return tlvs;
     }
 
     /**
-     * Returns the common TLVs for all {@code ResponseMessage} objects in bytes.
+     * Returns the common TLVs for all {@code ResponseMessage} objects.
      *
      * @param response the response message
-     * @return the serialized bytes
-     * @throws SerializationException thrown if serialization fails
+     * @return a list of tlvs
+     * @throws IOException thrown if serialization fails
      */
-    private byte[] getCommonResponseMessageBytes(ResponseMessage response) throws SerializationException {
-        // first TLV contains common bytes for all control messages
-        byte[] commonControlMessageBytes = getCommonControlMessageBytes(response);
+    private List<Tlv> getCommonResponseMessageTlvs(ResponseMessage response) throws IOException {
+        // first TLVs contains common bytes for all control messages
+        List<Tlv> commonControlMessageTlvs = getCommonControlMessageTlvs(response);
 
         // second TLV contains the status code for the response
-        byte[] statusCodeTlv = serialize(response.getStatusCode());
+        Tlv statusCodeTlv = serialize(response.getStatusCode());
 
-        return ByteHandler.combineBytes(commonControlMessageBytes, statusCodeTlv);
+        List<Tlv> tlvs = new ArrayList<>(commonControlMessageTlvs);
+        tlvs.add(statusCodeTlv);
+
+        return tlvs;
     }
 
     /**
-     * Returns the common TLVs for all {@code ControlMessage} objects in bytes.
+     * Returns the common TLVs for all {@code ControlMessage} objects.
      *
      * @param controlMessage the control message
-     * @return the serialized bytes
+     * @return a list of tlvs
+     * @throws IOException thrown if serialization fails
      */
-    private byte[] getCommonControlMessageBytes(ControlMessage controlMessage) throws SerializationException {
-        return controlMessage.getSerializableId().accept(this);
+    private List<Tlv> getCommonControlMessageTlvs(ControlMessage controlMessage) throws IOException {
+        List<Tlv> tlvs = new ArrayList<>();
+        tlvs.add(controlMessage.getSerializableId().accept(this));
+        return tlvs;
     }
 
     /**
-     * Returns the command TLV for any {@code RequestMessage} in bytes.
+     * Returns the command TLV for any {@code RequestMessage}.
      *
      * @param request the request message
-     * @return the serialized bytes
+     * @return a tlv
+     * @throws IOException thrown if serialization fails
      */
-    private byte[] getCommandTlv(RequestMessage request) throws SerializationException {
+    private Tlv getCommandTlv(RequestMessage request) throws IOException {
         return request.getCommand().accept(this);
     }
 
     /**
-     * Packs the content of a request message into a standard message frame for NOFSP, serializes it returns and it
-     * in bytes.
+     * Packs the content of a request message into a standard request message frame for NOFSP, and returns it as
+     * a TLV.
      *
      * @param tlvs the tlvs to pack into the value field for the message frame
      * @return a serialized request frame
-     * @throws SerializationException thrown if serialization fails
+     * @throws IOException thrown if serialization fails
      */
-    private static byte[] packInRequestFrame(byte[]... tlvs) throws SerializationException {
-        byte[] valueField = ByteHandler.combineBytes(tlvs);
+    private static Tlv packInRequestFrame(List<Tlv> tlvs) throws IOException {
         byte[] typeField = NofspSerializationConstants.REQUEST_BYTES;
-        byte[] lengthField = createLengthField(valueField.length);
-
-        return createTlv(typeField, lengthField, valueField);
+        return createTlv(typeField, tlvs);
     }
 
     /**
-     * Packs the content of a response message into a standard message frame for NOFSP, serializes it and returns
-     * it in bytes.
+     * Packs the content of a response message into a standard response message frame for NOFSP, and returns it as
+     * a TLV.
      *
      * @param tlvs the tlvs to pack into the value field for the message frame
      * @return a serialized response frame
-     * @throws SerializationException thrown if serialization fails
+     * @throws IOException thrown if serialization fails
      */
-    private static byte[] packInResponseFrame(byte[]... tlvs) throws SerializationException {
-        byte[] valueField = ByteHandler.combineBytes(tlvs);
+    private static Tlv packInResponseFrame(List<Tlv> tlvs) throws IOException {
         byte[] typeField = NofspSerializationConstants.RESPONSE_BYTES;
-        byte[] lengthField = createLengthField(valueField.length);
-
-        return createTlv(typeField, lengthField, valueField);
+        return createTlv(typeField, tlvs);
     }
 
     /**
-     * Packs the content of a sensor data message into a standard message frame for NOFSP, serializes it and
-     * returns it in bytes.
+     * Packs the content of a sensor data message into a standard sensor data message frame for NOFSP, and returns it
+     * as a TLV.
      *
-     * @param tlvs the tlvs to pack into the value field for the message frame
+     * @param tlvs the content of the sensor data message
      * @return a serialized sensor data frame
-     * @throws SerializationException thrown if serialization fails
+     * @throws IOException thrown if serialization fails
      */
-    private static byte[] packInSensorDataFrame(byte[]... tlvs) throws SerializationException {
-        byte[] valueField = ByteHandler.combineBytes(tlvs);
+    private static Tlv packInSensorDataFrame(List<Tlv> tlvs) throws IOException {
         byte[] typeField = NofspSerializationConstants.SENSOR_DATA_BYTES;
-        byte[] lengthField = createLengthField(valueField.length);
-
-        return createTlv(typeField, lengthField, valueField);
+        return createTlv(typeField, tlvs);
     }
 
     /**
-     * Creates a TLV of three fields - type field, length field and value field.
+     * Creates a TLV.
      *
-     * @param typeField   field describing type of data
-     * @param lengthField field indicating the length of data
-     * @param valueBytes  the actual data itself
-     * @return serialized TLV
+     * @param typeField the type field for the tlv
+     * @param valueBytes the value field for the tlv
+     * @return the constructed tlv
+     * @throws IOException thrown if an I/O exception occurs
      */
-    private static byte[] createTlv(byte[] typeField, byte[] lengthField, byte[] valueBytes) {
-        return ByteHandler.combineBytes(typeField, lengthField, valueBytes);
+    private static Tlv createTlv(byte[] typeField, byte[] valueBytes) throws IOException {
+        byte[] lengthField = createLengthField(valueBytes.length);
+        byte[] combinedBytes = ByteHandler.combineBytes(typeField, lengthField, valueBytes);
+
+        return TlvReader.constructTlv(combinedBytes, NofspSerializationConstants.TLV_FRAME);
+    }
+
+    /**
+     * Creates a TLV.
+     *
+     * @param typeField the type field for the tlv
+     * @param tlvs the value field for the tlv - consisting of several other tlvs
+     * @return the constructed tlv
+     * @throws IOException thrown if an I/O exception occurs
+     */
+    private static Tlv createTlv(byte[] typeField, List<Tlv> tlvs) throws IOException {
+        SimpleByteBuffer valueByteBuffer = new SimpleByteBuffer();
+        valueByteBuffer.addTlvs(tlvs.toArray(new Tlv[0]));
+
+        return createTlv(typeField, valueByteBuffer.toArray());
     }
 
     /**
@@ -315,9 +316,8 @@ public class NofspSerializer implements ByteSerializerVisitor {
      *
      * @return null value TLV
      */
-    private static byte[] createNullValueTlv() {
-        return createTlv(NofspSerializationConstants.NULL_BYTES,
-                ByteHandler.addLeadingPadding(ByteHandler.intToBytes(0), NofspSerializationConstants.TLV_FRAME.lengthFieldLength()), new byte[]{});
+    private static Tlv createNullValueTlv() throws IOException {
+        return createTlv(NofspSerializationConstants.NULL_BYTES, new byte[0]);
     }
 
     /**
@@ -325,17 +325,27 @@ public class NofspSerializer implements ByteSerializerVisitor {
      *
      * @param length the length
      * @return length field containing length
-     * @throws SerializationException thrown if serialization fails
+     * @throws IOException thrown if serialization fails
      */
-    private static byte[] createLengthField(int length) throws SerializationException {
+    private static byte[] createLengthField(int length) throws IOException {
         byte[] lengthField = null;
 
         try {
             lengthField = ByteHandler.addLeadingPadding(ByteHandler.intToBytes(length), NofspSerializationConstants.TLV_FRAME.lengthFieldLength());
         } catch (IllegalArgumentException e) {
-            throw new SerializationException(e.getMessage());
+            throw new IOException(e.getMessage());
         }
 
         return lengthField;
+    }
+
+    /**
+     * Creates a list of TLVs.
+     *
+     * @param tlvs tlvs to create a list from
+     * @return a list of tlvs
+     */
+    private static List<Tlv> createTlvList(Tlv... tlvs) {
+        return new ArrayList<>(Arrays.asList(tlvs));
     }
 }

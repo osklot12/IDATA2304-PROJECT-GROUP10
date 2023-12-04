@@ -2,7 +2,9 @@ package no.ntnu.controlpanel;
 
 import no.ntnu.controlpanel.virtual.*;
 import no.ntnu.fieldnode.device.DeviceClass;
+import no.ntnu.network.connectionservice.sensordatarouter.SensorDataDestination;
 import no.ntnu.network.message.deserialize.component.DeviceLookupTable;
+import no.ntnu.network.message.sensordata.SensorDataMessage;
 import no.ntnu.network.message.sensordata.SensorDataReceiver;
 
 import java.util.*;
@@ -12,7 +14,7 @@ import java.util.*;
  * The control panel stores data about field nodes, such as the sensor data they capture or the status of the
  * actuators.
  */
-public class ControlPanel implements SensorDataReceiver, VirtualFieldNodeListener, DeviceLookupTable {
+public class ControlPanel implements SensorDataDestination, SensorDataReceiver, VirtualFieldNodeListener, DeviceLookupTable {
     private final Map<Integer, VirtualFieldNode> fieldNodes;
     private Set<DeviceClass> compatibilityList = new HashSet<>();
 
@@ -91,14 +93,6 @@ public class ControlPanel implements SensorDataReceiver, VirtualFieldNodeListene
     }
 
     @Override
-    public void receiveSduData(int fieldNodeAddress, int sensorAddress, double data) {
-        VirtualFieldNode virtualFieldNode = fieldNodes.get(fieldNodeAddress);
-        if (virtualFieldNode != null) {
-            virtualFieldNode.addSDUSensorData(sensorAddress, data);
-        }
-    }
-
-    @Override
     public DeviceClass lookup(int clientAddress, int deviceAddress) {
         DeviceClass deviceClass = null;
 
@@ -112,5 +106,18 @@ public class ControlPanel implements SensorDataReceiver, VirtualFieldNodeListene
         }
 
         return deviceClass;
+    }
+
+    @Override
+    public void receiveSensorData(SensorDataMessage sensorData) {
+        sensorData.extractData(this);
+    }
+
+    @Override
+    public void receiveSduData(int fieldNodeAddress, int sensorAddress, double data) {
+        VirtualFieldNode virtualFieldNode = fieldNodes.get(fieldNodeAddress);
+        if (virtualFieldNode != null) {
+            virtualFieldNode.addSDUSensorData(sensorAddress, data);
+        }
     }
 }

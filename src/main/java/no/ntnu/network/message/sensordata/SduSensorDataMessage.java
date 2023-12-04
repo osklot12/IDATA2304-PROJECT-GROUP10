@@ -1,8 +1,10 @@
 package no.ntnu.network.message.sensordata;
 
-import no.ntnu.exception.SerializationException;
 import no.ntnu.network.message.common.ByteSerializableDouble;
+import no.ntnu.network.message.serialize.tool.tlv.Tlv;
 import no.ntnu.network.message.serialize.visitor.ByteSerializerVisitor;
+
+import java.io.IOException;
 
 /**
  * A sensor data message containing Single-Double-Unit data.
@@ -24,7 +26,7 @@ public class SduSensorDataMessage extends SensorDataMessage {
     }
 
     @Override
-    protected byte[] getDataBytes(ByteSerializerVisitor visitor) throws SerializationException {
+    protected Tlv getDataTlv(ByteSerializerVisitor visitor) throws IOException {
         return visitor.visitDouble(new ByteSerializableDouble(data));
     }
 

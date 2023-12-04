@@ -21,13 +21,12 @@ import java.net.SocketException;
  * A client for a control panel, connecting it to a central server using NOFSP.
  * The class is necessary for a control panel to be able to monitor and control field nodes in the network.
  */
-public class ControlPanelClient extends Client<ControlPanelContext> implements SensorDataDestination {
+public class ControlPanelClient extends Client<ControlPanelContext> {
     private final ControlPanel controlPanel;
     private final ControlPanelContext context;
     private final ByteSerializerVisitor serializer;
     private final NofspControlPanelDeserializer deserializer;
     private UdpSensorDataRouter sensorDataRouter;
-    private volatile boolean running;
 
     /**
      * Creates a new ControlPanelClient.
@@ -52,11 +51,17 @@ public class ControlPanelClient extends Client<ControlPanelContext> implements S
             throw new IllegalStateException("Cannot connect control panel, because it is already connected.");
         }
 
-        running = true;
         if (startHandlingIncomingSensorData() && (connectToServer(serverAddress, CentralServer.CONTROL_PORT_NUMBER, serializer, deserializer))) {
             registerControlPanel();
             subscribeToFieldNode(0);
-
+            try {
+                Thread.sleep(1000);
+                sendRequest(new UnsubscribeFromFieldNodeRequest(0));
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 
@@ -71,7 +76,7 @@ public class ControlPanelClient extends Client<ControlPanelContext> implements S
         try {
             UdpSensorDataSink sensorDataSink = new UdpSensorDataSink(deserializer);
             sensorDataRouter = new UdpSensorDataRouter(sensorDataSink);
-            sensorDataRouter.addDestination(this);
+            sensorDataRouter.addDestination(controlPanel);
             sensorDataRouter.start();
             success = true;
         } catch (SocketException e) {
@@ -86,7 +91,8 @@ public class ControlPanelClient extends Client<ControlPanelContext> implements S
      */
     private void registerControlPanel() {
         try {
-            sendRequest(new RegisterControlPanelRequest(controlPanel.getCompatibilityList(), sensorDataRouter.getLocalPortNumber()));
+            sendRequest(new RegisterControlPanelRequest(controlPanel.getCompatibilityList(),
+                    sensorDataRouter.getLocalPortNumber()));
         } catch (IOException e) {
             Logger.error("Cannot send registration request: " + e.getMessage());
         }
@@ -129,11 +135,5 @@ public class ControlPanelClient extends Client<ControlPanelContext> implements S
         } catch (IOException e) {
             Logger.error("Cannot process received message: " + e.getMessage());
         }
-    }
-
-    @Override
-    public void receiveSensorData(SensorDataMessage sensorData) {
-        Logger.info(sensorData.toString());
-        sensorData.extractData(controlPanel);
     }
 }

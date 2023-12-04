@@ -69,8 +69,7 @@ public class NofspServerDeserializerTest {
         FieldNodeInformation fieldNodeInformation = new FieldNodeInformation(fnst, fnsm, "test request");
         RegisterFieldNodeRequest request = new RegisterFieldNodeRequest(fieldNodeInformation);
 
-        byte[] bytes = serializer.serialize(request);
-        Tlv tlv = TlvReader.constructTlv(bytes, NofspSerializationConstants.TLV_FRAME);
+        Tlv tlv = serializer.serialize(request);
         Message<ServerContext> reconstructedMessage = deserializer.deserializeMessage(tlv);
 
         assertEquals(request, reconstructedMessage);
@@ -88,8 +87,7 @@ public class NofspServerDeserializerTest {
         compatibilityList.add(DeviceClass.S3);
         ControlMessage request = new RegisterControlPanelRequest(compatibilityList, 60005);
 
-        byte[] bytes = serializer.serialize(request);
-        Tlv tlv = TlvReader.constructTlv(bytes, NofspSerializationConstants.TLV_FRAME);
+        Tlv tlv = serializer.serialize(request);
         Message<ServerContext> reconstructedMessage = deserializer.deserializeMessage(tlv);
 
         assertEquals(request, reconstructedMessage);
@@ -104,8 +102,7 @@ public class NofspServerDeserializerTest {
     public void testHeartbeatResponseSerialization() throws IOException {
         HeartbeatResponse response = new HeartbeatResponse();
 
-        byte[] bytes = serializer.serialize(response);
-        Tlv tlv = TlvReader.constructTlv(bytes, NofspSerializationConstants.TLV_FRAME);
+        Tlv tlv = serializer.serialize(response);
 
         assertEquals(response, deserializer.deserializeMessage(tlv));
     }
@@ -119,8 +116,7 @@ public class NofspServerDeserializerTest {
     public void testFieldNodePoolPullRequestSerialization() throws IOException {
         FieldNodePoolPullRequest request = new FieldNodePoolPullRequest();
 
-        byte[] bytes = serializer.serialize(request);
-        Tlv tlv = TlvReader.constructTlv(bytes, NofspSerializationConstants.TLV_FRAME);
+        Tlv tlv = serializer.serialize(request);
 
         assertEquals(request, deserializer.deserializeMessage(tlv));
     }
@@ -134,8 +130,7 @@ public class NofspServerDeserializerTest {
     public void testSubscribeToFieldNodeRequestSerialization() throws IOException {
         SubscribeToFieldNodeRequest request = new SubscribeToFieldNodeRequest(4);
 
-        byte[] bytes = serializer.serialize(request);
-        Tlv tlv = TlvReader.constructTlv(bytes, NofspSerializationConstants.TLV_FRAME);
+        Tlv tlv = serializer.serialize(request);
 
         assertEquals(request, deserializer.deserializeMessage(tlv));
     }
@@ -149,8 +144,7 @@ public class NofspServerDeserializerTest {
     public void testAdlUpdatedResponseSerialization() throws IOException {
         AdlUpdatedResponse response = new AdlUpdatedResponse();
 
-        byte[] bytes = serializer.serialize(response);
-        Tlv tlv = TlvReader.constructTlv(bytes, NofspSerializationConstants.TLV_FRAME);
+        Tlv tlv = serializer.serialize(response);
 
         assertEquals(response, deserializer.deserializeMessage(tlv));
     }
@@ -164,8 +158,7 @@ public class NofspServerDeserializerTest {
     public void testAdlUpdateRejectedErrorSerialization() throws IOException {
         AdlUpdateRejectedError response = new AdlUpdateRejectedError("Test description");
 
-        byte[] bytes = serializer.serialize(response);
-        Tlv tlv = TlvReader.constructTlv(bytes, NofspSerializationConstants.TLV_FRAME);
+        Tlv tlv = serializer.serialize(response);
 
         assertEquals(response, deserializer.deserializeMessage(tlv));
     }
@@ -179,8 +172,7 @@ public class NofspServerDeserializerTest {
     public void testActuatorNotificationRequestSerialization() throws IOException {
         ActuatorNotificationRequest request = new ActuatorNotificationRequest(4, 0);
 
-        byte[] bytes = serializer.serialize(request);
-        Tlv tlv = TlvReader.constructTlv(bytes, NofspSerializationConstants.TLV_FRAME);
+        Tlv tlv = serializer.serialize(request);
 
         assertEquals(request, deserializer.deserializeMessage(tlv));
     }
@@ -194,8 +186,7 @@ public class NofspServerDeserializerTest {
     public void testVirtualActuatorUpdatedResponse() throws IOException {
         VirtualActuatorUpdatedResponse response = new VirtualActuatorUpdatedResponse();
 
-        byte[] bytes = serializer.serialize(response);
-        Tlv tlv = TlvReader.constructTlv(bytes, NofspSerializationConstants.TLV_FRAME);
+        Tlv tlv = serializer.serialize(response);
 
         assertEquals(response, deserializer.deserializeMessage(tlv));
     }
@@ -209,8 +200,7 @@ public class NofspServerDeserializerTest {
     public void testNoSuchVirtualDeviceErrorSerialization() throws IOException {
         NoSuchVirtualDeviceError response = new NoSuchVirtualDeviceError("TestDescription");
 
-        byte[] bytes = serializer.serialize(response);
-        Tlv tlv = TlvReader.constructTlv(bytes, NofspSerializationConstants.TLV_FRAME);
+        Tlv tlv = serializer.serialize(response);
 
         assertEquals(response, deserializer.deserializeMessage(tlv));
     }
@@ -224,8 +214,7 @@ public class NofspServerDeserializerTest {
     public void testServerActivateActuatorRequestSerialization() throws IOException {
         ServerActivateActuatorRequest request = new ServerActivateActuatorRequest(1, 2, 1);
 
-        byte[] bytes = serializer.serialize(request);
-        Tlv tlv = TlvReader.constructTlv(bytes, NofspSerializationConstants.TLV_FRAME);
+        Tlv tlv = serializer.serialize(request);
 
         assertEquals(request, deserializer.deserializeMessage(tlv));
     }
@@ -239,8 +228,7 @@ public class NofspServerDeserializerTest {
     public void testActuatorStateSetServerResponseSerialization() throws IOException {
         ActuatorStateSetServerResponse response = new ActuatorStateSetServerResponse();
 
-        byte[] bytes = serializer.serialize(response);
-        Tlv tlv = TlvReader.constructTlv(bytes, NofspSerializationConstants.TLV_FRAME);
+        Tlv tlv = serializer.serialize(response);
 
         assertEquals(response, deserializer.deserializeMessage(tlv));
     }
@@ -254,8 +242,7 @@ public class NofspServerDeserializerTest {
     public void testDeviceInteractionFailedErrorSerialization() throws IOException {
         DeviceInteractionFailedError response = new DeviceInteractionFailedError("TestDescription");
 
-        byte[] bytes = serializer.serialize(response);
-        Tlv tlv = TlvReader.constructTlv(bytes, NofspSerializationConstants.TLV_FRAME);
+        Tlv tlv = serializer.serialize(response);
 
         assertEquals(response, deserializer.deserializeMessage(tlv));
     }
@@ -269,8 +256,7 @@ public class NofspServerDeserializerTest {
     public void testSduSensorDataMessageSerialization() throws IOException {
         SduSensorDataMessage message = new SduSensorDataMessage(1, 3, 34.9);
 
-        byte[] bytes = serializer.serialize(message);
-        Tlv tlv = TlvReader.constructTlv(bytes, NofspSerializationConstants.TLV_FRAME);
+        Tlv tlv = serializer.serialize(message);
 
         assertEquals(message, deserializer.deserializeSensorData(tlv));
     }
@@ -284,8 +270,7 @@ public class NofspServerDeserializerTest {
     public void testUnsubscribeFromFieldNodeRequestSerialization() throws IOException {
         UnsubscribeFromFieldNodeRequest request = new UnsubscribeFromFieldNodeRequest(2);
 
-        byte[] bytes = serializer.serialize(request);
-        Tlv tlv = TlvReader.constructTlv(bytes, NofspSerializationConstants.TLV_FRAME);
+        Tlv tlv = serializer.serialize(request);
 
         assertEquals(request, deserializer.deserializeMessage(tlv));
     }
@@ -299,8 +284,7 @@ public class NofspServerDeserializerTest {
     public void testDisconnectRequestSerialization() throws IOException {
         DisconnectRequest request = new DisconnectRequest();
 
-        byte[] bytes = serializer.serialize(request);
-        Tlv tlv = TlvReader.constructTlv(bytes, NofspSerializationConstants.TLV_FRAME);
+        Tlv tlv = serializer.serialize(request);
 
         assertEquals(request, deserializer.deserializeMessage(tlv));
     }

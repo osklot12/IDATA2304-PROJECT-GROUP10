@@ -44,8 +44,7 @@ public class NofspDeserializerTest {
     public void testIntegerSerialization() throws IOException {
         ByteSerializableInteger integer = new ByteSerializableInteger(64);
 
-        byte[] bytes = serializer.serialize(integer);
-        Tlv tlv = TlvReader.constructTlv(bytes, NofspSerializationConstants.TLV_FRAME);
+        Tlv tlv = serializer.serialize(integer);
 
         assertEquals(integer, deserializer.deserialize(tlv));
     }
@@ -59,8 +58,7 @@ public class NofspDeserializerTest {
     public void testNegativeIntegerSerialization() throws IOException {
         ByteSerializableInteger integer = new ByteSerializableInteger(-4605);
 
-        byte[] bytes = serializer.serialize(integer);
-        Tlv tlv = TlvReader.constructTlv(bytes, NofspSerializationConstants.TLV_FRAME);
+        Tlv tlv = serializer.serialize(integer);
 
         assertEquals(integer, deserializer.deserialize(tlv));
     }
@@ -74,8 +72,7 @@ public class NofspDeserializerTest {
     public void testStringSerialization() throws IOException {
         ByteSerializableString string = new ByteSerializableString("Hello world!");
 
-        byte[] bytes = serializer.serialize(string);
-        Tlv tlv = TlvReader.constructTlv(bytes, NofspSerializationConstants.TLV_FRAME);
+        Tlv tlv = serializer.serialize(string);
 
         assertEquals(string, deserializer.deserialize(tlv));
     }
@@ -92,8 +89,7 @@ public class NofspDeserializerTest {
         set.add(new ByteSerializableString("This is the second string."));
         set.add(new ByteSerializableString("This is the third string."));
 
-        byte[] bytes = serializer.serialize(set);
-        Tlv tlv = TlvReader.constructTlv(bytes, NofspSerializationConstants.TLV_FRAME);
+        Tlv tlv = serializer.serialize(set);
 
         assertEquals(set, deserializer.deserialize(tlv));
     }

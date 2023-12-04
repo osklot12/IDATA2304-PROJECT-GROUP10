@@ -1,7 +1,9 @@
 package no.ntnu.network.message.serialize;
 
-import no.ntnu.exception.SerializationException;
+import no.ntnu.network.message.serialize.tool.tlv.Tlv;
 import no.ntnu.network.message.serialize.visitor.ByteSerializerVisitor;
+
+import java.io.IOException;
 
 /**
  * A serializable object acting as the component in the Composite design pattern.
@@ -15,5 +17,5 @@ public interface ByteSerializable {
      * @param visitor the visitor to accept
      * @return the serialized bytes for the object
      */
-    byte[] accept(ByteSerializerVisitor visitor) throws SerializationException;
+    Tlv accept(ByteSerializerVisitor visitor) throws IOException;
 }

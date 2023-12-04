@@ -1,14 +1,13 @@
 package no.ntnu.network.message.request;
 
 import no.ntnu.exception.NoSuchDeviceException;
-import no.ntnu.exception.SerializationException;
-import no.ntnu.network.message.Message;
 import no.ntnu.network.message.context.FieldNodeContext;
 import no.ntnu.network.message.response.AdlUpdatedResponse;
 import no.ntnu.network.message.response.ResponseMessage;
 import no.ntnu.network.message.response.error.AdlUpdateRejectedError;
 import no.ntnu.network.message.serialize.NofspSerializationConstants;
 import no.ntnu.network.message.serialize.tool.DataTypeConverter;
+import no.ntnu.network.message.serialize.tool.tlv.Tlv;
 import no.ntnu.network.message.serialize.visitor.ByteSerializerVisitor;
 
 import java.io.IOException;
@@ -59,7 +58,7 @@ public class AdlUpdateRequest extends StandardProcessingRequestMessage<FieldNode
     }
 
     @Override
-    public byte[] accept(ByteSerializerVisitor visitor) throws SerializationException {
+    public Tlv accept(ByteSerializerVisitor visitor) throws IOException {
         return visitor.visitRequestMessage(this, DataTypeConverter.getSerializableSetOfIntegers(adlUpdates));
     }
 

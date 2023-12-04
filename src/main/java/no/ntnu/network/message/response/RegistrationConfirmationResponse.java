@@ -1,11 +1,12 @@
 package no.ntnu.network.message.response;
 
-import no.ntnu.exception.SerializationException;
 import no.ntnu.network.message.common.ByteSerializableInteger;
 import no.ntnu.network.message.context.ClientContext;
-import no.ntnu.network.message.request.RequestMessage;
 import no.ntnu.network.message.serialize.NofspSerializationConstants;
+import no.ntnu.network.message.serialize.tool.tlv.Tlv;
 import no.ntnu.network.message.serialize.visitor.ByteSerializerVisitor;
+
+import java.io.IOException;
 
 /**
  * A confirmation response to a node registration request, indicating that the client has been
@@ -47,7 +48,7 @@ public class RegistrationConfirmationResponse<C extends ClientContext> extends S
     }
 
     @Override
-    public byte[] accept(ByteSerializerVisitor visitor) throws SerializationException {
+    public Tlv accept(ByteSerializerVisitor visitor) throws IOException {
         return visitor.visitResponseMessage(this, new ByteSerializableInteger(nodeAddress));
     }
 

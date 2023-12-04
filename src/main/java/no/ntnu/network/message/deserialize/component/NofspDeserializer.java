@@ -1,6 +1,5 @@
 package no.ntnu.network.message.deserialize.component;
 
-import no.ntnu.exception.SerializationException;
 import no.ntnu.network.message.common.*;
 import no.ntnu.network.message.serialize.NofspSerializationConstants;
 import no.ntnu.network.message.serialize.ByteSerializable;
@@ -417,7 +416,7 @@ public abstract class NofspDeserializer {
         if (serializable != null) {
             typeClass = serializable.getClass();
         } else {
-            throw new SerializationException("Cannot identify class for TLV: " + tlv.toString());
+            throw new IOException("Cannot identify class for TLV: " + tlv.toString());
         }
 
         return typeClass;

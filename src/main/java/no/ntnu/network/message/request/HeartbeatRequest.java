@@ -1,12 +1,10 @@
 package no.ntnu.network.message.request;
 
-import no.ntnu.exception.SerializationException;
-import no.ntnu.network.message.Message;
 import no.ntnu.network.message.context.ClientContext;
-import no.ntnu.network.message.context.MessageContext;
 import no.ntnu.network.message.response.HeartbeatResponse;
 import no.ntnu.network.message.response.ResponseMessage;
 import no.ntnu.network.message.serialize.NofspSerializationConstants;
+import no.ntnu.network.message.serialize.tool.tlv.Tlv;
 import no.ntnu.network.message.serialize.visitor.ByteSerializerVisitor;
 
 import java.io.IOException;
@@ -41,7 +39,7 @@ public class HeartbeatRequest<C extends ClientContext> extends StandardProcessin
     }
 
     @Override
-    public byte[] accept(ByteSerializerVisitor visitor) throws SerializationException {
+    public Tlv accept(ByteSerializerVisitor visitor) throws IOException {
         return visitor.visitRequestMessage(this);
     }
 

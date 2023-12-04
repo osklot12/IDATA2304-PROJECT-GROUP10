@@ -41,7 +41,7 @@ public class CentralHub implements SensorDataDestination, DeviceLookupTable {
      * Registers a field node client.
      *
      * @param fieldNodeInformation information about the field node
-     * @param agent the associated communication agent
+     * @param agent                the associated communication agent
      * @return the assigned address for the field node
      * @throws ClientRegistrationException thrown if registration fails
      */
@@ -71,8 +71,8 @@ public class CentralHub implements SensorDataDestination, DeviceLookupTable {
      * Registers a control panel client.
      *
      * @param compatibilityList the compatibility list
-     * @param controlAgent the control communication agent for the control panel client
-     * @param dataAgent the sensor data communication agent for the control panel client
+     * @param controlAgent      the control communication agent for the control panel client
+     * @param dataAgent         the sensor data communication agent for the control panel client
      * @return the assigned address for the control panel
      * @throws ClientRegistrationException thrown if registration fails
      */
@@ -158,7 +158,7 @@ public class CentralHub implements SensorDataDestination, DeviceLookupTable {
     /**
      * Subscribes a control panel to a field node.
      *
-     * @param subscriber the communication agent for the control panel
+     * @param subscriber       the communication agent for the control panel
      * @param fieldNodeAddress the node address of the field node to subscribe to
      * @return an Optional containing the corresponding field node client proxy, or empty if subscription fails
      * @throws SubscriptionException if subscribing fails
@@ -180,7 +180,7 @@ public class CentralHub implements SensorDataDestination, DeviceLookupTable {
      * This method can be extended to allow new clients to subscribe.
      *
      * @param subscriberAddress the node address of the subscriber
-     * @param fieldNodeAddress the node address of the field node to subscribe to
+     * @param fieldNodeAddress  the node address of the field node to subscribe to
      * @return the client proxy for the field node, or null if subscription is not successful
      * @throws SubscriptionException if subscription fails
      */
@@ -224,20 +224,28 @@ public class CentralHub implements SensorDataDestination, DeviceLookupTable {
     /**
      * Unsubscribes a control panel from a field node.
      *
-     * @param subscriber the communication agent for the control panel
+     * @param subscriber       the communication agent for the control panel
      * @param fieldNodeAddress the node address of the field node to unsubscribe from
      * @throws SubscriptionException thrown if unsubscribing fails
      */
     public void unsubscribeFromFieldNode(ControlCommAgent subscriber, int fieldNodeAddress) throws SubscriptionException {
         if (subscriber == null) {
-            throw new IllegalArgumentException("Cannot unsubscribe from field node with address "+ fieldNodeAddress +
+            throw new IllegalArgumentException("Cannot unsubscribe from field node with address " + fieldNodeAddress +
                     ", because subscriber is null.");
         }
 
         Set<Integer> subscribers = getFieldNodeSubscribers(fieldNodeAddress);
         int subscriberAddress = subscriber.getClientNodeAddress();
         if (subscribers != null && subscribers.contains(subscriberAddress)) {
-             subscribers.remove(subscriberAddress);
+            Set<Integer> initialAdl = getAdlForFieldNode(fieldNodeAddress);
+            subscribers.remove(subscriberAddress);
+            if (adlChanged(initialAdl, fieldNodeAddress)) {
+                try {
+                    sendAdlUpdate(fieldNodeAddress);
+                } catch (IOException e) {
+                    Logger.error("Could not send ADL update to field node " + fieldNodeAddress + ": " + e.getMessage());
+                }
+            }
         } else {
             throw new SubscriptionException("Cannot unsubscribe from field node " + fieldNodeAddress + ", because " +
                     "no such subscription exists.");
@@ -257,7 +265,7 @@ public class CentralHub implements SensorDataDestination, DeviceLookupTable {
      * Adds a subscriber to a field node.
      *
      * @param subscriberAddress the address of the subscribing control panel
-     * @param fieldNodeAddress the address of the field node to subscribe to
+     * @param fieldNodeAddress  the address of the field node to subscribe to
      */
     private void addFieldNodeSubscriber(int subscriberAddress, int fieldNodeAddress) {
         Set<Integer> subscribers = getFieldNodeSubscribers(fieldNodeAddress);
@@ -278,7 +286,7 @@ public class CentralHub implements SensorDataDestination, DeviceLookupTable {
      * Removes a subscriber of a field node.
      *
      * @param subscriberAddress the address of the unsubscribing control panel
-     * @param fieldNodeAddress the address of the field node to unsubscribe to
+     * @param fieldNodeAddress  the address of the field node to unsubscribe to
      */
     private void removeFieldNodeSubscriber(int subscriberAddress, int fieldNodeAddress) {
         Set<Integer> subscribers = sensorDataRoutingTable.get(fieldNodeAddress);
@@ -342,8 +350,8 @@ public class CentralHub implements SensorDataDestination, DeviceLookupTable {
      * control panel about the event.
      *
      * @param fieldNodeAddress the address of the field node
-     * @param actuatorAddress the address of the actuator
-     * @param newState the new state to set
+     * @param actuatorAddress  the address of the actuator
+     * @param newState         the new state to set
      * @throws NoSuchAddressException thrown if one of the addresses is invalid
      */
     public void setLocalActuatorState(int fieldNodeAddress, int actuatorAddress, int newState) throws NoSuchAddressException {
@@ -377,8 +385,8 @@ public class CentralHub implements SensorDataDestination, DeviceLookupTable {
      * All control panels subscribed to the field node will need to be notified about this event.
      *
      * @param fieldNodeAddress the address of the field node
-     * @param actuatorAddress the address of the actuator
-     * @param newState the new state of the actuator
+     * @param actuatorAddress  the address of the actuator
+     * @param newState         the new state of the actuator
      */
     private void handleActuatorStateChangeForwarding(int fieldNodeAddress, int actuatorAddress, int newState) {
         ServerFnsmNotificationRequest request = new ServerFnsmNotificationRequest(fieldNodeAddress, actuatorAddress, newState);

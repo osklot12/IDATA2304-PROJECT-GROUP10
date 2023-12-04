@@ -2,6 +2,10 @@ package no.ntnu.network.message.response;
 
 import no.ntnu.network.message.common.ByteSerializableInteger;
 import no.ntnu.network.message.common.ControlMessage;
+import no.ntnu.network.message.serialize.tool.tlv.Tlv;
+import no.ntnu.network.message.serialize.visitor.ByteSerializerVisitor;
+
+import java.io.IOException;
 
 /**
  * A message sent from one node to another, responding to a request message.
@@ -25,6 +29,11 @@ public abstract class ResponseMessage extends ControlMessage {
      */
     public ByteSerializableInteger getStatusCode() {
         return statusCode;
+    }
+
+    @Override
+    public Tlv accept(ByteSerializerVisitor visitor) throws IOException {
+        return visitor.visitResponseMessage(this);
     }
 
     @Override

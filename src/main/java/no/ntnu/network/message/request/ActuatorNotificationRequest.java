@@ -1,7 +1,6 @@
 package no.ntnu.network.message.request;
 
 import no.ntnu.exception.NoSuchAddressException;
-import no.ntnu.exception.SerializationException;
 import no.ntnu.network.message.common.ByteSerializableInteger;
 import no.ntnu.network.message.context.ServerContext;
 import no.ntnu.network.message.response.ResponseMessage;
@@ -9,7 +8,10 @@ import no.ntnu.network.message.response.ServerFnsmUpdatedResponse;
 import no.ntnu.network.message.response.error.AuthenticationFailedError;
 import no.ntnu.network.message.response.error.ServerFnsmUpdateRejectedError;
 import no.ntnu.network.message.serialize.NofspSerializationConstants;
+import no.ntnu.network.message.serialize.tool.tlv.Tlv;
 import no.ntnu.network.message.serialize.visitor.ByteSerializerVisitor;
+
+import java.io.IOException;
 
 /**
  * A request sent from a field node to the central server, notifying it about a change of state for an actuator and
@@ -64,7 +66,7 @@ public class ActuatorNotificationRequest extends StandardProcessingRequestMessag
     }
 
     @Override
-    public byte[] accept(ByteSerializerVisitor visitor) throws SerializationException {
+    public Tlv accept(ByteSerializerVisitor visitor) throws IOException {
         return visitor.visitRequestMessage(this, new ByteSerializableInteger(actuatorAddress),
                 new ByteSerializableInteger(newState));
     }

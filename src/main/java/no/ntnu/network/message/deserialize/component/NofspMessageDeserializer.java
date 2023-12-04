@@ -1,7 +1,5 @@
 package no.ntnu.network.message.deserialize.component;
 
-import no.ntnu.exception.SerializationException;
-import no.ntnu.fieldnode.device.DeviceClass;
 import no.ntnu.network.message.Message;
 import no.ntnu.network.message.context.MessageContext;
 import no.ntnu.network.message.serialize.NofspSerializationConstants;
@@ -11,7 +9,6 @@ import no.ntnu.network.message.serialize.tool.tlv.TlvFrame;
 import no.ntnu.network.message.serialize.tool.tlv.TlvReader;
 
 import java.io.IOException;
-import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.Map;
 

@@ -1,9 +1,10 @@
 package no.ntnu.network.message.common;
 
-import no.ntnu.exception.SerializationException;
 import no.ntnu.network.message.serialize.ByteSerializable;
+import no.ntnu.network.message.serialize.tool.tlv.Tlv;
 import no.ntnu.network.message.serialize.visitor.ByteSerializerVisitor;
 
+import java.io.IOException;
 import java.util.HashSet;
 
 /**
@@ -20,7 +21,7 @@ public class ByteSerializableSet<T extends ByteSerializable> extends HashSet<T> 
     }
 
     @Override
-    public byte[] accept(ByteSerializerVisitor visitor) throws SerializationException {
+    public Tlv accept(ByteSerializerVisitor visitor) throws IOException {
         return visitor.visitSet(this);
     }
 

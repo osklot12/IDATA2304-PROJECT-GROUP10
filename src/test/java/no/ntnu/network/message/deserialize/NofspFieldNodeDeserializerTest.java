@@ -47,8 +47,7 @@ public class NofspFieldNodeDeserializerTest {
         adlUpdates.add(4);
         AdlUpdateRequest request = new AdlUpdateRequest(adlUpdates);
 
-        byte[] bytes = serializer.serialize(request);
-        Tlv tlv = TlvReader.constructTlv(bytes, NofspSerializationConstants.TLV_FRAME);
+        Tlv tlv = serializer.serialize(request);
 
         assertEquals(request, deserializer.deserializeMessage(tlv));
     }
@@ -62,8 +61,7 @@ public class NofspFieldNodeDeserializerTest {
     public void testServerFnsmUpdatedResponseSerialization() throws IOException {
         ServerFnsmUpdatedResponse response = new ServerFnsmUpdatedResponse();
 
-        byte[] bytes = serializer.serialize(response);
-        Tlv tlv = TlvReader.constructTlv(bytes, NofspSerializationConstants.TLV_FRAME);
+        Tlv tlv = serializer.serialize(response);
 
         assertEquals(response, deserializer.deserializeMessage(tlv));
     }
@@ -77,8 +75,7 @@ public class NofspFieldNodeDeserializerTest {
     public void testServerFnsmUpdateRejectedErrorSerialization() throws IOException {
         ServerFnsmUpdateRejectedError response = new ServerFnsmUpdateRejectedError("TestDescription");
 
-        byte[] bytes = serializer.serialize(response);
-        Tlv tlv = TlvReader.constructTlv(bytes, NofspSerializationConstants.TLV_FRAME);
+        Tlv tlv = serializer.serialize(response);
 
         assertEquals(response, deserializer.deserializeMessage(tlv));
     }
@@ -92,8 +89,7 @@ public class NofspFieldNodeDeserializerTest {
     public void testFieldNodeActivateActuatorRequest() throws IOException {
         FieldNodeActivateActuatorRequest request = new FieldNodeActivateActuatorRequest(2, 3);
 
-        byte[] bytes = serializer.serialize(request);
-        Tlv tlv = TlvReader.constructTlv(bytes, NofspSerializationConstants.TLV_FRAME);
+        Tlv tlv = serializer.serialize(request);
 
         assertEquals(request, deserializer.deserializeMessage(tlv));
     }
@@ -109,8 +105,7 @@ public class NofspFieldNodeDeserializerTest {
     public void testDisconnectionAllowedResponseSerialization() throws IOException {
         DisconnectionAllowedResponse<FieldNodeContext> response = new DisconnectionAllowedResponse<>();
 
-        byte[] bytes = serializer.serialize(response);
-        Tlv tlv = TlvReader.constructTlv(bytes, NofspSerializationConstants.TLV_FRAME);
+        Tlv tlv = serializer.serialize(response);
 
         assertEquals(response, deserializer.deserializeMessage(tlv));
     }

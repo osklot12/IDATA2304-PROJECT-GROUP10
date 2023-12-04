@@ -18,7 +18,7 @@ public class TlvReader {
     /**
      * Creates a new TlvReader.
      *
-     * @param source source of bytes to read from
+     * @param source   source of bytes to read from
      * @param tlvFrame Tlv frame to use for parsing segments
      */
     public TlvReader(ByteSource source, TlvFrame tlvFrame) {
@@ -30,7 +30,7 @@ public class TlvReader {
     /**
      * Creates a new TlvReader.
      *
-     * @param bytes bytes to read from
+     * @param bytes    bytes to read from
      * @param tlvFrame Tlv frame to use for parsing segments
      */
     public TlvReader(byte[] bytes, TlvFrame tlvFrame) {
@@ -138,7 +138,7 @@ public class TlvReader {
      */
     public static byte[] getLengthField(byte[] bytes, TlvFrame frame) throws IOException {
         byte[] result = null;
-        
+
         try {
             result = Arrays.copyOfRange(bytes, frame.typeFieldLength(), frame.typeFieldLength() + frame.lengthFieldLength());
         } catch (Exception e) {

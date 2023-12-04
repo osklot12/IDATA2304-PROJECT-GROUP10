@@ -1,13 +1,12 @@
 package no.ntnu.network.message.response.error;
 
-import no.ntnu.exception.SerializationException;
 import no.ntnu.network.message.common.ByteSerializableString;
 import no.ntnu.network.message.context.MessageContext;
-import no.ntnu.network.message.request.RequestMessage;
-import no.ntnu.network.message.response.RegistrationConfirmationResponse;
-import no.ntnu.network.message.response.ResponseMessage;
 import no.ntnu.network.message.response.StandardProcessingResponseMessage;
+import no.ntnu.network.message.serialize.tool.tlv.Tlv;
 import no.ntnu.network.message.serialize.visitor.ByteSerializerVisitor;
+
+import java.io.IOException;
 
 /**
  * A response message indicating that an error has occurred.
@@ -47,7 +46,7 @@ public abstract class ErrorMessage<C extends MessageContext> extends StandardPro
     }
 
     @Override
-    public byte[] accept(ByteSerializerVisitor visitor) throws SerializationException {
+    public Tlv accept(ByteSerializerVisitor visitor) throws IOException {
         return visitor.visitResponseMessage(this, getDescription());
     }
 

@@ -1,11 +1,13 @@
 package no.ntnu.network.message.serialize.visitor;
 
-import no.ntnu.exception.SerializationException;
 import no.ntnu.network.message.common.*;
 import no.ntnu.network.message.request.*;
 import no.ntnu.network.message.response.ResponseMessage;
 import no.ntnu.network.message.sensordata.SensorDataMessage;
 import no.ntnu.network.message.serialize.ByteSerializable;
+import no.ntnu.network.message.serialize.tool.tlv.Tlv;
+
+import java.io.IOException;
 
 /**
  * A serializer for common data, acting as the visitor in the Visitor design pattern.
@@ -21,36 +23,36 @@ public interface ByteSerializerVisitor {
      *
      * @param serializable the object to serialize
      * @return serialized bytes
-     * @throws SerializationException thrown if serialization fails
+     * @throws IOException thrown if serialization fails
      */
-    byte[] serialize(ByteSerializable serializable) throws SerializationException;
+    Tlv serialize(ByteSerializable serializable) throws IOException;
 
     /**
      * Serializes a {@code ByteSerializableInteger} object.
      *
      * @param integer integer to serialize
      * @return the serialized integer
-     * @throws SerializationException thrown if serialization fails
+     * @throws IOException thrown if serialization fails
      */
-    byte[] visitInteger(ByteSerializableInteger integer) throws SerializationException;
+    Tlv visitInteger(ByteSerializableInteger integer) throws IOException;
 
     /**
      * Serializes a {@code ByteSerializableDouble} object.
      *
      * @param theDouble double to serialize
      * @return the serialized double
-     * @throws SerializationException thrown if serialization fails
+     * @throws IOException thrown if serialization fails
      */
-    byte[] visitDouble(ByteSerializableDouble theDouble) throws SerializationException;
+    Tlv visitDouble(ByteSerializableDouble theDouble) throws IOException;
 
     /**
      * Serializes a {@code ByteSerializableString} object.
      *
      * @param string string to serialize
      * @return the serialized string
-     * @throws SerializationException thrown if serialization fails
+     * @throws IOException thrown if serialization fails
      */
-    byte[] visitString(ByteSerializableString string) throws SerializationException;
+    Tlv visitString(ByteSerializableString string) throws IOException;
 
     /**
      * Serializes a {@code ByteSerializableList} object.
@@ -58,9 +60,9 @@ public interface ByteSerializerVisitor {
      * @param list list to serialize
      * @return the serialized list
      * @param <T> any class implementing the {@code ByteSerializable} interface
-     * @throws SerializationException thrown if serialization fails
+     * @throws IOException thrown if serialization fails
      */
-    <T extends ByteSerializable> byte[] visitList(ByteSerializableList<T> list) throws SerializationException;
+    <T extends ByteSerializable> Tlv visitList(ByteSerializableList<T> list) throws IOException;
 
     /**
      * Serializes a {@code ByteSerializableSet} object.
@@ -68,9 +70,9 @@ public interface ByteSerializerVisitor {
      * @param set set to serialize
      * @return the serialized set
      * @param <T> any class implementing the {@code ByteSerializable} interface
-     * @throws SerializationException thrown if serialization fails
+     * @throws IOException thrown if serialization fails
      */
-    <T extends ByteSerializable> byte[] visitSet(ByteSerializableSet<T> set) throws SerializationException;
+    <T extends ByteSerializable> Tlv visitSet(ByteSerializableSet<T> set) throws IOException;
 
     /**
      * Serializes a {@code ByteSerializableMap} object.
@@ -79,9 +81,9 @@ public interface ByteSerializerVisitor {
      * @return the serialized map
      * @param <K> any key implementing {@code ByteSerializable}
      * @param <V> any value implementing {@code ByteSerializable}
-     * @throws SerializationException thrown if serialization fails
+     * @throws IOException thrown if serialization fails
      */
-    <K extends ByteSerializable, V extends ByteSerializable> byte[] visitMap(ByteSerializableMap<K, V> map) throws SerializationException;
+    <K extends ByteSerializable, V extends ByteSerializable> Tlv visitMap(ByteSerializableMap<K, V> map) throws IOException;
 
     /**
      * Serializes a {@code RequestMessage} with parameters.
@@ -89,18 +91,18 @@ public interface ByteSerializerVisitor {
      * @param request the request message to serialize
      * @param parameters the parameters to serialize, in the given order
      * @return the serialized request message
-     * @throws SerializationException thrown if serialization fails
+     * @throws IOException thrown if serialization fails
      */
-    byte[] visitRequestMessage(RequestMessage request, ByteSerializable... parameters) throws SerializationException;
+    Tlv visitRequestMessage(RequestMessage request, ByteSerializable... parameters) throws IOException;
 
     /**
      * Serializes a {@code RequestMessage} with no parameters.
      *
      * @param request the request message to serialize
      * @return the serialized request message
-     * @throws SerializationException thrown if serialization fails
+     * @throws IOException thrown if serialization fails
      */
-    byte[] visitRequestMessage(RequestMessage request) throws SerializationException;
+    Tlv visitRequestMessage(RequestMessage request) throws IOException;
 
     /**
      * Serializes a {@code ResponseMessage} with parameters.
@@ -108,18 +110,18 @@ public interface ByteSerializerVisitor {
      * @param response the response message to serialize
      * @param parameters the parameters to serialize, in the given order
      * @return the serialized response
-     * @throws SerializationException thrown if serialization fails
+     * @throws IOException thrown if serialization fails
      */
-    byte[] visitResponseMessage(ResponseMessage response, ByteSerializable... parameters) throws SerializationException;
+    Tlv visitResponseMessage(ResponseMessage response, ByteSerializable... parameters) throws IOException;
 
     /**
      * Serializes a {@code ResponseMessage}.
      *
      * @param response the response message to serialize
      * @return the serialized response
-     * @throws SerializationException thrown if serialization fails
+     * @throws IOException thrown if serialization fails
      */
-    byte[] visitResponseMessage(ResponseMessage response) throws SerializationException;
+    Tlv visitResponseMessage(ResponseMessage response) throws IOException;
 
     /**
      * Serializes a {@code SensorDataMessage}.
@@ -127,7 +129,7 @@ public interface ByteSerializerVisitor {
      * @param message the sensor data message to serialize
      * @param data the data captured
      * @return the serialized sensor data message
-     * @throws SerializationException thrown if serialization fails
+     * @throws IOException thrown if serialization fails
      */
-    byte[] visitSensorDataMessage(SensorDataMessage message, byte[] data) throws SerializationException;
+    Tlv visitSensorDataMessage(SensorDataMessage message, Tlv data) throws IOException;
 }

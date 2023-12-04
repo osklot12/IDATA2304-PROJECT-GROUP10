@@ -1,7 +1,5 @@
 package no.ntnu.network.message.serialize.tool;
 
-import no.ntnu.exception.SerializationException;
-
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 

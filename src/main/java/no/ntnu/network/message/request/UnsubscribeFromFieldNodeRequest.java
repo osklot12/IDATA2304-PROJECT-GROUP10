@@ -1,16 +1,17 @@
 package no.ntnu.network.message.request;
 
-import no.ntnu.exception.SerializationException;
 import no.ntnu.exception.SubscriptionException;
 import no.ntnu.network.message.common.ByteSerializableInteger;
-import no.ntnu.network.message.context.MessageContext;
 import no.ntnu.network.message.context.ServerContext;
 import no.ntnu.network.message.response.ResponseMessage;
 import no.ntnu.network.message.response.UnsubscribedFromFieldNodeResponse;
 import no.ntnu.network.message.response.error.AuthenticationFailedError;
 import no.ntnu.network.message.response.error.SubscriptionError;
 import no.ntnu.network.message.serialize.NofspSerializationConstants;
+import no.ntnu.network.message.serialize.tool.tlv.Tlv;
 import no.ntnu.network.message.serialize.visitor.ByteSerializerVisitor;
+
+import java.io.IOException;
 
 /**
  * A request sent from a control panel to the central server, requesting to be unsubscribed from a field node.
@@ -60,7 +61,7 @@ public class UnsubscribeFromFieldNodeRequest extends StandardProcessingRequestMe
     }
 
     @Override
-    public byte[] accept(ByteSerializerVisitor visitor) throws SerializationException {
+    public Tlv accept(ByteSerializerVisitor visitor) throws IOException {
         return visitor.visitRequestMessage(this, new ByteSerializableInteger(fieldNodeAddress));
     }
 

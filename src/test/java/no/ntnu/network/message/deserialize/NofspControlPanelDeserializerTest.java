@@ -52,8 +52,7 @@ public class NofspControlPanelDeserializerTest {
     public void testHeartbeatRequestSerialization() throws IOException {
         HeartbeatRequest<ControlPanelContext> request = new HeartbeatRequest<>();
 
-        byte[] bytes = serializer.serialize(request);
-        Tlv tlv = TlvReader.constructTlv(bytes, NofspSerializationConstants.TLV_FRAME);
+        Tlv tlv = serializer.serialize(request);
 
         assertEquals(request, deserializer.deserializeMessage(tlv));
     }
@@ -71,8 +70,7 @@ public class NofspControlPanelDeserializerTest {
 
         FieldNodePoolResponse response = new FieldNodePoolResponse(fieldNodePool);
 
-        byte[] bytes = serializer.serialize(response);
-        Tlv tlv = TlvReader.constructTlv(bytes, NofspSerializationConstants.TLV_FRAME);
+        Tlv tlv = serializer.serialize(response);
 
         assertEquals(response, deserializer.deserializeMessage(tlv));
     }
@@ -96,8 +94,7 @@ public class NofspControlPanelDeserializerTest {
 
         SubscribedToFieldNodeResponse response = new SubscribedToFieldNodeResponse(1, fnst, fnsm, name);
 
-        byte[] bytes = serializer.serialize(response);
-        Tlv tlv = TlvReader.constructTlv(bytes, NofspSerializationConstants.TLV_FRAME);
+        Tlv tlv = serializer.serialize(response);
 
         assertEquals(response, deserializer.deserializeMessage(tlv));
     }
@@ -111,8 +108,7 @@ public class NofspControlPanelDeserializerTest {
     public void testServerFnsmNotificationRequestSerialization() throws IOException {
         ServerFnsmNotificationRequest request = new ServerFnsmNotificationRequest(1, 1, 2);
 
-        byte[] bytes = serializer.serialize(request);
-        Tlv tlv = TlvReader.constructTlv(bytes, NofspSerializationConstants.TLV_FRAME);
+        Tlv tlv = serializer.serialize(request);
 
         assertEquals(request, deserializer.deserializeMessage(tlv));
     }
@@ -126,8 +122,7 @@ public class NofspControlPanelDeserializerTest {
     public void testActuatorStateSetControlPanelResponseSerialization() throws IOException {
         ActuatorStateSetControlPanelResponse response = new ActuatorStateSetControlPanelResponse();
 
-        byte[] bytes = serializer.serialize(response);
-        Tlv tlv = TlvReader.constructTlv(bytes, NofspSerializationConstants.TLV_FRAME);
+        Tlv tlv = serializer.serialize(response);
 
         assertEquals(response, deserializer.deserializeMessage(tlv));
     }
@@ -141,8 +136,7 @@ public class NofspControlPanelDeserializerTest {
     public void testFieldNodeUnreachableError() throws IOException {
         FieldNodeUnreachableError response = new FieldNodeUnreachableError("TestDescription");
 
-        byte[] bytes = serializer.serialize(response);
-        Tlv tlv = TlvReader.constructTlv(bytes, NofspSerializationConstants.TLV_FRAME);
+        Tlv tlv = serializer.serialize(response);
 
         assertEquals(response, deserializer.deserializeMessage(tlv));
     }
@@ -156,8 +150,7 @@ public class NofspControlPanelDeserializerTest {
     public void testUnsubscribedFromFieldNodeResponseSerialization() throws IOException {
         UnsubscribedFromFieldNodeResponse response = new UnsubscribedFromFieldNodeResponse(3);
 
-        byte[] bytes = serializer.serialize(response);
-        Tlv tlv = TlvReader.constructTlv(bytes, NofspSerializationConstants.TLV_FRAME);
+        Tlv tlv = serializer.serialize(response);
 
         assertEquals(response, deserializer.deserializeMessage(tlv));
     }

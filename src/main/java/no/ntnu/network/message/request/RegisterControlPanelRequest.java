@@ -1,7 +1,6 @@
 package no.ntnu.network.message.request;
 
 import no.ntnu.exception.ClientRegistrationException;
-import no.ntnu.exception.SerializationException;
 import no.ntnu.fieldnode.device.DeviceClass;
 import no.ntnu.network.message.common.ByteSerializableInteger;
 import no.ntnu.network.message.context.ServerContext;
@@ -10,8 +9,10 @@ import no.ntnu.network.message.response.ResponseMessage;
 import no.ntnu.network.message.response.error.RegistrationDeclinedError;
 import no.ntnu.network.message.serialize.NofspSerializationConstants;
 import no.ntnu.network.message.serialize.tool.DataTypeConverter;
+import no.ntnu.network.message.serialize.tool.tlv.Tlv;
 import no.ntnu.network.message.serialize.visitor.ByteSerializerVisitor;
 
+import java.io.IOException;
 import java.util.Set;
 
 /**
@@ -58,7 +59,7 @@ public class RegisterControlPanelRequest extends StandardProcessingRequestMessag
     }
 
     @Override
-    public byte[] accept(ByteSerializerVisitor visitor) throws SerializationException {
+    public Tlv accept(ByteSerializerVisitor visitor) throws IOException {
         return visitor.visitRequestMessage(this,
                 DataTypeConverter.getSerializableCompatibilityList(compatibilityList),
                 new ByteSerializableInteger(dataSinkPortNumber));

@@ -1,13 +1,12 @@
 package no.ntnu.network.message.request;
 
-import no.ntnu.exception.SerializationException;
-import no.ntnu.network.centralserver.centralhub.clientproxy.FieldNodeClientProxy;
 import no.ntnu.network.message.common.ByteSerializableInteger;
 import no.ntnu.network.message.context.ServerContext;
 import no.ntnu.network.message.response.ResponseMessage;
 import no.ntnu.network.message.response.error.AuthenticationFailedError;
 import no.ntnu.network.message.response.error.DeviceInteractionFailedError;
 import no.ntnu.network.message.serialize.NofspSerializationConstants;
+import no.ntnu.network.message.serialize.tool.tlv.Tlv;
 import no.ntnu.network.message.serialize.visitor.ByteSerializerVisitor;
 
 import java.io.IOException;
@@ -68,7 +67,7 @@ public class ServerActivateActuatorRequest extends StandardProcessingRequestMess
     }
 
     @Override
-    public byte[] accept(ByteSerializerVisitor visitor) throws SerializationException {
+    public Tlv accept(ByteSerializerVisitor visitor) throws IOException {
         return visitor.visitRequestMessage(this, new ByteSerializableInteger(fieldNodeAddress),
                 new ByteSerializableInteger(actuatorAddress), new ByteSerializableInteger(newState));
     }

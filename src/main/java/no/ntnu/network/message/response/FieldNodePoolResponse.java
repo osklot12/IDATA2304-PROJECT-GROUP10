@@ -1,12 +1,9 @@
 package no.ntnu.network.message.response;
 
-import no.ntnu.exception.SerializationException;
-import no.ntnu.fieldnode.device.DeviceClass;
-import no.ntnu.network.message.Message;
 import no.ntnu.network.message.context.ControlPanelContext;
-import no.ntnu.network.message.request.RequestMessage;
 import no.ntnu.network.message.serialize.NofspSerializationConstants;
 import no.ntnu.network.message.serialize.tool.DataTypeConverter;
+import no.ntnu.network.message.serialize.tool.tlv.Tlv;
 import no.ntnu.network.message.serialize.visitor.ByteSerializerVisitor;
 
 import java.io.IOException;
@@ -50,7 +47,7 @@ public class FieldNodePoolResponse extends StandardProcessingResponseMessage<Con
     }
 
     @Override
-    public byte[] accept(ByteSerializerVisitor visitor) throws SerializationException {
+    public Tlv accept(ByteSerializerVisitor visitor) throws IOException {
         return visitor.visitResponseMessage(this, DataTypeConverter.getSerializableFieldNodePool(fieldNodePool));
     }
 

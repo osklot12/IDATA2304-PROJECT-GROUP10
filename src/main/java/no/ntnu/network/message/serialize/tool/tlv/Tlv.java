@@ -21,6 +21,15 @@ public record Tlv(byte[] typeField, byte[] lengthField, byte[] valueField) {
         return new TlvFrame(typeField.length, lengthField.length);
     }
 
+    /**
+     * Returns the TLV as an array of bytes.
+     *
+     * @return tlv as array of bytes
+     */
+    public byte[] toBytes() {
+        return ByteHandler.combineBytes(typeField, lengthField, valueField);
+    }
+
     @Override
     public boolean equals(Object o) {
         if (o == this) {

@@ -1,15 +1,12 @@
 package no.ntnu.network.message.response;
 
-import no.ntnu.exception.SerializationException;
 import no.ntnu.fieldnode.device.DeviceClass;
-import no.ntnu.network.message.Message;
 import no.ntnu.network.message.common.ByteSerializableInteger;
 import no.ntnu.network.message.common.ByteSerializableString;
 import no.ntnu.network.message.context.ControlPanelContext;
-import no.ntnu.network.message.request.RequestMessage;
-import no.ntnu.network.message.request.SubscribeToFieldNodeRequest;
 import no.ntnu.network.message.serialize.NofspSerializationConstants;
 import no.ntnu.network.message.serialize.tool.DataTypeConverter;
+import no.ntnu.network.message.serialize.tool.tlv.Tlv;
 import no.ntnu.network.message.serialize.visitor.ByteSerializerVisitor;
 
 import java.io.IOException;
@@ -74,7 +71,7 @@ public class SubscribedToFieldNodeResponse extends StandardProcessingResponseMes
     }
 
     @Override
-    public byte[] accept(ByteSerializerVisitor visitor) throws SerializationException {
+    public Tlv accept(ByteSerializerVisitor visitor) throws IOException {
         return visitor.visitResponseMessage(this, new ByteSerializableInteger(fieldNodeAddress),
                 DataTypeConverter.getSerializableFnst(fnst), DataTypeConverter.getSerializableFnsm(fnsm),
                 new ByteSerializableString(name));

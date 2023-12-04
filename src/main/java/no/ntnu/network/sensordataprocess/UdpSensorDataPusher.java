@@ -2,6 +2,7 @@ package no.ntnu.network.sensordataprocess;
 
 import no.ntnu.network.DataCommAgent;
 import no.ntnu.network.message.sensordata.SensorDataMessage;
+import no.ntnu.network.message.serialize.tool.tlv.Tlv;
 import no.ntnu.network.message.serialize.visitor.ByteSerializerVisitor;
 
 import java.io.IOException;
@@ -34,7 +35,7 @@ public class UdpSensorDataPusher implements DataCommAgent {
 
     @Override
     public void sendSensorData(SensorDataMessage sensorData) throws IOException {
-        byte[] bytesToSend = serializer.serialize(sensorData);
-        messageSender.sendMessage(bytesToSend, destIpAddress, destPortNumber);
+        Tlv messageTlv = serializer.serialize(sensorData);
+        messageSender.sendMessage(messageTlv.toBytes(), destIpAddress, destPortNumber);
     }
 }

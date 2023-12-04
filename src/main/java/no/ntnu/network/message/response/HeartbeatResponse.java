@@ -1,13 +1,7 @@
 package no.ntnu.network.message.response;
 
-import no.ntnu.exception.SerializationException;
-import no.ntnu.network.message.Message;
 import no.ntnu.network.message.context.ServerContext;
-import no.ntnu.network.message.request.RequestMessage;
 import no.ntnu.network.message.serialize.NofspSerializationConstants;
-import no.ntnu.network.message.serialize.visitor.ByteSerializerVisitor;
-
-import java.io.IOException;
 
 /**
  * A response to a heartbeat, indicating that the client is still connected.
@@ -34,11 +28,6 @@ public class HeartbeatResponse extends StandardProcessingResponseMessage<ServerC
     @Override
     protected void handleResponseProcessing(ServerContext context) {
         // no further processing required
-    }
-
-    @Override
-    public byte[] accept(ByteSerializerVisitor visitor) throws SerializationException {
-        return visitor.visitResponseMessage(this);
     }
 
     @Override
