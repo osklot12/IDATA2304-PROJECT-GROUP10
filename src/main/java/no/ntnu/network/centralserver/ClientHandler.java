@@ -96,12 +96,6 @@ public class ClientHandler extends ControlProcessAgent<ServerContext> implements
     }
 
     @Override
-    protected void handleEndOfMessageStream() {
-        Logger.error("End of the message stream for " + getRemoteEntityAsString() + " has been met, and the" +
-                " connection will therefore be closed.");
-    }
-
-    @Override
     protected void handleMessageReadingException(IOException e) {
         Logger.error("An exception has been encountered while reading messages from " + getRemoteEntityAsString() +
                 " and the connection will therefore be closed: " + e.getMessage());

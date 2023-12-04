@@ -1,10 +1,7 @@
 package no.ntnu.network.message.deserialize;
 
 import no.ntnu.fieldnode.device.DeviceClass;
-import no.ntnu.network.message.common.ByteSerializableInteger;
-import no.ntnu.network.message.common.ByteSerializableMap;
-import no.ntnu.network.message.common.ByteSerializableSet;
-import no.ntnu.network.message.common.ByteSerializableString;
+import no.ntnu.network.message.common.*;
 import no.ntnu.network.message.context.ServerContext;
 import no.ntnu.network.message.deserialize.component.DeviceLookupTable;
 import no.ntnu.network.message.deserialize.component.NofspMessageDeserializer;
@@ -29,6 +26,7 @@ import no.ntnu.network.representation.FieldNodeInformation;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * A deserializer for the central server, deserializing server-specific messages.
@@ -224,8 +222,16 @@ public class NofspServerDeserializer extends NofspMessageDeserializer<ServerCont
      * @param parameterReader the TlvReader holding the parameter tlvs
      * @return the deserialized request
      */
-    private AdlUpdatedResponse getAdlUpdatedResponse(int messageId, TlvReader parameterReader) {
-        return new AdlUpdatedResponse(messageId);
+    private AdlUpdatedResponse getAdlUpdatedResponse(int messageId, TlvReader parameterReader) throws IOException {
+        AdlUpdatedResponse response = null;
+
+        // deserializes the updated adl
+        ByteSerializableSet<ByteSerializableInteger> updatedAdl = getSetOfType(parameterReader.readNextTlv(),
+                ByteSerializableInteger.class);
+
+        response = new AdlUpdatedResponse(messageId, DataTypeConverter.getSetOfIntegers(updatedAdl));
+
+        return response;
     }
 
     /**

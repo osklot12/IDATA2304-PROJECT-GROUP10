@@ -48,8 +48,8 @@ public class AdlUpdateRequest extends StandardProcessingRequestMessage<FieldNode
         ResponseMessage response = null;
 
         try {
-            context.updateAdl(adlUpdates);
-            response = new AdlUpdatedResponse();
+            Set<Integer> updatedAdl = context.updateAdl(adlUpdates);
+            response = new AdlUpdatedResponse(updatedAdl);
         } catch (NoSuchDeviceException e) {
             response = new AdlUpdateRejectedError(e.getMessage());
         }

@@ -198,6 +198,15 @@ public class ServerContext extends MessageContext {
         centralHub.setLocalActuatorState(agent.getClientNodeAddress(), actuatorAddress, newState);
     }
 
+    /**
+     * Updates the local ADL for the field node.
+     *
+     * @param updatedAdl the updated adl
+     */
+    public void updateLocalAdl(Set<Integer> updatedAdl) {
+        centralHub.updateLocalAdl(agent.getClientNodeAddress(), updatedAdl);
+    }
+
     @Override
     public void logReceivingRequest(RequestMessage request) {
         ServerLogger.requestReceived(request, agent.getRemoteEntityAsString());

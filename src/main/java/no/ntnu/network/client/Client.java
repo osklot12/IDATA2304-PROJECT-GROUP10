@@ -70,11 +70,6 @@ public abstract class Client<C extends ClientContext> extends ControlProcessAgen
     public abstract void disconnect();
 
     @Override
-    protected void handleEndOfMessageStream() {
-        Logger.error("End of the message stream has been met, and the connection will therefore be closed.");
-    }
-
-    @Override
     protected void handleMessageReadingException(IOException e) {
         Logger.error("An exception has been encountered while reading messages and the connection" +
                 "will therefore be closed: " + e.getMessage());

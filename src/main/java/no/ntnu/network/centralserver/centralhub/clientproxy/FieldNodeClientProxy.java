@@ -7,7 +7,9 @@ import no.ntnu.fieldnode.device.DeviceClass;
 import no.ntnu.network.ControlCommAgent;
 import no.ntnu.network.representation.FieldNodeInformation;
 
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * A proxy for a field node client, used for storing information about the field node and interacting with it.
@@ -16,6 +18,7 @@ public class FieldNodeClientProxy extends ClientProxy {
     private final Map<Integer, DeviceClass> fnst;
     private final Map<Integer, Integer> fnsm;
     private final String name;
+    private Set<Integer> adl;
 
     /**
      * Creates a new FieldNodeClientProxy.
@@ -29,6 +32,7 @@ public class FieldNodeClientProxy extends ClientProxy {
         this.fnst = fieldNodeInformation.fnst();
         this.fnsm = fieldNodeInformation.fnsm();
         this.name = fieldNodeInformation.name();
+        this.adl = new HashSet<>();
     }
 
     /**
@@ -112,6 +116,28 @@ public class FieldNodeClientProxy extends ClientProxy {
      */
     public String getName() {
         return name;
+    }
+
+    /**
+     * Returns the Active Device List for the field node.
+     *
+     * @return the adl
+     */
+    public Set<Integer> getAdl() {
+        return adl;
+    }
+
+    /**
+     * Sets the Active Device List.
+     *
+     * @param adl the adl to set
+     */
+    public void setAdl(Set<Integer> adl) {
+        if (adl == null) {
+            throw new IllegalArgumentException("Cannot set adl, because adl is null.");
+        }
+
+        this.adl = adl;
     }
 
     @Override

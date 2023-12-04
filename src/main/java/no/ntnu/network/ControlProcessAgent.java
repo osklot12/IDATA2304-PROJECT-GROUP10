@@ -178,11 +178,6 @@ public abstract class ControlProcessAgent<C extends MessageContext> implements C
     }
 
     /**
-     * Handles the event of meeting the end of the message stream.
-     */
-    protected abstract void handleEndOfMessageStream();
-
-    /**
      * Handles the case of an I/O exception thrown while trying to read the next message.
      *
      * @param e the I/O exception thrown

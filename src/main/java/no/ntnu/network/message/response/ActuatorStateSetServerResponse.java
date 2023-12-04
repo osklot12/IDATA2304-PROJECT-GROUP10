@@ -28,7 +28,7 @@ public class ActuatorStateSetServerResponse extends StandardProcessingResponseMe
 
     @Override
     protected void handleResponseProcessing(ServerContext context) {
-        // no further handling required
+
     }
 
     @Override

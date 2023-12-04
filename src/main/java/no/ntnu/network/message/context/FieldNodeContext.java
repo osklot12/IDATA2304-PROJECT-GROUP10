@@ -49,8 +49,9 @@ public class FieldNodeContext extends ClientContext {
      * these addresses to the ADL, while negative addresses indicates the removal of these addresses.
      *
      * @param adlUpdate the ADL update set
+     * @return the updated adl
      */
-    public void updateAdl(Set<Integer> adlUpdate) throws NoSuchDeviceException {
+    public Set<Integer> updateAdl(Set<Integer> adlUpdate) throws NoSuchDeviceException {
         if (adlUpdate == null) {
             throw new IllegalArgumentException("Cannot update ADL, because adlUpdate is null.");
         }
@@ -67,6 +68,8 @@ public class FieldNodeContext extends ClientContext {
                 adl.add(address);
             }
         });
+
+        return adl;
     }
 
     /**

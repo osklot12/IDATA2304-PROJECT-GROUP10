@@ -194,23 +194,38 @@ public class CentralHub implements SensorDataDestination, DeviceLookupTable {
             throw new SubscriptionException(formatExceptionMessage("control panel is already subscribed", fieldNodeAddress));
         }
 
-        Set<Integer> previousAdl = getAdlForFieldNode(fieldNodeAddress);
         addFieldNodeSubscriber(subscriberAddress, fieldNodeAddress);
 
-        if (adlChanged(previousAdl, fieldNodeAddress)) {
+        // sends an adl update if adl changed due to the event
+        if (!isAdlSynchronized(fieldNodeAddress)) {
             try {
                 sendAdlUpdate(fieldNodeAddress);
             } catch (IOException e) {
-                removeFieldNodeSubscriber(subscriberAddress, fieldNodeAddress);
-                throw new SubscriptionException("Cannot send ADL update request to field node: " + e.getMessage());
+                Logger.error("Could not send ADL update to field node with address " + fieldNodeAddress);
             }
         }
 
         return fieldNodes.get(fieldNodeAddress);
     }
 
-    private boolean adlChanged(Set<Integer> previousAdl, int fieldNodeAddress) {
-        return !previousAdl.equals(getAdlForFieldNode(fieldNodeAddress));
+    /**
+     * Indicates whether the local ADL for a field node contains data that the field node does not have.
+     *
+     * @param fieldNodeAddress the address of the field node
+     * @return true if field node knows about adl changes, false otherwise
+     */
+    private boolean isAdlSynchronized(int fieldNodeAddress) {
+        boolean isSynchronized = false;
+
+        FieldNodeClientProxy fieldNodeProxy = fieldNodes.get(fieldNodeAddress);
+        if (fieldNodeProxy != null) {
+            isSynchronized = fieldNodeProxy.getAdl().equals(getAdlForFieldNode(fieldNodeAddress));
+        } else {
+            throw new IllegalArgumentException("Cannot check if adl is synchronized, because no field node with" +
+                    " address " + fieldNodeAddress + " was found.");
+        }
+
+        return isSynchronized;
     }
 
     private boolean validControlPanel(int subscriberAddress) {
@@ -237,19 +252,34 @@ public class CentralHub implements SensorDataDestination, DeviceLookupTable {
         Set<Integer> subscribers = getFieldNodeSubscribers(fieldNodeAddress);
         int subscriberAddress = subscriber.getClientNodeAddress();
         if (subscribers != null && subscribers.contains(subscriberAddress)) {
-            Set<Integer> initialAdl = getAdlForFieldNode(fieldNodeAddress);
             subscribers.remove(subscriberAddress);
-            if (adlChanged(initialAdl, fieldNodeAddress)) {
+
+            // sends an adl update if adl changed due to the event
+            if (!isAdlSynchronized(fieldNodeAddress)) {
                 try {
                     sendAdlUpdate(fieldNodeAddress);
                 } catch (IOException e) {
-                    Logger.error("Could not send ADL update to field node " + fieldNodeAddress + ": " + e.getMessage());
+                    Logger.error("Could not send ADL update to field node with address " + fieldNodeAddress);
                 }
             }
         } else {
             throw new SubscriptionException("Cannot unsubscribe from field node " + fieldNodeAddress + ", because " +
                     "no such subscription exists.");
         }
+    }
+
+    /**
+     * Updates the locally stored ADL for a field node.
+     *
+     * @param fieldNodeAddress the address of the field node
+     * @param updatedAdl the updated adl to set
+     */
+    public void updateLocalAdl(int fieldNodeAddress, Set<Integer> updatedAdl) {
+        if (updatedAdl == null) {
+            throw new IllegalArgumentException("Cannot update local ADL, because updatedAdl is null.");
+        }
+
+        fieldNodes.get(fieldNodeAddress).setAdl(updatedAdl);
     }
 
     /**

@@ -142,7 +142,7 @@ public class NofspServerDeserializerTest {
      */
     @Test
     public void testAdlUpdatedResponseSerialization() throws IOException {
-        AdlUpdatedResponse response = new AdlUpdatedResponse();
+        AdlUpdatedResponse response = new AdlUpdatedResponse(new HashSet<>());
 
         Tlv tlv = serializer.serialize(response);
 
