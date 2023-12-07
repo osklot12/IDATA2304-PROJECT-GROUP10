@@ -4,6 +4,7 @@ import no.ntnu.exception.ClientRegistrationException;
 import no.ntnu.exception.NoSuchAddressException;
 import no.ntnu.exception.SubscriptionException;
 import no.ntnu.fieldnode.device.DeviceClass;
+import no.ntnu.tools.SimpleLogger;
 import no.ntnu.network.ControlCommAgent;
 import no.ntnu.network.DataCommAgent;
 import no.ntnu.network.representation.FieldNodeInformation;
@@ -13,7 +14,7 @@ import no.ntnu.network.centralserver.centralhub.clientproxy.FieldNodeClientProxy
 import no.ntnu.network.message.request.FieldNodeActivateActuatorRequest;
 import no.ntnu.network.message.request.RequestMessage;
 import no.ntnu.network.message.response.ResponseMessage;
-import no.ntnu.tools.logger.ServerLogger;
+import no.ntnu.tools.eventformatter.ServerEventFormatter;
 
 import java.io.IOException;
 import java.util.Map;
@@ -25,6 +26,7 @@ import java.util.Set;
 public class ServerContext extends MessageContext {
     private final UdpDataCommAgentProvider udpDataSink;
     private final CentralHub centralHub;
+    private final Set<SimpleLogger> loggers;
 
     /**
      * Creates a new CentralServerContext.
@@ -33,7 +35,7 @@ public class ServerContext extends MessageContext {
      * @param udpDataSink the
      * @param centralHub the central hub to operate on
      */
-    public ServerContext(ControlCommAgent agent, UdpDataCommAgentProvider udpDataSink, CentralHub centralHub) {
+    public ServerContext(ControlCommAgent agent, UdpDataCommAgentProvider udpDataSink, CentralHub centralHub, Set<SimpleLogger> loggers) {
         super(agent);
         if (udpDataSink == null) {
             throw new IllegalStateException("Cannot create ServerContext, because dataAgentProvider is null.");
@@ -43,8 +45,13 @@ public class ServerContext extends MessageContext {
             throw new IllegalArgumentException("Cannot create ServerContext, because central hub is null.");
         }
 
+        if (loggers == null) {
+            throw new IllegalArgumentException("Cannot create Servercontext, because loggers is null.");
+        }
+
         this.udpDataSink = udpDataSink;
         this.centralHub = centralHub;
+        this.loggers = loggers;
     }
 
     /**
@@ -209,11 +216,11 @@ public class ServerContext extends MessageContext {
 
     @Override
     public void logReceivingRequest(RequestMessage request) {
-        ServerLogger.requestReceived(request, agent.getRemoteEntityAsString());
+        loggers.forEach(logger -> logger.logInfo(ServerEventFormatter.requestReceived(request, agent.getRemoteEntityAsString())));
     }
 
     @Override
     public void logReceivingResponse(ResponseMessage response) {
-        ServerLogger.responseReceived(response, agent.getRemoteEntityAsString());
+        loggers.forEach(logger -> logger.logInfo(ServerEventFormatter.responseReceived(response, agent.getRemoteEntityAsString())));
     }
 }

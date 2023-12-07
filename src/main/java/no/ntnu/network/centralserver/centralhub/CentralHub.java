@@ -13,7 +13,7 @@ import no.ntnu.network.message.request.AdlUpdateRequest;
 import no.ntnu.network.message.request.ServerFnsmNotificationRequest;
 import no.ntnu.network.message.sensordata.SensorDataMessage;
 import no.ntnu.network.representation.FieldNodeInformation;
-import no.ntnu.tools.logger.Logger;
+import no.ntnu.tools.SystemOutLogger;
 
 import java.io.IOException;
 import java.util.*;
@@ -201,7 +201,7 @@ public class CentralHub implements SensorDataDestination, DeviceLookupTable {
             try {
                 sendAdlUpdate(fieldNodeAddress);
             } catch (IOException e) {
-                Logger.error("Could not send ADL update to field node with address " + fieldNodeAddress);
+                SystemOutLogger.error("Could not send ADL update to field node with address " + fieldNodeAddress);
             }
         }
 
@@ -259,7 +259,7 @@ public class CentralHub implements SensorDataDestination, DeviceLookupTable {
                 try {
                     sendAdlUpdate(fieldNodeAddress);
                 } catch (IOException e) {
-                    Logger.error("Could not send ADL update to field node with address " + fieldNodeAddress);
+                    SystemOutLogger.error("Could not send ADL update to field node with address " + fieldNodeAddress);
                 }
             }
         } else {
@@ -342,7 +342,7 @@ public class CentralHub implements SensorDataDestination, DeviceLookupTable {
      */
     private Set<Integer> getAdlForFieldNode(int fieldNodeAddress) {
         Set<DeviceClass> activeClasses = new HashSet<>();
-        Set<Integer> subscribers = sensorDataRoutingTable.get(fieldNodeAddress);
+        Set<Integer> subscribers = getFieldNodeSubscribers(fieldNodeAddress);
         subscribers.forEach(subscriber -> {
             // adding all compatible device classes for each subscriber of the field node
             ControlPanelClientProxy controlPanel = controlPanels.get(subscriber);
@@ -428,7 +428,7 @@ public class CentralHub implements SensorDataDestination, DeviceLookupTable {
             try {
                 agent.sendRequest(request);
             } catch (IOException e) {
-                Logger.error("Cannot notify " + agent.getRemoteEntityAsString() + " about the change of state for" +
+                SystemOutLogger.error("Cannot notify " + agent.getRemoteEntityAsString() + " about the change of state for" +
                         "actuator " + actuatorAddress + " on field node " + fieldNodeAddress);
             }
         });
@@ -449,7 +449,7 @@ public class CentralHub implements SensorDataDestination, DeviceLookupTable {
             try {
                 controlPanel.sendSensorData(sensorData);
             } catch (IOException e) {
-                Logger.error("Cannot send sensor data to control panel with address " + subscriberAddress + ": " +
+                SystemOutLogger.error("Cannot send sensor data to control panel with address " + subscriberAddress + ": " +
                         e.getMessage());
             }
         });

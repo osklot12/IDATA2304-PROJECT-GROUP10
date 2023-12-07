@@ -15,8 +15,8 @@ import no.ntnu.network.message.response.ResponseMessage;
 import no.ntnu.network.message.serialize.NofspSerializationConstants;
 import no.ntnu.network.message.serialize.visitor.ByteSerializerVisitor;
 import no.ntnu.network.sensordataprocess.UdpSensorDataPusher;
-import no.ntnu.tools.logger.Logger;
-import no.ntnu.tools.logger.ServerLogger;
+import no.ntnu.tools.SystemOutLogger;
+import no.ntnu.tools.eventformatter.ServerEventFormatter;
 
 import java.io.IOException;
 import java.net.Socket;
@@ -60,7 +60,7 @@ public class ClientHandler extends ControlProcessAgent<ServerContext> implements
         this.deserializer = deserializer;
         setSocket(clientSocket);
         establishConnectionServices();
-        this.context = new ServerContext(this, this, centralHub);
+        this.context = new ServerContext(this, this, centralHub, getLoggers());
     }
 
     /**
@@ -91,13 +91,13 @@ public class ClientHandler extends ControlProcessAgent<ServerContext> implements
     @Override
     public void run() {
         if (establishConnection(serializer, deserializer)) {
-            Logger.info("Successfully connected to client " + getRemoteSocketAddress());
+            logInfo("Successfully connected to client " + getRemoteSocketAddress());
         }
     }
 
     @Override
     protected void handleMessageReadingException(IOException e) {
-        Logger.error("An exception has been encountered while reading messages from " + getRemoteEntityAsString() +
+        logError("An exception has been encountered while reading messages from " + getRemoteEntityAsString() +
                 " and the connection will therefore be closed: " + e.getMessage());
     }
 
@@ -106,41 +106,45 @@ public class ClientHandler extends ControlProcessAgent<ServerContext> implements
         try {
             message.process(context);
         } catch (IOException e) {
-            Logger.error("Cannot process message: " + e.getMessage());
+            logError("Cannot process message: " + e.getMessage());
         }
     }
 
     @Override
-    protected void logDisconnection() {
-        Logger.info("Client " + getRemoteEntityAsString() + " has been disconnected.");
+    protected void handleConnectionClosing() {
+        logInfo("Client " + getRemoteEntityAsString() + " has been disconnected.");
+        // if client is registered
+        if (getClientNodeAddress() != -1) {
+            context.deregisterClient();
+        }
     }
 
     @Override
     protected void logSendRequestMessage(RequestMessage request) {
-        ServerLogger.requestSent(request, getRemoteSocketAddress().toString());
+        logInfo(ServerEventFormatter.requestSent(request, getRemoteSocketAddress().toString()));
     }
 
     @Override
     protected void logSendResponseMessage(ResponseMessage response) {
-        ServerLogger.responseSent(response, getRemoteSocketAddress().toString());
+        logInfo(ServerEventFormatter.responseSent(response, getRemoteSocketAddress().toString()));
     }
 
     @Override
     public void requestTimedOut(RequestMessage requestMessage) {
-        ServerLogger.requestTimeout(requestMessage, getRemoteSocketAddress().toString());
+        logError(ServerEventFormatter.requestTimeout(requestMessage, getRemoteSocketAddress().toString()));
 
         // checks if the timed out request is a heartbeat
         if (NofspSerializationConstants.HEART_BEAT.equals(requestMessage.getCommand().getString())) {
             // timed out heartbeats closes the connection
             safelyClose();
-            ServerLogger.deadHeartbeat(getRemoteSocketAddress().toString());
+            ServerEventFormatter.deadClient(getRemoteSocketAddress().toString());
         }
     }
 
     @Override
     public void connectionServiceShutdown(String message) {
         if (isConnected()) {
-            ServerLogger.emergency(message);
+            ServerEventFormatter.emergency(message);
             safelyClose();
         }
     }

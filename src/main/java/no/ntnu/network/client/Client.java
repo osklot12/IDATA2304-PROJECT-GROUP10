@@ -6,8 +6,8 @@ import no.ntnu.network.message.deserialize.component.MessageDeserializer;
 import no.ntnu.network.message.request.RequestMessage;
 import no.ntnu.network.message.response.ResponseMessage;
 import no.ntnu.network.message.serialize.visitor.ByteSerializerVisitor;
-import no.ntnu.tools.logger.ClientLogger;
-import no.ntnu.tools.logger.Logger;
+import no.ntnu.tools.eventformatter.ClientEventFormatter;
+import no.ntnu.tools.SystemOutLogger;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -34,10 +34,10 @@ public abstract class Client<C extends ClientContext> extends ControlProcessAgen
             setSocket(new Socket(serverAddress, portNumber));
             if (establishConnection(serializer, deserializer)) {
                 success = true;
-                Logger.info("Successfully connected to server " + getRemoteSocketAddress());
+                SystemOutLogger.info("Successfully connected to server " + getRemoteSocketAddress());
             }
         } catch (IOException e) {
-            Logger.error("Cannot connect to server '" + serverAddress + "' with port number " + portNumber +
+            SystemOutLogger.error("Cannot connect to server '" + serverAddress + "' with port number " + portNumber +
                     ": " + e.getMessage());
         }
 
@@ -61,8 +61,9 @@ public abstract class Client<C extends ClientContext> extends ControlProcessAgen
      * Connects to the server.
      *
      * @param serverAddress the ip address of the server
+     * @throws IOException thrown if an I/O exception occurs
      */
-    public abstract void connect(String serverAddress);
+    public abstract void connect(String serverAddress) throws IOException;
 
     /**
      * Disconnects from the server
@@ -71,28 +72,28 @@ public abstract class Client<C extends ClientContext> extends ControlProcessAgen
 
     @Override
     protected void handleMessageReadingException(IOException e) {
-        Logger.error("An exception has been encountered while reading messages and the connection" +
+        logError("An exception has been encountered while reading messages and the connection" +
                 "will therefore be closed: " + e.getMessage());
     }
 
     @Override
-    protected void logDisconnection() {
-        Logger.info("Disconnected from the server.");
+    protected void handleConnectionClosing() {
+        logInfo("Disconnected from the server.");
     }
 
 
     @Override
     public void requestTimedOut(RequestMessage requestMessage) {
-        ClientLogger.requestTimeout(requestMessage);
+        logError(ClientEventFormatter.requestTimeout(requestMessage));
     }
 
     @Override
     protected void logSendRequestMessage(RequestMessage request) {
-        ClientLogger.requestSent(request);
+        logInfo(ClientEventFormatter.requestSent(request));
     }
 
     @Override
     protected void logSendResponseMessage(ResponseMessage response) {
-        ClientLogger.responseSent(response);
+        logInfo(ClientEventFormatter.responseSent(response));
     }
 }

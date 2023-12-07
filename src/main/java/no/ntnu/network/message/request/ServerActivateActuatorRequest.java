@@ -2,6 +2,7 @@ package no.ntnu.network.message.request;
 
 import no.ntnu.network.message.common.ByteSerializableInteger;
 import no.ntnu.network.message.context.ServerContext;
+import no.ntnu.network.message.response.ActuatorStateSetControlPanelResponse;
 import no.ntnu.network.message.response.ResponseMessage;
 import no.ntnu.network.message.response.error.AuthenticationFailedError;
 import no.ntnu.network.message.response.error.DeviceInteractionFailedError;
@@ -56,6 +57,7 @@ public class ServerActivateActuatorRequest extends StandardProcessingRequestMess
         if (context.isClientRegistered()) {
             try {
                 context.requestActuatorActivationForFieldNode(fieldNodeAddress, actuatorAddress, newState);
+                response = new ActuatorStateSetControlPanelResponse();
             } catch (IOException e) {
                 response = new DeviceInteractionFailedError(e.getMessage());
             }

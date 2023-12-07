@@ -15,7 +15,7 @@ import no.ntnu.network.message.serialize.visitor.ByteSerializerVisitor;
 import no.ntnu.network.message.serialize.visitor.NofspSerializer;
 import no.ntnu.network.representation.FieldNodeInformation;
 import no.ntnu.network.sensordataprocess.UdpSensorDataPusher;
-import no.ntnu.tools.logger.Logger;
+import no.ntnu.tools.SystemOutLogger;
 
 import java.io.IOException;
 import java.net.SocketException;
@@ -51,7 +51,7 @@ public class FieldNodeClient extends Client<FieldNodeContext> implements FieldNo
         this.fieldNode = fieldNode;
         fieldNode.addListener(this);
         this.adl = new HashSet<>();
-        this.context = new FieldNodeContext(this, fieldNode, this.adl);
+        this.context = new FieldNodeContext(this, fieldNode, this.adl, getLoggers());
     }
 
     @Override
@@ -66,7 +66,7 @@ public class FieldNodeClient extends Client<FieldNodeContext> implements FieldNo
             try {
                 establishSensorDataProcess();
             } catch (SocketException e) {
-                Logger.error("Could not establish sensor data process: " + e.getMessage());
+                logError("Could not establish sensor data process: " + e.getMessage());
             }
         }
     }
@@ -80,7 +80,7 @@ public class FieldNodeClient extends Client<FieldNodeContext> implements FieldNo
         try {
             sendRequest(new RegisterFieldNodeRequest(fieldNodeInformation));
         } catch (IOException e) {
-            Logger.error("Cannot send registration request: " + e.getMessage());
+            logError("Cannot send registration request: " + e.getMessage());
         }
     }
 
@@ -99,7 +99,7 @@ public class FieldNodeClient extends Client<FieldNodeContext> implements FieldNo
         try {
             sendRequest(new ActuatorNotificationRequest(actuatorAddress, newState));
         } catch (IOException e) {
-            Logger.error("Cannot send request to update actuator state for actuator " + actuatorAddress);
+            logError("Cannot send request to update actuator state for actuator " + actuatorAddress);
         }
     }
 
@@ -107,7 +107,7 @@ public class FieldNodeClient extends Client<FieldNodeContext> implements FieldNo
         try {
             sensorDataProcess.sendSensorData(message);
         } catch (IOException e) {
-            Logger.error("Cannot send sensor data message: " + e.getMessage());
+            logError("Cannot send sensor data message: " + e.getMessage());
         }
     }
 
@@ -116,7 +116,7 @@ public class FieldNodeClient extends Client<FieldNodeContext> implements FieldNo
         try {
             message.process(context);
         } catch (IOException e) {
-            Logger.error("Cannot process received message: " + e.getMessage());
+            logError("Cannot process received message: " + e.getMessage());
         }
     }
 

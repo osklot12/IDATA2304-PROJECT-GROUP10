@@ -3,7 +3,7 @@ package no.ntnu.network.connectionservice.sensordatarouter;
 import no.ntnu.network.connectionservice.ConnectionService;
 import no.ntnu.network.message.sensordata.SensorDataMessage;
 import no.ntnu.network.sensordataprocess.UdpSensorDataSink;
-import no.ntnu.tools.logger.Logger;
+import no.ntnu.tools.SystemOutLogger;
 
 import java.io.IOException;
 import java.util.HashSet;
@@ -50,7 +50,7 @@ public class UdpSensorDataRouter implements ConnectionService {
                     destinations.forEach(destination -> destination.receiveSensorData(message));
                 }
             } catch (IOException e) {
-                Logger.error("Could not receive sensor data message: " + e.getMessage());
+                SystemOutLogger.error("Could not receive sensor data message: " + e.getMessage());
             }
         }
     }

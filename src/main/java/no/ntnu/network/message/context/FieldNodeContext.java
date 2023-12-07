@@ -3,6 +3,7 @@ package no.ntnu.network.message.context;
 import no.ntnu.exception.ActuatorInteractionFailedException;
 import no.ntnu.exception.NoSuchDeviceException;
 import no.ntnu.fieldnode.FieldNode;
+import no.ntnu.tools.SimpleLogger;
 import no.ntnu.network.ControlCommAgent;
 
 import java.util.Iterator;
@@ -22,8 +23,8 @@ public class FieldNodeContext extends ClientContext {
      * @param fieldNode the field node to operate on
      * @param adl the active device list for the field node
      */
-    public FieldNodeContext(ControlCommAgent agent, FieldNode fieldNode, Set<Integer> adl) {
-        super(agent);
+    public FieldNodeContext(ControlCommAgent agent, FieldNode fieldNode, Set<Integer> adl, Set<SimpleLogger> loggers) {
+        super(agent, loggers);
         if (fieldNode == null) {
             throw new IllegalArgumentException("Cannot create FieldNodeContext, because field node is null");
         }

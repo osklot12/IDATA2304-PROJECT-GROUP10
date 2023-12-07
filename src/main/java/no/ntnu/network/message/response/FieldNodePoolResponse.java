@@ -43,7 +43,7 @@ public class FieldNodePoolResponse extends StandardProcessingResponseMessage<Con
 
     @Override
     protected void handleResponseProcessing(ControlPanelContext context) {
-        // TODO handle further processing
+        context.addFieldNodePool(fieldNodePool);
     }
 
     @Override

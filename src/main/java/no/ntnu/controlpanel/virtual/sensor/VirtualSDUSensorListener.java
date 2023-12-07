@@ -1,4 +1,4 @@
-package no.ntnu.controlpanel.virtual;
+package no.ntnu.controlpanel.virtual.sensor;
 
 /**
  * A listener listening for a change in data held by a virtual sdu sensor.
@@ -7,7 +7,7 @@ public interface VirtualSDUSensorListener {
     /**
      * Triggers when new sdu data is stored by a virtual sdu sensor.
      *
-     * @param virtualSDUSensor virtual sdu sensor that triggered the event
+     * @param sensorAddress the address of the sensor that captured the data
      */
-    void newSDUData(VirtualSDUSensor virtualSDUSensor);
+    void newSduData(int sensorAddress);
 }

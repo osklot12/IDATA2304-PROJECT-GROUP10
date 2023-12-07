@@ -1,0 +1,100 @@
+.field-node-list {
+    -fx-background-color: transparent; /* Example background color */
+    -fx-padding: 5px; /* Padding inside the ListView */
+    -fx-control-inner-background-alt: -fx-control-inner-background;
+}
+
+.list-cell:selected, .list-cell:focused {
+    -fx-background-color: transparent; /* Removes the blue background on selection */
+}
+
+.field-node-list .list-cell {
+    -fx-background-color: transparent; /* Reset background color */
+    -fx-background-insets: 0; /* Reset any background insets */
+}
+
+.field-node-pool-header {
+    -fx-alignment: center; /* Center align the content */
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+    -fx-padding: 15px;
+}
+
+.field-node-pool-box {
+     -fx-alignment: center-left;
+     -fx-spacing: 10px; /* Spacing between elements */
+     -fx-padding: 12px;
+     -fx-background-color: #e6e6e6;
+     -fx-border-radius: 5px;
+     -fx-background-radius: 5px;
+     -fx-effect: dropshadow(three-pass-box, rgba(0, 0, 0, 0.1), 10, 0, 0, 5); /* Subtle shadow */
+}
+
+.field-node-pool-box-label {
+    -fx-font-weight: bold;
+    -fx-font-size: 14px;
+}
+
+.standard-button {
+    -fx-cursor: hand;
+    -fx-background-color: #154c79;
+    -fx-text-fill: #ebebeb;
+    -fx-font-size: 12px;
+    -fx-border-radius: 5;
+    -fx-background-radius: 5;
+    -fx-padding: 5 10;
+}
+
+.standard-button:hover {
+    -fx-background-color: #4e8cbf;
+}
+
+.field-node-view-section-scroll-pane {
+    -fx-padding: 20px 20px;
+}
+
+.field-node-view-grid {
+     -fx-padding: 10px;
+}
+
+.field-node-view {
+    -fx-min-width: 370px;
+    -fx-max-width: 370px;
+    -fx-alignment: center; /* Center align the content */
+    -fx-padding: 20px;
+    -fx-border-radius: 5px;
+    -fx-background-radius: 5px;
+    -fx-background-color: #e6e6e6;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.8), 5, 0, 0, 1);
+}
+
+.field-node-view-header {
+    -fx-alignment: center; /* Center align the content */
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+    -fx-padding: 0px 10px 10px 10px;
+}
+
+.device-navigator {
+    -fx-min-width: 300px;
+    -fx-max-width: 300px;
+    -fx-min-height: 250px;
+    -fx-max-height: 250px;
+    -fx-padding: 20px;
+}
+
+.display-grid-cell {
+    -fx-alignment: center; /* Center align the content */
+    -fx-padding: 10px;
+    -fx-min-width: 120px;
+    -fx-max-width: 120px;
+    -fx-min-height: 100px;
+    -fx-max-height: 100px;
+    -fx-background-color: #e6e6e6;
+}
+
+.sdu-data-display {
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-padding: 5px;
+}

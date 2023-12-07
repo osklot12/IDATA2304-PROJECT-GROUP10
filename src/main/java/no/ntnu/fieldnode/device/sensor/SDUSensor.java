@@ -16,7 +16,7 @@ public abstract class SDUSensor implements Sensor {
     protected final int sensorNoise;
     protected final SduSensorDataBroker dataBroker;
     private Timer captureTimer;
-    private static final int CAPTURE_INTERVAL = 5000;
+    private static final int CAPTURE_INTERVAL = 1000;
     protected double sensorData;
     protected Environment environment;
 

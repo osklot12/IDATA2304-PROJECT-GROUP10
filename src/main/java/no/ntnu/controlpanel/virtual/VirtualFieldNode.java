@@ -1,22 +1,24 @@
 package no.ntnu.controlpanel.virtual;
 
-import no.ntnu.broker.VirtualFieldNodeBroker;
+import no.ntnu.controlpanel.virtual.actuator.ActuatorRelationAddress;
+import no.ntnu.controlpanel.virtual.actuator.AddressedVActuatorListener;
+import no.ntnu.controlpanel.virtual.actuator.VirtualStandardActuator;
+import no.ntnu.controlpanel.virtual.sensor.VirtualSDUSensor;
 import no.ntnu.exception.NoSuchVirtualDeviceException;
 import no.ntnu.fieldnode.device.DeviceClass;
-import no.ntnu.tools.logger.Logger;
 
 import java.util.*;
 
 /**
- * A representation of a field node, used for storing data for the field node it represents.
- * Unlike the FieldNode, the VirtualFieldNode does not contain any proper logic for the node.
+ * A representation of a field node, used for storing data about the field node it represents.
  */
-public class VirtualFieldNode implements VirtualSDUSensorListener, VirtualActuatorListener {
-    private static final int VIRTUAL_SENSOR_BUFFER_SIZE = 10;
-    private final Map<Integer, VirtualDevice> devices;
-    private final VirtualFieldNodeBroker fieldNodeBroker;
+public class VirtualFieldNode implements AddressedVActuatorListener {
+    private static final int VIRTUAL_SENSOR_BUFFER_SIZE = 20;
+    private final Map<Integer, VirtualSDUSensor> virtualSduSensors;
+    private final Map<Integer, VirtualStandardActuator> virtualStandardActuators;
     private final String name;
     private final Map<DeviceClass, VirtualDeviceCreator> virtualDeviceCreatorMap;
+    private final Map<Integer, VirtualFieldNodeListener> listeners;
 
     /**
      * A functional interface defining virtual device creating methods.
@@ -36,31 +38,46 @@ public class VirtualFieldNode implements VirtualSDUSensorListener, VirtualActuat
             throw new IllegalArgumentException("Cannot create VirtualFieldNode, because name is null.");
         }
 
-        devices = new HashMap<>();
-        this.fieldNodeBroker = new VirtualFieldNodeBroker();
+        this.virtualSduSensors = new HashMap<>();
+        this.virtualStandardActuators = new HashMap<>();
         this.name = name;
         this.virtualDeviceCreatorMap = new EnumMap<>(DeviceClass.class);
+        this.listeners = new HashMap<>();
         initializeVirtualDeviceCreatorMap();
-    }
-
-    /**
-     * Creates a new VirtualFieldNode.
-     */
-    public VirtualFieldNode() {
-        this("field node");
     }
 
     /**
      * Initializes the mapping of device classes to virtual device creating methods.
      */
     private void initializeVirtualDeviceCreatorMap() {
-        virtualDeviceCreatorMap.put(DeviceClass.S1, this::getVirtualSDUSensor);
-        virtualDeviceCreatorMap.put(DeviceClass.S2, this::getVirtualSDUSensor);
-        virtualDeviceCreatorMap.put(DeviceClass.S3, this::getVirtualSDUSensor);
+        virtualDeviceCreatorMap.put(DeviceClass.S1, this::createVirtualSDUSensor);
+        virtualDeviceCreatorMap.put(DeviceClass.S2, this::createVirtualSDUSensor);
+        virtualDeviceCreatorMap.put(DeviceClass.S3, this::createVirtualSDUSensor);
 
-        virtualDeviceCreatorMap.put(DeviceClass.A1, this::getVirtualStandardActuator);
-        virtualDeviceCreatorMap.put(DeviceClass.A2, this::getVirtualStandardActuator);
-        virtualDeviceCreatorMap.put(DeviceClass.A3, this::getVirtualStandardActuator);
+        virtualDeviceCreatorMap.put(DeviceClass.A1, this::createVirtualStandardActuator);
+        virtualDeviceCreatorMap.put(DeviceClass.A2, this::createVirtualStandardActuator);
+        virtualDeviceCreatorMap.put(DeviceClass.A3, this::createVirtualStandardActuator);
+    }
+
+    /**
+     * Adds a listeners to listen for events for the virtual field node.
+     * Each listener is associated with an address, and this address is used when notifying the listener
+     * about the event.
+     *
+     * @param address the address of the relation
+     * @param listener the listener to add
+     */
+    public void addListener(int address, VirtualFieldNodeListener listener) {
+        listeners.put(address, listener);
+    }
+
+    /**
+     * Returns the name of the virtual field node.
+     *
+     * @return the name
+     */
+    public String getName() {
+        return name;
     }
 
     /**
@@ -69,7 +86,7 @@ public class VirtualFieldNode implements VirtualSDUSensorListener, VirtualActuat
      * @param deviceClass the device class of the sensor
      * @return the virtual sdu sensor
      */
-    private VirtualSDUSensor getVirtualSDUSensor(DeviceClass deviceClass) {
+    private VirtualSDUSensor createVirtualSDUSensor(DeviceClass deviceClass) {
         return new VirtualSDUSensor(deviceClass, VIRTUAL_SENSOR_BUFFER_SIZE);
     }
 
@@ -79,7 +96,7 @@ public class VirtualFieldNode implements VirtualSDUSensorListener, VirtualActuat
      * @param deviceClass the device class of the actuator
      * @return the virtual standard actuator
      */
-    private VirtualStandardActuator getVirtualStandardActuator(DeviceClass deviceClass) {
+    private VirtualStandardActuator createVirtualStandardActuator(DeviceClass deviceClass) {
         return new VirtualStandardActuator(deviceClass, 0);
     }
 
@@ -90,7 +107,35 @@ public class VirtualFieldNode implements VirtualSDUSensorListener, VirtualActuat
      * @return the associated virtual device, null if no match is found
      */
     public VirtualDevice getVirtualDevice(int deviceAddress) {
-        return devices.get(deviceAddress);
+        return getVirtualDevices().get(deviceAddress);
+    }
+
+    /**
+     * Returns all virtual SDU sensors.
+     *
+     * @return all virtual sdu sensors
+     */
+    public Map<Integer, VirtualSDUSensor> getVirtualSDUSensors() {
+        return virtualSduSensors;
+    }
+
+    /**
+     * Returns all virtual standard actuators.
+     *
+     * @return all virtual standard actuators
+     */
+    public Map<Integer, VirtualStandardActuator> getVirtualStandardActuators() {
+        return virtualStandardActuators;
+    }
+
+    /**
+     * Returns the virtual standard actuator with the given address.
+     *
+     * @param address the address of the virtual standard actuator
+     * @return the virtual standard actuator, null if no such actuator exists
+     */
+    public VirtualStandardActuator getVirtualStandardActuator(int address) {
+        return virtualStandardActuators.get(address);
     }
 
     /**
@@ -107,7 +152,13 @@ public class VirtualFieldNode implements VirtualSDUSensorListener, VirtualActuat
             VirtualDeviceCreator deviceCreator = virtualDeviceCreatorMap.get(deviceClass);
             if (deviceCreator != null) {
                 VirtualDevice virtualDevice = deviceCreator.getVirtualDevice(deviceClass);
-                addVirtualDevice(address, virtualDevice);
+                if (virtualDevice instanceof VirtualSDUSensor sduSensor) {
+                    addVirtualSduSensor(address, sduSensor);
+                }
+
+                if (virtualDevice instanceof VirtualStandardActuator standardActuator) {
+                    addVirtualStandardActuator(address, standardActuator);
+                }
             }
         });
     }
@@ -126,84 +177,38 @@ public class VirtualFieldNode implements VirtualSDUSensorListener, VirtualActuat
     }
 
     /**
-     * Adds a virtual device to the virtual field node.
+     * Adds a virtual SDU sensor to the virtual field node.
      *
-     * @param address the address for the virtual device
-     * @param device the virtual device to add
-     * @return true if successfully added
+     * @param address the address of the virtual sdu sensor
+     * @param virtualSDUSensor the virtual sdu sensor to add
      */
-    public boolean addVirtualDevice(int address, VirtualDevice device) {
-        boolean success = false;
-
-        if (!(devices.containsKey(address))) {
-            if (connectVirtualDevice(device)) {
-                devices.put(address, device);
-                success = true;
-            } else {
-                disconnectVirtualDevice(device);
-            }
-        }
-
-        return success;
+    public void addVirtualSduSensor(int address, VirtualSDUSensor virtualSDUSensor) {
+        virtualSduSensors.put(address, virtualSDUSensor);
     }
 
     /**
-     * Returns a collection of all the virtual devices for the virtual field node.
+     * Adds a virtual standard actuator to the virtual field node.
      *
-     * @return collection of virtual devices
+     * @param address the address of the virtual standard actuator
+     * @param virtualStandardActuator the virtual standard actuator to add
      */
-    public Collection<VirtualDevice> getVirtualDevices() {
-        return devices.values();
+    public void addVirtualStandardActuator(int address, VirtualStandardActuator virtualStandardActuator) {
+        virtualStandardActuators.put(address, virtualStandardActuator);
+        virtualStandardActuator.addListener(new ActuatorRelationAddress(address, this));
     }
 
-    public int getVirtualActuatorState(int actuatorAddress) {
-        int state = -1;
+    /**
+     * Returns a map of all the virtual devices for the virtual field node.
+     *
+     * @return map of virtual devices
+     */
+    public Map<Integer, VirtualDevice> getVirtualDevices() {
+        Map<Integer, VirtualDevice> result = new HashMap<>();
 
-        if (devices.containsKey(actuatorAddress) && devices.get(actuatorAddress) instanceof VirtualStandardActuator actuator) {
-            state = actuator.getState();
-        }
+        result.putAll(getVirtualSDUSensors());
+        result.putAll(getVirtualStandardActuators());
 
-        return state;
-    }
-
-    private boolean connectVirtualDevice(VirtualDevice device) {
-        boolean success = true;
-
-        if (device instanceof VirtualSDUSensor virtualSDUSensor) {
-            success = virtualSDUSensor.addListener(this);
-        }
-
-        if (device instanceof VirtualStandardActuator virtualStandardActuator) {
-            success = virtualStandardActuator.addListener(this);
-        }
-
-        return success;
-    }
-
-    private void disconnectVirtualDevice(VirtualDevice device) {
-        if (device instanceof VirtualSDUSensor virtualSDUSensor) {
-            virtualSDUSensor.removeListener(this);
-        }
-
-        if (device instanceof VirtualStandardActuator virtualStandardActuator) {
-            virtualStandardActuator.removeListener(this);
-        }
-    }
-
-    private int getVirtualDeviceAddress(VirtualDevice virtualDevice) {
-        int address = -1;
-
-        Iterator<Map.Entry<Integer, VirtualDevice>> entryIterator = devices.entrySet().iterator();
-
-        while(address == -1 && entryIterator.hasNext()) {
-            Map.Entry<Integer, VirtualDevice> entry = entryIterator.next();
-
-            if (virtualDevice.equals(entry.getValue())) {
-                address = entry.getKey();
-            }
-        }
-
-        return address;
+        return result;
     }
 
     /**
@@ -214,12 +219,13 @@ public class VirtualFieldNode implements VirtualSDUSensorListener, VirtualActuat
      * @throws NoSuchVirtualDeviceException thrown if no virtual sdu sensor exists for the given address
      */
     public void addSDUSensorData(int sensorAddress, double data) throws NoSuchVirtualDeviceException {
-        if (!(devices.containsKey(sensorAddress)) || !(devices.get(sensorAddress) instanceof VirtualSDUSensor)) {
+        VirtualSDUSensor sensor = virtualSduSensors.get(sensorAddress);
+        if (sensor == null) {
             throw new NoSuchVirtualDeviceException("Cannot add sdu sensor data, because there is no virtual SDU" +
                     "sensor with the given address");
         }
 
-        ((VirtualSDUSensor) devices.get(sensorAddress)).addSensorData(data);
+        sensor.addSensorData(data);
     }
 
     /**
@@ -231,25 +237,17 @@ public class VirtualFieldNode implements VirtualSDUSensorListener, VirtualActuat
      * @throws NoSuchVirtualDeviceException thrown if no virtual standard actuator exists for the given address
      */
     public void setVirtualStandardActuatorState(int actuatorAddress, int state, boolean global) throws NoSuchVirtualDeviceException {
-        if (!(devices.containsKey(actuatorAddress)) || !(devices.get(actuatorAddress) instanceof VirtualStandardActuator virtualActuator)) {
+        VirtualStandardActuator actuator = virtualStandardActuators.get(actuatorAddress);
+        if (actuator == null) {
             throw new NoSuchVirtualDeviceException("Cannot set virtual actuator state, because there is no virtual" +
                     "standard actuator with the given address.");
         }
 
-        virtualActuator.setState(state, global);
+        actuator.setState(state, this);
     }
 
     @Override
-    public void virtualActuatorStateChanged(VirtualStandardActuator actuator, boolean global) {
-        int actuatorAddress = getVirtualDeviceAddress(actuator);
-
-        if (actuatorAddress != -1) {
-            fieldNodeBroker.notifyActuatorStateChanged(this, actuatorAddress, global);
-        }
-    }
-
-    @Override
-    public void newSDUData(VirtualSDUSensor virtualSDUSensor) {
-        fieldNodeBroker.notifyNewSDUData(virtualSDUSensor);
+    public void virtualActuatorStateChanged(int actuatorAddress) {
+        listeners.forEach((address, listener) -> listener.virtualActuatorStateChanged(address, actuatorAddress));
     }
 }

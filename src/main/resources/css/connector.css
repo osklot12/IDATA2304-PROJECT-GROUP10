@@ -1,0 +1,55 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto&display=swap');
+
+.connector-form {
+    -fx-alignment: center;
+    -fx-pref-width: 250px; /* Preferred width */
+    -fx-min-width: 250px; /* Minimum width */
+    -fx-max-width: 250px; /* Maximum width */
+}
+
+.root {
+    -fx-font-size: 16px;
+    -fx-font-family: 'Roboto', sans-serif;
+}
+
+.root-pane {
+    -fx-background-color: #f0f0f0; /* Light gray background */
+    -fx-padding: 20px; /* Padding around the grid */
+    -fx-alignment: center; /* Center align the content */
+}
+
+.button {
+    -fx-cursor: hand;
+    -fx-background-color: #3070b3;
+    -fx-text-fill: white;
+    -fx-border-radius: 5;
+    -fx-background-radius: 5;
+    -fx-padding: 5 20;
+}
+
+.button:hover {
+    -fx-background-color: #1e5a8c; /* Darker shade on hover */
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.6), 10, 0.5, 0, 1); /* Shadow effect */
+}
+
+.text-field {
+    -fx-background-color: rgba(255, 255, 255, 0.9); /* Slightly transparent white background */
+    -fx-background-insets: 0, 1, 2;
+    -fx-background-radius: 10; /* More rounded corners */
+    -fx-padding: 5 9 5 9;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.26), 8, 0.5, 0, 2); /* Subtle shadow */
+    -fx-border-color: transparent; /* Remove border */
+    -fx-alignment: center; /* Center text */
+}
+
+.text-field:hover {
+    -fx-background-color: rgba(255, 255, 255, 1); /* Solid white background on hover */
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.26), 10, 0.5, 0, 3); /* Slightly larger shadow */
+}
+
+.error-log {
+    -fx-text-fill: red;
+    -fx-font-size: 12px; /* Adjust font size as needed */
+    -fx-alignment: center; /* Center align the content */
+    -fx-text-alignment: center;
+}

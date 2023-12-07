@@ -11,16 +11,16 @@ public class LightDimmerActuator extends StandardActuator {
      * Creates a new LightDimmerActuator.
      */
     public LightDimmerActuator() {
-        super(DeviceClass.A3, new int[] {0, 1, 2, 3, 4, 5, 6 ,7});
+        super(DeviceClass.A3, new int[] {0, 1, 2, 3, 4, 5, 6});
     }
 
     @Override
     public void setEnvironment(Environment environment){
-        if (!(this.environment == null)) {
+        if (this.environment != null) {
             this.environment.removeLuminosityModifier(this);
         }
 
-        if (!(environment == null)) {
+        if (environment != null) {
             environment.addLuminosityModifier(this);
             this.environment = environment;
         }

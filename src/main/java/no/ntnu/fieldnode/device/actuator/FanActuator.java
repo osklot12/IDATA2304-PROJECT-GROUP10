@@ -19,11 +19,11 @@ public class FanActuator extends StandardActuator {
 
     @Override
     public void setEnvironment(Environment environment){
-        if (!(this.environment == null)) {
+        if (this.environment != null) {
             this.environment.removeTemperatureModifier(this);
         }
 
-        if (!(environment == null)) {
+        if (environment != null) {
             environment.addTemperatureModifier(this);
             this.environment = environment;
         }
@@ -33,15 +33,15 @@ public class FanActuator extends StandardActuator {
     public double modifyEnvironmentState(Double value) {
         switch (state.getState()) {
             case 1:
-                value -= 1;
-                break;
-
-            case 2:
                 value -= 2;
                 break;
 
+            case 2:
+                value -= 4;
+                break;
+
             case 3:
-                value -= 3;
+                value -= 6;
                 break;
 
             default:

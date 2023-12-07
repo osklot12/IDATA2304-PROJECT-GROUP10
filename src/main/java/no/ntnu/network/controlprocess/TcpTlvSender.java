@@ -1,7 +1,7 @@
 package no.ntnu.network.controlprocess;
 
 import no.ntnu.network.message.serialize.tool.tlv.Tlv;
-import no.ntnu.tools.logger.Logger;
+import no.ntnu.tools.SystemOutLogger;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -37,7 +37,7 @@ public class TcpTlvSender {
             outputStream.write(tlv.toBytes());
             outputStream.flush();
         } catch (IOException e) {
-            Logger.error("Cannot send message: " + e.getMessage());
+            SystemOutLogger.error("Cannot send message: " + e.getMessage());
         }
     }
 }

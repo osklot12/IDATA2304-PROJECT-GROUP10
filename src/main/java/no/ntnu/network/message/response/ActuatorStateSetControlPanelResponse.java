@@ -30,4 +30,9 @@ public class ActuatorStateSetControlPanelResponse extends StandardProcessingResp
     protected void handleResponseProcessing(ControlPanelContext context) {
 
     }
+
+    @Override
+    public String toString() {
+        return "request to activate actuator has been sent to field node";
+    }
 }

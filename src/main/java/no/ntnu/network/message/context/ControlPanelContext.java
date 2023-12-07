@@ -2,13 +2,13 @@ package no.ntnu.network.message.context;
 
 import no.ntnu.controlpanel.ControlPanel;
 import no.ntnu.controlpanel.virtual.VirtualFieldNode;
-import no.ntnu.controlpanel.virtual.VirtualSDUSensor;
 import no.ntnu.exception.NoSuchVirtualDeviceException;
 import no.ntnu.fieldnode.device.DeviceClass;
+import no.ntnu.tools.SimpleLogger;
 import no.ntnu.network.ControlCommAgent;
 
-import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * A message context for processing control panel messages.
@@ -22,8 +22,8 @@ public class ControlPanelContext extends ClientContext {
      * @param agent the communication agent
      * @param controlPanel the control panel to operate on
      */
-    public ControlPanelContext(ControlCommAgent agent, ControlPanel controlPanel) {
-        super(agent);
+    public ControlPanelContext(ControlCommAgent agent, ControlPanel controlPanel, Set<SimpleLogger> loggers) {
+        super(agent, loggers);
         if (controlPanel == null) {
             throw new IllegalArgumentException("Cannot create ControlPanelContext, because control panel is null");
         }
@@ -71,5 +71,18 @@ public class ControlPanelContext extends ClientContext {
             throw new NoSuchVirtualDeviceException("Cannot set state of actuator " + actuatorAddress + " for " +
                     "field node " + fieldNodeAddress + ", because no such virtual field node exists.");
         }
+    }
+
+    /**
+     * Adds a field node pool to the control panel.
+     *
+     * @param fieldNodePool the field node pool to add
+     */
+    public void addFieldNodePool(Map<Integer, String> fieldNodePool) {
+        if (fieldNodePool == null) {
+            throw new IllegalArgumentException("Cannot add field node pool, because fieldNodePool is null.");
+        }
+
+        controlPanel.setFieldNodePool(fieldNodePool);
     }
 }

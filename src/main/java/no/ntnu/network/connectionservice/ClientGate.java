@@ -1,7 +1,7 @@
 package no.ntnu.network.connectionservice;
 
 import no.ntnu.network.ControlCommAgent;
-import no.ntnu.tools.logger.ServerLogger;
+import no.ntnu.tools.eventformatter.ServerEventFormatter;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -50,7 +50,7 @@ public class ClientGate implements ConnectionService {
      * Closes the connection to the client.
      */
     private void closeConnection() {
-        ServerLogger.emergency("Client " + agent.getRemoteEntityAsString() + " has not been registered and will be" +
+        ServerEventFormatter.emergency("Client " + agent.getRemoteEntityAsString() + " has not been registered and will be" +
                 " disconnected.");
         agent.close();
     }

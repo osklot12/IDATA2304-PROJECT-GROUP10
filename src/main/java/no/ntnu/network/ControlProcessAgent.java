@@ -1,5 +1,6 @@
 package no.ntnu.network;
 
+import no.ntnu.tools.SimpleLogger;
 import no.ntnu.network.connectionservice.ConnectionService;
 import no.ntnu.network.connectionservice.requestmanager.RequestManager;
 import no.ntnu.network.connectionservice.requestmanager.RequestTimeoutListener;
@@ -10,13 +11,15 @@ import no.ntnu.network.message.deserialize.component.MessageDeserializer;
 import no.ntnu.network.message.request.RequestMessage;
 import no.ntnu.network.message.response.ResponseMessage;
 import no.ntnu.network.message.serialize.visitor.ByteSerializerVisitor;
-import no.ntnu.tools.logger.Logger;
+import no.ntnu.tools.SystemOutLogger;
 
 import java.io.IOException;
 import java.net.Socket;
 import java.net.SocketAddress;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * An agent responsible for handling control message communication with another entity in the network.
@@ -35,9 +38,10 @@ public abstract class ControlProcessAgent<C extends MessageContext> implements C
     private final List<ConnectionService> connectionServices;
     private TcpControlProcess<C> controlProcess;
     private volatile boolean connected;
+    protected Socket socket;
     private volatile int clientNodeAddress;
     protected RequestManager requestManager;
-    protected Socket socket;
+    private final Set<SimpleLogger> loggers;
 
     /**
      * Creates a new CommunicationAgent.
@@ -46,6 +50,35 @@ public abstract class ControlProcessAgent<C extends MessageContext> implements C
         this.connectionServices = new ArrayList<>();
         this.connected = false;
         this.clientNodeAddress = -1;
+        this.loggers = new HashSet<>();
+        addLogger(new SystemOutLogger());
+    }
+
+    /**
+     * Adds a logger for network events.
+     *
+     * @param logger the logger to add
+     */
+    public void addLogger(SimpleLogger logger) {
+        loggers.add(logger);
+    }
+
+    /**
+     * Logs info.
+     *
+     * @param message the information to log
+     */
+    protected void logInfo(String message) {
+        loggers.forEach(logger -> logger.logInfo(message));
+    }
+
+    /**
+     * Logs an error.
+     *
+     * @param error the error message to log
+     */
+    protected void logError(String error) {
+        loggers.forEach(logger -> logger.logError(error));
     }
 
     /**
@@ -65,7 +98,7 @@ public abstract class ControlProcessAgent<C extends MessageContext> implements C
 
         boolean success = false;
 
-        Logger.info("Connecting to " + socket.getRemoteSocketAddress() + "...");
+        logInfo("Connecting to " + socket.getRemoteSocketAddress() + "...");
         if (establishControlProcess(serializer, deserializer)) {
             connected = true;
             createConnectionServices();
@@ -114,9 +147,9 @@ public abstract class ControlProcessAgent<C extends MessageContext> implements C
         try {
             controlProcess = new TcpControlProcess<>(socket, serializer, deserializer);
             success = true;
-            Logger.info("Control process for " + getRemoteSocketAddress() + " has been established successfully.");
+            logInfo("Control process for " + getRemoteSocketAddress() + " has been established successfully.");
         } catch (IOException e) {
-            Logger.error("Cannot establish control process: " + e.getMessage());
+           logError("Cannot establish control process: " + e.getMessage());
         }
 
         return success;
@@ -259,23 +292,23 @@ public abstract class ControlProcessAgent<C extends MessageContext> implements C
             stopConnectionServices();
             connected = false;
             socket.close();
-            logDisconnection();
+            handleConnectionClosing();
         } catch (IOException e) {
-            Logger.error("Cannot close the connection with " + socket.getRemoteSocketAddress() + ": " + e.getMessage());
+            logError("Cannot close the connection with " + socket.getRemoteSocketAddress() + ": " + e.getMessage());
         }
     }
 
     /**
-     * Logs the closing of the connection, triggered by the close() method.
+     * Handles further processing of a connection closing.
      */
-    protected abstract void logDisconnection();
+    protected abstract void handleConnectionClosing();
 
     /**
      * Returns whether the agent is connected or not, in a synchronized manner.
      *
      * @return true if connected
      */
-    protected synchronized boolean isConnected() {
+    public synchronized boolean isConnected() {
         return connected;
     }
 
@@ -301,4 +334,13 @@ public abstract class ControlProcessAgent<C extends MessageContext> implements C
      * @param response the response message sent
      */
     protected abstract void logSendResponseMessage(ResponseMessage response);
+
+    /**
+     * Returns the loggers for the agent.
+     *
+     * @return the loggers
+     */
+    public Set<SimpleLogger> getLoggers() {
+        return loggers;
+    }
 }

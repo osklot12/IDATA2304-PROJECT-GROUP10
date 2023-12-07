@@ -1,14 +1,12 @@
 package no.ntnu.network.centralserver;
 
 import no.ntnu.network.centralserver.centralhub.CentralHub;
-import no.ntnu.network.connectionservice.sensordatarouter.SensorDataDestination;
 import no.ntnu.network.connectionservice.sensordatarouter.UdpSensorDataRouter;
 import no.ntnu.network.message.deserialize.NofspServerDeserializer;
-import no.ntnu.network.message.sensordata.SensorDataMessage;
 import no.ntnu.network.message.serialize.visitor.ByteSerializerVisitor;
 import no.ntnu.network.message.serialize.visitor.NofspSerializer;
 import no.ntnu.network.sensordataprocess.UdpSensorDataSink;
-import no.ntnu.tools.logger.Logger;
+import no.ntnu.tools.SystemOutLogger;
 
 import java.io.IOException;
 import java.net.*;
@@ -63,9 +61,9 @@ public class CentralServer {
 
         running = true;
         if (startHandlingIncomingSensorData()) {
-            Logger.info("Server listening for incoming UDP sensor data messages on port " + DATA_PORT_NUMBER + "...");
+            SystemOutLogger.info("Server listening for incoming UDP sensor data messages on port " + DATA_PORT_NUMBER + "...");
             if (startHandlingIncomingClients()) {
-                Logger.info("Server listening for incoming client TPC connections on port " + CONTROL_PORT_NUMBER + "...");
+                SystemOutLogger.info("Server listening for incoming client TPC connections on port " + CONTROL_PORT_NUMBER + "...");
             }
         }
     }
@@ -118,7 +116,7 @@ public class CentralServer {
             sensorDataRouter.start();
             success = true;
         } catch (SocketException e) {
-            Logger.error("Could not start handling incoming sensor data: " + e.getMessage());
+            SystemOutLogger.error("Could not start handling incoming sensor data: " + e.getMessage());
         }
 
         return success;
@@ -136,12 +134,12 @@ public class CentralServer {
             running = false;
             serverSocket.close();
             sensorDataRouter.stop();
-            Logger.info("Server has been shut down.");
+            SystemOutLogger.info("Server has been shut down.");
         } catch (IOException e) {
             if (serverSocket.isClosed()) {
                 running = false;
             } else {
-                Logger.error("Cannot stop server: " + e.getMessage());
+                SystemOutLogger.error("Cannot stop server: " + e.getMessage());
             }
         }
     }
@@ -156,9 +154,9 @@ public class CentralServer {
 
         try {
             clientSocket = serverSocket.accept();
-            Logger.info("Client " + clientSocket.getRemoteSocketAddress() + " has requested to connect to the server.");
+            SystemOutLogger.info("Client " + clientSocket.getRemoteSocketAddress() + " has requested to connect to the server.");
         } catch (IOException e) {
-            Logger.error("Cannot accept next client: " + e.getMessage());
+            SystemOutLogger.error("Cannot accept next client: " + e.getMessage());
         }
 
         return clientSocket;
@@ -175,7 +173,7 @@ public class CentralServer {
         try {
             socket = new ServerSocket(60005);
         } catch (IOException e) {
-            Logger.error("Cannot open server socket: " + e.getMessage());
+            SystemOutLogger.error("Cannot open server socket: " + e.getMessage());
         }
 
         return socket;

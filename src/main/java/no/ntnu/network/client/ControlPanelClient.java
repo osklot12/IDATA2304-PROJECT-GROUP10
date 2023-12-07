@@ -1,18 +1,16 @@
 package no.ntnu.network.client;
 
 import no.ntnu.controlpanel.ControlPanel;
+import no.ntnu.network.representation.FieldNodeAgent;
 import no.ntnu.network.centralserver.CentralServer;
-import no.ntnu.network.connectionservice.sensordatarouter.SensorDataDestination;
 import no.ntnu.network.connectionservice.sensordatarouter.UdpSensorDataRouter;
 import no.ntnu.network.message.Message;
 import no.ntnu.network.message.context.ControlPanelContext;
 import no.ntnu.network.message.deserialize.NofspControlPanelDeserializer;
 import no.ntnu.network.message.request.*;
-import no.ntnu.network.message.sensordata.SensorDataMessage;
 import no.ntnu.network.message.serialize.visitor.ByteSerializerVisitor;
 import no.ntnu.network.message.serialize.visitor.NofspSerializer;
 import no.ntnu.network.sensordataprocess.UdpSensorDataSink;
-import no.ntnu.tools.logger.Logger;
 
 import java.io.IOException;
 import java.net.SocketException;
@@ -21,7 +19,7 @@ import java.net.SocketException;
  * A client for a control panel, connecting it to a central server using NOFSP.
  * The class is necessary for a control panel to be able to monitor and control field nodes in the network.
  */
-public class ControlPanelClient extends Client<ControlPanelContext> {
+public class ControlPanelClient extends Client<ControlPanelContext> implements FieldNodeAgent {
     private final ControlPanel controlPanel;
     private final ControlPanelContext context;
     private final ByteSerializerVisitor serializer;
@@ -41,27 +39,26 @@ public class ControlPanelClient extends Client<ControlPanelContext> {
 
         this.serializer = new NofspSerializer();
         this.controlPanel = controlPanel;
+        controlPanel.setFieldNodeAgent(this);
         this.deserializer = new NofspControlPanelDeserializer(controlPanel);
-        this.context = new ControlPanelContext(this, controlPanel);
+        this.context = new ControlPanelContext(this, controlPanel, getLoggers());
     }
 
     @Override
-    public void connect(String serverAddress) {
+    public void connect(String serverAddress) throws IOException {
         if (isConnected()) {
             throw new IllegalStateException("Cannot connect control panel, because it is already connected.");
         }
 
-        if (startHandlingIncomingSensorData() && (connectToServer(serverAddress, CentralServer.CONTROL_PORT_NUMBER, serializer, deserializer))) {
-            registerControlPanel();
-            subscribeToFieldNode(0);
-            try {
-                Thread.sleep(1000);
-                sendRequest(new UnsubscribeFromFieldNodeRequest(0));
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
+        if (startHandlingIncomingSensorData()) {
+            if (connectToServer(serverAddress, CentralServer.CONTROL_PORT_NUMBER, serializer, deserializer)) {
+                registerControlPanel();
+            } else {
+                sensorDataRouter.stop();
+                throw new IOException("Failed to connect to server with address: " + serverAddress);
             }
+        } else {
+            throw new IOException("Failed to establish sensor data process.");
         }
     }
 
@@ -70,7 +67,7 @@ public class ControlPanelClient extends Client<ControlPanelContext> {
      *
      * @return true if successfully listening for sensor data
      */
-    private boolean startHandlingIncomingSensorData() {
+    private boolean startHandlingIncomingSensorData() throws IOException {
         boolean success = false;
 
         try {
@@ -80,7 +77,7 @@ public class ControlPanelClient extends Client<ControlPanelContext> {
             sensorDataRouter.start();
             success = true;
         } catch (SocketException e) {
-            Logger.error("Could not start handling incoming sensor data: " + e.getMessage());
+            logError("Could not start handling incoming sensor data: " + e.getMessage());
         }
 
         return success;
@@ -94,33 +91,61 @@ public class ControlPanelClient extends Client<ControlPanelContext> {
             sendRequest(new RegisterControlPanelRequest(controlPanel.getCompatibilityList(),
                     sensorDataRouter.getLocalPortNumber()));
         } catch (IOException e) {
-            Logger.error("Cannot send registration request: " + e.getMessage());
+            logError("Cannot send registration request: " + e.getMessage());
         }
     }
 
     /**
-     * Requests the field node pool.
+     * Returns the control panel.
+     *
+     * @return the control panel
      */
+    public ControlPanel getControlPanel() {
+        return controlPanel;
+    }
+
+    @Override
     public void requestFieldNodePool() {
         try {
             sendRequest(new FieldNodePoolPullRequest());
         } catch (IOException e) {
-            Logger.error("Cannot send field node pool pull request: " + e.getMessage());
+            logError("Cannot send field node pool pull request: " + e.getMessage());
         }
     }
 
-    /**
-     * Requests to subscribe to a given field node.
-     *
-     * @param fieldNodeAddress the node address of the field node to subscribe to
-     */
+    @Override
     public void subscribeToFieldNode(int fieldNodeAddress) {
         try {
             sendRequest(new SubscribeToFieldNodeRequest(fieldNodeAddress));
         } catch (IOException e) {
-            Logger.error("Cannot send request to subscribe to field node with address " + fieldNodeAddress +
+            logError("Cannot send request to subscribe to field node with address " + fieldNodeAddress +
                     ": " + e.getMessage());
         }
+    }
+
+    @Override
+    public void unsubscribeFromFieldNode(int fieldNodeAddress) {
+        try {
+            sendRequest(new UnsubscribeFromFieldNodeRequest(fieldNodeAddress));
+        } catch (IOException e) {
+            logError("Cannot send request to unsubscribe to field node with address " + fieldNodeAddress +
+                    ": " + e.getMessage());
+        }
+    }
+
+    @Override
+    public void setActuatorState(int fieldNodeAddress, int actuatorAddress, int newState) {
+        try {
+            sendRequest(new ServerActivateActuatorRequest(fieldNodeAddress, actuatorAddress, newState));
+        } catch (IOException e) {
+            logError("Cannot send request to activate actuator with address " + actuatorAddress + " on field " +
+                    "node " + fieldNodeAddress + ": " + e.getMessage());
+        }
+    }
+
+    @Override
+    public String getFieldNodeSourceAsString() {
+        return getRemoteEntityAsString();
     }
 
     @Override
@@ -133,7 +158,7 @@ public class ControlPanelClient extends Client<ControlPanelContext> {
         try {
             message.process(context);
         } catch (IOException e) {
-            Logger.error("Cannot process received message: " + e.getMessage());
+            logError("Cannot process received message: " + e.getMessage());
         }
     }
 }

@@ -1,6 +1,5 @@
 package no.ntnu.controlpanel.virtual;
 
-import javafx.beans.Observable;
 import no.ntnu.fieldnode.device.DeviceClass;
 
 /**
