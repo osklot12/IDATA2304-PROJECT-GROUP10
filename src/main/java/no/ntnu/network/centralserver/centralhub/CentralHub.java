@@ -195,15 +195,7 @@ public class CentralHub implements SensorDataDestination, DeviceLookupTable {
         }
 
         addFieldNodeSubscriber(subscriberAddress, fieldNodeAddress);
-
-        // sends an adl update if adl changed due to the event
-        if (!isAdlSynchronized(fieldNodeAddress)) {
-            try {
-                sendAdlUpdate(fieldNodeAddress);
-            } catch (IOException e) {
-                SystemOutLogger.error("Could not send ADL update to field node with address " + fieldNodeAddress);
-            }
-        }
+        handleAdlUpdate(fieldNodeAddress);
 
         return fieldNodes.get(fieldNodeAddress);
     }
@@ -214,7 +206,7 @@ public class CentralHub implements SensorDataDestination, DeviceLookupTable {
      * @param fieldNodeAddress the address of the field node
      * @return true if field node knows about adl changes, false otherwise
      */
-    private boolean isAdlSynchronized(int fieldNodeAddress) {
+    private boolean adlOutOfSync(int fieldNodeAddress) {
         boolean isSynchronized = false;
 
         FieldNodeClientProxy fieldNodeProxy = fieldNodes.get(fieldNodeAddress);
@@ -225,7 +217,7 @@ public class CentralHub implements SensorDataDestination, DeviceLookupTable {
                     " address " + fieldNodeAddress + " was found.");
         }
 
-        return isSynchronized;
+        return !isSynchronized;
     }
 
     private boolean validControlPanel(int subscriberAddress) {
@@ -253,15 +245,7 @@ public class CentralHub implements SensorDataDestination, DeviceLookupTable {
         int subscriberAddress = subscriber.getClientNodeAddress();
         if (subscribers != null && subscribers.contains(subscriberAddress)) {
             subscribers.remove(subscriberAddress);
-
-            // sends an adl update if adl changed due to the event
-            if (!isAdlSynchronized(fieldNodeAddress)) {
-                try {
-                    sendAdlUpdate(fieldNodeAddress);
-                } catch (IOException e) {
-                    SystemOutLogger.error("Could not send ADL update to field node with address " + fieldNodeAddress);
-                }
-            }
+            handleAdlUpdate(fieldNodeAddress);
         } else {
             throw new SubscriptionException("Cannot unsubscribe from field node " + fieldNodeAddress + ", because " +
                     "no such subscription exists.");
@@ -269,10 +253,25 @@ public class CentralHub implements SensorDataDestination, DeviceLookupTable {
     }
 
     /**
+     * Handles the event of an eventual ADL update.
+     *
+     * @param fieldNodeAddress the address of the field node
+     */
+    private void handleAdlUpdate(int fieldNodeAddress) {
+        if (adlOutOfSync(fieldNodeAddress)) {
+            try {
+                sendAdlUpdate(fieldNodeAddress);
+            } catch (IOException e) {
+                SystemOutLogger.error("Could not send ADL update to field node with address " + fieldNodeAddress);
+            }
+        }
+    }
+
+    /**
      * Updates the locally stored ADL for a field node.
      *
      * @param fieldNodeAddress the address of the field node
-     * @param updatedAdl the updated adl to set
+     * @param updatedAdl       the updated adl to set
      */
     public void updateLocalAdl(int fieldNodeAddress, Set<Integer> updatedAdl) {
         if (updatedAdl == null) {
@@ -313,43 +312,64 @@ public class CentralHub implements SensorDataDestination, DeviceLookupTable {
     }
 
     /**
-     * Removes a subscriber of a field node.
-     *
-     * @param subscriberAddress the address of the unsubscribing control panel
-     * @param fieldNodeAddress  the address of the field node to unsubscribe to
-     */
-    private void removeFieldNodeSubscriber(int subscriberAddress, int fieldNodeAddress) {
-        Set<Integer> subscribers = sensorDataRoutingTable.get(fieldNodeAddress);
-        subscribers.remove(subscriberAddress);
-    }
-
-    /**
      * Generates and sends an ADL update to the given field node address.
      *
      * @param fieldNodeAddress the field node to send update to
      */
     private void sendAdlUpdate(int fieldNodeAddress) throws IOException {
-        Set<Integer> adl = getAdlForFieldNode(fieldNodeAddress);
         ControlCommAgent fieldNodeAgent = fieldNodes.get(fieldNodeAddress).getAgent();
-        fieldNodeAgent.sendRequest(new AdlUpdateRequest(adl));
+        fieldNodeAgent.sendRequest(new AdlUpdateRequest(getAdlUpdate(fieldNodeAddress)));
     }
 
     /**
-     * Generates an ADL for a given field node.
+     * Returns an ADL update for a field node.
+     * An ADL update is a set of device classes, where positive addresses means the adding of the device to the ADL,
+     * while negative addresses means the removal of the device from the ADL.
      *
      * @param fieldNodeAddress the address of the field node
-     * @return the adl
+     * @return the adl update
+     */
+    private Set<Integer> getAdlUpdate(int fieldNodeAddress) {
+        Set<Integer> previousAdl = fieldNodes.get(fieldNodeAddress).getAdl();
+        Set<Integer> newAdl = getAdlForFieldNode(fieldNodeAddress);
+
+        // computes the addresses to add - the ones that are in the new adl but not in the previous
+        Set<Integer> addressesToAdd = new HashSet<>(newAdl);
+        addressesToAdd.removeAll(previousAdl);
+
+        // computes the addresses to remove - the ones that were in the previous adl but not in the new
+        Set<Integer> addressesToRemove = new HashSet<>(previousAdl);
+        addressesToRemove.removeAll(newAdl);
+
+        // add addresses to add to the adl update
+        Set<Integer> adlUpdate = new HashSet<>(addressesToAdd);
+
+        // negate the addresses to remove and add them to update
+        addressesToRemove.forEach(address -> adlUpdate.add(address * -1));
+
+        return adlUpdate;
+    }
+
+    /**
+     * Generates the current ADL for a given field node.
+     *
+     * @param fieldNodeAddress the address of the field node
+     * @return the generated adl
      */
     private Set<Integer> getAdlForFieldNode(int fieldNodeAddress) {
-        Set<DeviceClass> activeClasses = new HashSet<>();
-        Set<Integer> subscribers = getFieldNodeSubscribers(fieldNodeAddress);
-        subscribers.forEach(subscriber -> {
-            // adding all compatible device classes for each subscriber of the field node
-            ControlPanelClientProxy controlPanel = controlPanels.get(subscriber);
-            activeClasses.addAll(controlPanel.getCompatibilityList());
-        });
+        return generateAdl(fieldNodeAddress, getActiveDeviceClasses(fieldNodeAddress));
+    }
 
+    /**
+     * Generates a current ADL for a field node.
+     *
+     * @param fieldNodeAddress the address of the field node
+     * @param activeClasses    the active device classes for the field node
+     * @return a current ADL for the field node
+     */
+    private Set<Integer> generateAdl(int fieldNodeAddress, Set<DeviceClass> activeClasses) {
         Set<Integer> adl = new HashSet<>();
+
         Map<Integer, DeviceClass> fnst = fieldNodes.get(fieldNodeAddress).getFNST();
         fnst.forEach((key, value) -> {
             // adding the device address to adl if the device class is 'active'
@@ -359,6 +379,27 @@ public class CentralHub implements SensorDataDestination, DeviceLookupTable {
         });
 
         return adl;
+    }
+
+    /**
+     * Returns the active device classes for a given field node.
+     * A device class is considered active for a field node if a subscriber is compatible with this device class, and
+     * the field node owns a device of this kind.
+     *
+     * @param fieldNodeAddress the address of the field node
+     * @return a set of all active device classes for the field node
+     */
+    private Set<DeviceClass> getActiveDeviceClasses(int fieldNodeAddress) {
+        Set<DeviceClass> activeClasses = new HashSet<>();
+
+        Set<Integer> subscribers = getFieldNodeSubscribers(fieldNodeAddress);
+        subscribers.forEach(subscriber -> {
+            // adding all compatible device classes for each subscriber of the field node
+            ControlPanelClientProxy controlPanel = controlPanels.get(subscriber);
+            activeClasses.addAll(controlPanel.getCompatibilityList());
+        });
+
+        return activeClasses;
     }
 
     /**

@@ -17,6 +17,7 @@ import java.util.*;
  * A field node is a subsystem in the network consisting of sensors and actuators.
  */
 public class FieldNode implements SduSensorListener, ActuatorListener {
+    private static final int INITIAL_DEVICE_ADDRESS = 1; // address to assign to first device
     private static final String STANDARD_NAME = "FieldNode";
     private Environment environment;
     private final Map<Integer, Device> devices;
@@ -153,7 +154,7 @@ public class FieldNode implements SduSensorListener, ActuatorListener {
      * @return the assigned address of the sensor, -1 on error
      */
     public int addDevice(Device device) {
-        int address = -1;
+        int address = INITIAL_DEVICE_ADDRESS;
 
         if (!(devices.containsValue(device))) {
             address = generateNewDeviceAddress();
@@ -178,7 +179,7 @@ public class FieldNode implements SduSensorListener, ActuatorListener {
     }
 
     private int generateNewDeviceAddress() {
-        int currentCheck = 0;
+        int currentCheck = 1;
 
         while (devices.containsKey(currentCheck)) {
             currentCheck++;

@@ -5,6 +5,7 @@ import no.ntnu.exception.NoSuchDeviceException;
 import no.ntnu.fieldnode.FieldNode;
 import no.ntnu.tools.SimpleLogger;
 import no.ntnu.network.ControlCommAgent;
+import no.ntnu.tools.SystemOutLogger;
 
 import java.util.Iterator;
 import java.util.Set;
@@ -57,13 +58,15 @@ public class FieldNodeContext extends ClientContext {
             throw new IllegalArgumentException("Cannot update ADL, because adlUpdate is null.");
         }
 
+        SystemOutLogger.info(adlUpdate.toString());
         // checks if all addresses in the update are valid
         checkAdlUpdateValidity(adlUpdate);
 
         adlUpdate.forEach(address -> {
             if (address < 0) {
                 // negative addresses indicates removal
-                adl.remove(address);
+                int addressToRemove = address * -1;
+                adl.remove(addressToRemove);
             } else {
                 // positive address values indicates addition
                 adl.add(address);
@@ -80,7 +83,7 @@ public class FieldNodeContext extends ClientContext {
      */
     private void checkAdlUpdateValidity(Set<Integer> adlUpdate) throws NoSuchDeviceException {
         adlUpdate.forEach(address -> {
-            if (!fieldNodeHasDevice(address)) {
+            if (!fieldNodeHasDevice(address) && !fieldNodeHasDevice(address * -1)) {
                 throw new NoSuchDeviceException("Cannot update ADL, because no device with address " + address +
                         " exists.");
             }

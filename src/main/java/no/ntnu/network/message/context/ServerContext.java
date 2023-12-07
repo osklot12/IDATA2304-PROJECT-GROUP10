@@ -31,9 +31,9 @@ public class ServerContext extends MessageContext {
     /**
      * Creates a new CentralServerContext.
      *
-     * @param agent the communication agent
+     * @param agent       the communication agent
      * @param udpDataSink the
-     * @param centralHub the central hub to operate on
+     * @param centralHub  the central hub to operate on
      */
     public ServerContext(ControlCommAgent agent, UdpDataCommAgentProvider udpDataSink, CentralHub centralHub, Set<SimpleLogger> loggers) {
         super(agent);
@@ -73,7 +73,7 @@ public class ServerContext extends MessageContext {
     /**
      * Registers a control panel client at the central server.
      *
-     * @param compatibilityList the compatibility list for the control panel
+     * @param compatibilityList  the compatibility list for the control panel
      * @param dataSinkPortNumber the port number for the control panel data sink
      * @return the assigned address for the control panel client
      * @throws ClientRegistrationException thrown if registration fails
@@ -149,8 +149,8 @@ public class ServerContext extends MessageContext {
      * Requests the change of state for an actuator on a remote field node.
      *
      * @param fieldNodeAddress the address of the field node
-     * @param actuatorAddress the address of the actuator
-     * @param newState the new state to set
+     * @param actuatorAddress  the address of the actuator
+     * @param newState         the new state to set
      */
     public void requestActuatorActivationForFieldNode(int fieldNodeAddress, int actuatorAddress, int newState) throws IOException {
         FieldNodeClientProxy proxy = centralHub.getFieldNodeProxy(fieldNodeAddress);
@@ -165,9 +165,10 @@ public class ServerContext extends MessageContext {
 
     /**
      * Sends a request to activate a specific actuator on a given field node.
-     * @param proxy the field node proxy to send request to
+     *
+     * @param proxy           the field node proxy to send request to
      * @param actuatorAddress the address of the actuator to activate
-     * @param newState the new state to set for the actuator
+     * @param newState        the new state to set for the actuator
      * @throws IOException thrown if an I/O exception occurs
      */
     private static void sendFieldNodeActuatorRequest(FieldNodeClientProxy proxy, int actuatorAddress, int newState) throws IOException {
@@ -185,7 +186,7 @@ public class ServerContext extends MessageContext {
      * Returns whether a locally stored field node proxy owns an actuator with a specific address.
      *
      * @param actuatorAddress the address of the actuator
-     * @param proxy the field node proxy to check for
+     * @param proxy           the field node proxy to check for
      * @return true if field node proxy has actuator, false otherwise
      */
     private static boolean fieldNodeHasActuator(int actuatorAddress, FieldNodeClientProxy proxy) {
@@ -198,7 +199,7 @@ public class ServerContext extends MessageContext {
      * node.
      *
      * @param actuatorAddress the address of the actuator
-     * @param newState the new state to set
+     * @param newState        the new state to set
      * @throws NoSuchAddressException thrown if one of the addresses is invalid
      */
     public void updateLocalActuatorState(int actuatorAddress, int newState) throws NoSuchAddressException {
