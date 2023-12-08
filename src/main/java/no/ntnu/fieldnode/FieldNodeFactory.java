@@ -21,28 +21,10 @@ public class FieldNodeFactory {
     private FieldNodeFactory() {}
 
     /**
-     * Creates a FieldNode with no sensor noise.
+     * Creates a FieldNode of variation 1, with some sensor noise.
      *
      * @param environment the environment for the field node
-     * @return field node with no sensor noise
-     */
-    public static FieldNode getNoNoiseFieldNode(Environment environment) {
-        if (environment == null) {
-            throw new IllegalArgumentException(NO_ENVIRONMENT_EXCEPTION_DESCRIPTION);
-        }
-
-        FieldNode fieldNode = new FieldNode(environment);
-        addSensors(fieldNode, 0);
-        addActuators(fieldNode);
-
-        return fieldNode;
-    }
-
-    /**
-     * Creates a FieldNode with some sensor noise.
-     *
-     * @param environment the environment for the field node
-     * @return field node with some sensor noise
+     * @return the field node
      */
     public static FieldNode getSomeNoiseFieldNode(Environment environment) {
         if (environment == null) {
@@ -51,24 +33,6 @@ public class FieldNodeFactory {
 
         FieldNode fieldNode = new FieldNode(environment);
         addSensors(fieldNode, 1);
-        addActuators(fieldNode);
-
-        return fieldNode;
-    }
-
-    /**
-     * Creates a FieldNode with a lot of sensor noise.
-     *
-     * @param environment the environment for the field node
-     * @return field node with a lot of sensor noise
-     */
-    public static FieldNode getMuchNoiseFieldNode(Environment environment) {
-        if (environment == null) {
-            throw new IllegalArgumentException(NO_ENVIRONMENT_EXCEPTION_DESCRIPTION);
-        }
-
-        FieldNode fieldNode = new FieldNode(environment);
-        addSensors(fieldNode, 5);
         addActuators(fieldNode);
 
         return fieldNode;

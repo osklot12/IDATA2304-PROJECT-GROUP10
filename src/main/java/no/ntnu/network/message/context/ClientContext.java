@@ -1,6 +1,6 @@
 package no.ntnu.network.message.context;
 
-import no.ntnu.tools.SimpleLogger;
+import no.ntnu.tools.logger.SimpleLogger;
 import no.ntnu.network.ControlCommAgent;
 import no.ntnu.network.message.request.RequestMessage;
 import no.ntnu.network.message.response.ResponseMessage;

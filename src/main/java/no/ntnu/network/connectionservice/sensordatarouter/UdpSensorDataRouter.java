@@ -3,7 +3,8 @@ package no.ntnu.network.connectionservice.sensordatarouter;
 import no.ntnu.network.connectionservice.ConnectionService;
 import no.ntnu.network.message.sensordata.SensorDataMessage;
 import no.ntnu.network.sensordataprocess.UdpSensorDataSink;
-import no.ntnu.tools.SystemOutLogger;
+import no.ntnu.tools.logger.SimpleLogger;
+import no.ntnu.tools.logger.SystemOutLogger;
 
 import java.io.IOException;
 import java.util.HashSet;
@@ -17,6 +18,7 @@ public class UdpSensorDataRouter implements ConnectionService {
     private final Set<SensorDataDestination> destinations;
     private Thread routingThread;
     private volatile boolean running;
+    private final Set<SimpleLogger> loggers;
 
     /**
      * Creates a new UdpSensorDataRouter.
@@ -26,6 +28,25 @@ public class UdpSensorDataRouter implements ConnectionService {
     public UdpSensorDataRouter(UdpSensorDataSink sensorDataSink) {
         this.sensorDataSink = sensorDataSink;
         this.destinations = new HashSet<>();
+        this.loggers = new HashSet<>();
+    }
+
+    /**
+     * Adds a logger.
+     *
+     * @param logger the logger to add
+     */
+    public void addLogger(SimpleLogger logger) {
+        loggers.add(logger);
+    }
+
+    /**
+     * Logs an error.
+     *
+     * @param error error message to log
+     */
+    private void logError(String error) {
+        loggers.forEach(logger -> logger.logError(error));
     }
 
     @Override
@@ -50,7 +71,7 @@ public class UdpSensorDataRouter implements ConnectionService {
                     destinations.forEach(destination -> destination.receiveSensorData(message));
                 }
             } catch (IOException e) {
-                SystemOutLogger.error("Could not receive sensor data message: " + e.getMessage());
+                logError("Could not receive sensor data message: " + e.getMessage());
             }
         }
     }

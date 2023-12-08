@@ -1,6 +1,6 @@
 package no.ntnu.network;
 
-import no.ntnu.tools.SimpleLogger;
+import no.ntnu.tools.logger.SimpleLogger;
 import no.ntnu.network.connectionservice.ConnectionService;
 import no.ntnu.network.connectionservice.requestmanager.RequestManager;
 import no.ntnu.network.connectionservice.requestmanager.RequestTimeoutListener;
@@ -11,7 +11,6 @@ import no.ntnu.network.message.deserialize.component.MessageDeserializer;
 import no.ntnu.network.message.request.RequestMessage;
 import no.ntnu.network.message.response.ResponseMessage;
 import no.ntnu.network.message.serialize.visitor.ByteSerializerVisitor;
-import no.ntnu.tools.SystemOutLogger;
 
 import java.io.IOException;
 import java.net.Socket;
@@ -51,7 +50,6 @@ public abstract class ControlProcessAgent<C extends MessageContext> implements C
         this.connected = false;
         this.clientNodeAddress = -1;
         this.loggers = new HashSet<>();
-        addLogger(new SystemOutLogger());
     }
 
     /**

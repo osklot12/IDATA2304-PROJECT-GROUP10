@@ -15,7 +15,6 @@ import no.ntnu.network.message.response.ResponseMessage;
 import no.ntnu.network.message.serialize.NofspSerializationConstants;
 import no.ntnu.network.message.serialize.visitor.ByteSerializerVisitor;
 import no.ntnu.network.sensordataprocess.UdpSensorDataPusher;
-import no.ntnu.tools.SystemOutLogger;
 import no.ntnu.tools.eventformatter.ServerEventFormatter;
 
 import java.io.IOException;

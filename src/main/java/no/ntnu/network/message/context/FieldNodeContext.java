@@ -3,9 +3,8 @@ package no.ntnu.network.message.context;
 import no.ntnu.exception.ActuatorInteractionFailedException;
 import no.ntnu.exception.NoSuchDeviceException;
 import no.ntnu.fieldnode.FieldNode;
-import no.ntnu.tools.SimpleLogger;
+import no.ntnu.tools.logger.SimpleLogger;
 import no.ntnu.network.ControlCommAgent;
-import no.ntnu.tools.SystemOutLogger;
 
 import java.util.Iterator;
 import java.util.Set;
@@ -58,7 +57,6 @@ public class FieldNodeContext extends ClientContext {
             throw new IllegalArgumentException("Cannot update ADL, because adlUpdate is null.");
         }
 
-        SystemOutLogger.info(adlUpdate.toString());
         // checks if all addresses in the update are valid
         checkAdlUpdateValidity(adlUpdate);
 

@@ -7,7 +7,6 @@ import no.ntnu.network.message.request.RequestMessage;
 import no.ntnu.network.message.response.ResponseMessage;
 import no.ntnu.network.message.serialize.visitor.ByteSerializerVisitor;
 import no.ntnu.tools.eventformatter.ClientEventFormatter;
-import no.ntnu.tools.SystemOutLogger;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -21,9 +20,9 @@ public abstract class Client<C extends ClientContext> extends ControlProcessAgen
      * Connects the client to a server.
      *
      * @param serverAddress the ip address of the server
-     * @param portNumber the port number for the server
-     * @param serializer the serializer used to serialize messages
-     * @param deserializer the deserializer used to deserialize messages
+     * @param portNumber    the port number for the server
+     * @param serializer    the serializer used to serialize messages
+     * @param deserializer  the deserializer used to deserialize messages
      * @return true if successfully connected to server, false otherwise
      */
     protected boolean connectToServer(String serverAddress, int portNumber,
@@ -34,10 +33,10 @@ public abstract class Client<C extends ClientContext> extends ControlProcessAgen
             setSocket(new Socket(serverAddress, portNumber));
             if (establishConnection(serializer, deserializer)) {
                 success = true;
-                SystemOutLogger.info("Successfully connected to server " + getRemoteSocketAddress());
+                logInfo("Successfully connected to server " + getRemoteSocketAddress());
             }
         } catch (IOException e) {
-            SystemOutLogger.error("Cannot connect to server '" + serverAddress + "' with port number " + portNumber +
+            logError("Cannot connect to server '" + serverAddress + "' with port number " + portNumber +
                     ": " + e.getMessage());
         }
 

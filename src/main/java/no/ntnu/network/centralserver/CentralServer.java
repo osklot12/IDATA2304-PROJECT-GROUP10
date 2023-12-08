@@ -6,10 +6,12 @@ import no.ntnu.network.message.deserialize.NofspServerDeserializer;
 import no.ntnu.network.message.serialize.visitor.ByteSerializerVisitor;
 import no.ntnu.network.message.serialize.visitor.NofspSerializer;
 import no.ntnu.network.sensordataprocess.UdpSensorDataSink;
-import no.ntnu.tools.SystemOutLogger;
+import no.ntnu.tools.logger.SimpleLogger;
 
 import java.io.IOException;
 import java.net.*;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * The CentralServer serves as a hub for managing and routing communication between various field nodes and
@@ -40,6 +42,7 @@ public class CentralServer {
     private volatile boolean running;
     private ServerSocket serverSocket;
     private UdpSensorDataRouter sensorDataRouter;
+    private final Set<SimpleLogger> loggers;
 
     /**
      * Creates a new CentralServer.
@@ -49,6 +52,17 @@ public class CentralServer {
         this.serializer = new NofspSerializer();
         this.deserializer = new NofspServerDeserializer(centralHub);
         this.running = false;
+        this.loggers = new HashSet<>();
+    }
+
+    /**
+     * Adds a logger to log central server related events.
+     *
+     * @param logger the logger to add
+     */
+    public void addLogger(SimpleLogger logger) {
+        loggers.add(logger);
+        centralHub.addLogger(logger);
     }
 
     /**
@@ -61,11 +75,29 @@ public class CentralServer {
 
         running = true;
         if (startHandlingIncomingSensorData()) {
-            SystemOutLogger.info("Server listening for incoming UDP sensor data messages on port " + DATA_PORT_NUMBER + "...");
+            logInfo("Server listening for incoming UDP sensor data messages on port " + DATA_PORT_NUMBER + "...");
             if (startHandlingIncomingClients()) {
-                SystemOutLogger.info("Server listening for incoming client TPC connections on port " + CONTROL_PORT_NUMBER + "...");
+                logInfo("Server listening for incoming client TPC connections on port " + CONTROL_PORT_NUMBER + "...");
             }
         }
+    }
+
+    /**
+     * Logs info.
+     *
+     * @param message the information to log
+     */
+    private void logInfo(String message) {
+        loggers.forEach(logger -> logger.logInfo(message));
+    }
+
+    /**
+     * Logs an error.
+     *
+     * @param error the error message to log
+     */
+    private void logError(String error) {
+        loggers.forEach(logger -> logger.logError(error));
     }
 
     /**
@@ -86,6 +118,8 @@ public class CentralServer {
 
                     if (clientSocket != null) {
                         ClientHandler clientHandler = new ClientHandler(clientSocket, centralHub, serializer, deserializer);
+                        // passes the loggers to the client handler to log client specific events
+                        loggers.forEach(clientHandler::addLogger);
                         clientHandler.run();
                     }
                 }
@@ -116,7 +150,7 @@ public class CentralServer {
             sensorDataRouter.start();
             success = true;
         } catch (SocketException e) {
-            SystemOutLogger.error("Could not start handling incoming sensor data: " + e.getMessage());
+            logError("Could not start handling incoming sensor data: " + e.getMessage());
         }
 
         return success;
@@ -134,12 +168,12 @@ public class CentralServer {
             running = false;
             serverSocket.close();
             sensorDataRouter.stop();
-            SystemOutLogger.info("Server has been shut down.");
+            logInfo("Server has been shut down.");
         } catch (IOException e) {
             if (serverSocket.isClosed()) {
                 running = false;
             } else {
-                SystemOutLogger.error("Cannot stop server: " + e.getMessage());
+                logError("Cannot stop server: " + e.getMessage());
             }
         }
     }
@@ -154,9 +188,9 @@ public class CentralServer {
 
         try {
             clientSocket = serverSocket.accept();
-            SystemOutLogger.info("Client " + clientSocket.getRemoteSocketAddress() + " has requested to connect to the server.");
+            logInfo("Client " + clientSocket.getRemoteSocketAddress() + " has requested to connect to the server.");
         } catch (IOException e) {
-            SystemOutLogger.error("Cannot accept next client: " + e.getMessage());
+            logError("Cannot accept next client: " + e.getMessage());
         }
 
         return clientSocket;
@@ -173,7 +207,7 @@ public class CentralServer {
         try {
             socket = new ServerSocket(60005);
         } catch (IOException e) {
-            SystemOutLogger.error("Cannot open server socket: " + e.getMessage());
+            logError("Cannot open server socket: " + e.getMessage());
         }
 
         return socket;

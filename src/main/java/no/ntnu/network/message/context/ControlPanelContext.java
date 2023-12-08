@@ -4,7 +4,7 @@ import no.ntnu.controlpanel.ControlPanel;
 import no.ntnu.controlpanel.virtual.VirtualFieldNode;
 import no.ntnu.exception.NoSuchVirtualDeviceException;
 import no.ntnu.fieldnode.device.DeviceClass;
-import no.ntnu.tools.SimpleLogger;
+import no.ntnu.tools.logger.SimpleLogger;
 import no.ntnu.network.ControlCommAgent;
 
 import java.util.Map;

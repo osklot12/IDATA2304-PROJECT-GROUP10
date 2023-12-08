@@ -13,7 +13,7 @@ import no.ntnu.network.message.request.AdlUpdateRequest;
 import no.ntnu.network.message.request.ServerFnsmNotificationRequest;
 import no.ntnu.network.message.sensordata.SensorDataMessage;
 import no.ntnu.network.representation.FieldNodeInformation;
-import no.ntnu.tools.SystemOutLogger;
+import no.ntnu.tools.logger.SimpleLogger;
 
 import java.io.IOException;
 import java.util.*;
@@ -27,6 +27,7 @@ public class CentralHub implements SensorDataDestination, DeviceLookupTable {
     private final Map<Integer, FieldNodeClientProxy> fieldNodes;
     private final Map<Integer, ControlPanelClientProxy> controlPanels;
     private final Map<Integer, Set<Integer>> sensorDataRoutingTable;
+    private final Set<SimpleLogger> loggers;
 
     /**
      * Creates a new CentralHub.
@@ -35,6 +36,38 @@ public class CentralHub implements SensorDataDestination, DeviceLookupTable {
         this.fieldNodes = new HashMap<>();
         this.controlPanels = new HashMap<>();
         this.sensorDataRoutingTable = new HashMap<>();
+        this.loggers = new HashSet<>();
+    }
+
+    /**
+     * Adds a logger to the central hub.
+     *
+     * @param logger the logger to add
+     */
+    public void addLogger(SimpleLogger logger) {
+        if (logger == null) {
+            throw new IllegalArgumentException("Cannot add logger, because logger is null.");
+        }
+
+        loggers.add(logger);
+    }
+
+    /**
+     * Logs info.
+     *
+     * @param message the information to log
+     */
+    private void logInfo(String message) {
+        loggers.forEach(logger -> logger.logInfo(message));
+    }
+
+    /**
+     * Logs an error.
+     *
+     * @param message the error message to log
+     */
+    private void logError(String message) {
+        loggers.forEach(logger -> logger.logError(message));
     }
 
     /**
@@ -45,7 +78,7 @@ public class CentralHub implements SensorDataDestination, DeviceLookupTable {
      * @return the assigned address for the field node
      * @throws ClientRegistrationException thrown if registration fails
      */
-    public int registerFieldNode(FieldNodeInformation fieldNodeInformation, ControlCommAgent agent) throws ClientRegistrationException {
+    public synchronized int registerFieldNode(FieldNodeInformation fieldNodeInformation, ControlCommAgent agent) throws ClientRegistrationException {
         if (fieldNodeInformation == null) {
             throw new IllegalArgumentException("Cannot register field node, because fieldNodeInformation is null.");
         }
@@ -76,7 +109,7 @@ public class CentralHub implements SensorDataDestination, DeviceLookupTable {
      * @return the assigned address for the control panel
      * @throws ClientRegistrationException thrown if registration fails
      */
-    public int registerControlPanel(Set<DeviceClass> compatibilityList, ControlCommAgent controlAgent, DataCommAgent dataAgent) throws ClientRegistrationException {
+    public synchronized int registerControlPanel(Set<DeviceClass> compatibilityList, ControlCommAgent controlAgent, DataCommAgent dataAgent) throws ClientRegistrationException {
         if (compatibilityList == null) {
             throw new IllegalArgumentException("Cannot register control panel, because compatibility list is null.");
         }
@@ -99,11 +132,12 @@ public class CentralHub implements SensorDataDestination, DeviceLookupTable {
      * Deregisters a client.
      *
      * @param clientAddress the client address
-     * @return true if successfully deregistered, false if no such client address was found
      */
-    public boolean deregisterClient(int clientAddress) {
+    public synchronized void deregisterClient(int clientAddress) {
         removeSensorDataSubscriber(clientAddress);
-        return (fieldNodes.remove(clientAddress) != null) || (controlPanels.remove(clientAddress) != null);
+        if ((fieldNodes.remove(clientAddress) == null)) {
+            controlPanels.remove(clientAddress);
+        }
     }
 
     /**
@@ -163,8 +197,7 @@ public class CentralHub implements SensorDataDestination, DeviceLookupTable {
      * @return an Optional containing the corresponding field node client proxy, or empty if subscription fails
      * @throws SubscriptionException if subscribing fails
      */
-    public FieldNodeClientProxy subscribeToFieldNode(ControlCommAgent subscriber, int fieldNodeAddress)
-            throws SubscriptionException {
+    public synchronized FieldNodeClientProxy subscribeToFieldNode(ControlCommAgent subscriber, int fieldNodeAddress) throws SubscriptionException {
         Objects.requireNonNull(subscriber, "Cannot subscribe to field node because subscriber is null.");
 
         if (!sensorDataRoutingTable.containsKey(fieldNodeAddress)) {
@@ -177,15 +210,13 @@ public class CentralHub implements SensorDataDestination, DeviceLookupTable {
     /**
      * Handles the subscription to a field node.
      * Only control panels can currently subscribe to field nodes.
-     * This method can be extended to allow new clients to subscribe.
      *
      * @param subscriberAddress the node address of the subscriber
      * @param fieldNodeAddress  the node address of the field node to subscribe to
      * @return the client proxy for the field node, or null if subscription is not successful
      * @throws SubscriptionException if subscription fails
      */
-    private FieldNodeClientProxy handleFieldNodeSubscription(int subscriberAddress, int fieldNodeAddress)
-            throws SubscriptionException {
+    private FieldNodeClientProxy handleFieldNodeSubscription(int subscriberAddress, int fieldNodeAddress) throws SubscriptionException {
         if (!validControlPanel(subscriberAddress)) {
             throw new SubscriptionException(formatExceptionMessage("control panel is not registered", fieldNodeAddress));
         }
@@ -195,7 +226,13 @@ public class CentralHub implements SensorDataDestination, DeviceLookupTable {
         }
 
         addFieldNodeSubscriber(subscriberAddress, fieldNodeAddress);
-        handleAdlUpdate(fieldNodeAddress);
+        if (adlOutOfSync(fieldNodeAddress)) {
+            try {
+                sendAdlUpdate(fieldNodeAddress);
+            } catch (IOException e) {
+                throw new SubscriptionException(e.getMessage());
+            }
+        }
 
         return fieldNodes.get(fieldNodeAddress);
     }
@@ -245,25 +282,16 @@ public class CentralHub implements SensorDataDestination, DeviceLookupTable {
         int subscriberAddress = subscriber.getClientNodeAddress();
         if (subscribers != null && subscribers.contains(subscriberAddress)) {
             subscribers.remove(subscriberAddress);
-            handleAdlUpdate(fieldNodeAddress);
+            if (adlOutOfSync(fieldNodeAddress)) {
+                try {
+                    sendAdlUpdate(fieldNodeAddress);
+                } catch (IOException e) {
+                    throw new SubscriptionException(e.getMessage());
+                }
+            }
         } else {
             throw new SubscriptionException("Cannot unsubscribe from field node " + fieldNodeAddress + ", because " +
                     "no such subscription exists.");
-        }
-    }
-
-    /**
-     * Handles the event of an eventual ADL update.
-     *
-     * @param fieldNodeAddress the address of the field node
-     */
-    private void handleAdlUpdate(int fieldNodeAddress) {
-        if (adlOutOfSync(fieldNodeAddress)) {
-            try {
-                sendAdlUpdate(fieldNodeAddress);
-            } catch (IOException e) {
-                SystemOutLogger.error("Could not send ADL update to field node with address " + fieldNodeAddress);
-            }
         }
     }
 
@@ -273,7 +301,7 @@ public class CentralHub implements SensorDataDestination, DeviceLookupTable {
      * @param fieldNodeAddress the address of the field node
      * @param updatedAdl       the updated adl to set
      */
-    public void updateLocalAdl(int fieldNodeAddress, Set<Integer> updatedAdl) {
+    public synchronized void updateLocalAdl(int fieldNodeAddress, Set<Integer> updatedAdl) {
         if (updatedAdl == null) {
             throw new IllegalArgumentException("Cannot update local ADL, because updatedAdl is null.");
         }
@@ -286,7 +314,7 @@ public class CentralHub implements SensorDataDestination, DeviceLookupTable {
      *
      * @param subscriberAddress the subscriber to remove
      */
-    public void removeSensorDataSubscriber(int subscriberAddress) {
+    public synchronized void removeSensorDataSubscriber(int subscriberAddress) {
         sensorDataRoutingTable.values().forEach(set -> set.remove(subscriberAddress));
     }
 
@@ -425,7 +453,7 @@ public class CentralHub implements SensorDataDestination, DeviceLookupTable {
      * @param newState         the new state to set
      * @throws NoSuchAddressException thrown if one of the addresses is invalid
      */
-    public void setLocalActuatorState(int fieldNodeAddress, int actuatorAddress, int newState) throws NoSuchAddressException {
+    public synchronized void setLocalActuatorState(int fieldNodeAddress, int actuatorAddress, int newState) throws NoSuchAddressException {
         if (!(fieldNodes.containsKey(fieldNodeAddress))) {
             throw new NoSuchAddressException("Cannot set actuator state for field node with address " + fieldNodeAddress +
                     ", because no such field node exists.");
@@ -469,7 +497,7 @@ public class CentralHub implements SensorDataDestination, DeviceLookupTable {
             try {
                 agent.sendRequest(request);
             } catch (IOException e) {
-                SystemOutLogger.error("Cannot notify " + agent.getRemoteEntityAsString() + " about the change of state for" +
+                logError("Cannot notify " + agent.getRemoteEntityAsString() + " about the change of state for" +
                         "actuator " + actuatorAddress + " on field node " + fieldNodeAddress);
             }
         });
@@ -490,7 +518,7 @@ public class CentralHub implements SensorDataDestination, DeviceLookupTable {
             try {
                 controlPanel.sendSensorData(sensorData);
             } catch (IOException e) {
-                SystemOutLogger.error("Cannot send sensor data to control panel with address " + subscriberAddress + ": " +
+                logError("Cannot send sensor data to control panel with address " + subscriberAddress + ": " +
                         e.getMessage());
             }
         });

@@ -9,5 +9,6 @@ public class ControlPanelRunner {
     public static void main(String[] args) {
         ControlPanel controlPanel = new ControlPanel();
         ControlPanelConnector.start(controlPanel);
+        
     }
 }

@@ -15,7 +15,6 @@ import no.ntnu.network.message.serialize.visitor.ByteSerializerVisitor;
 import no.ntnu.network.message.serialize.visitor.NofspSerializer;
 import no.ntnu.network.representation.FieldNodeInformation;
 import no.ntnu.network.sensordataprocess.UdpSensorDataPusher;
-import no.ntnu.tools.SystemOutLogger;
 
 import java.io.IOException;
 import java.net.SocketException;
@@ -31,6 +30,7 @@ public class FieldNodeClient extends Client<FieldNodeContext> implements FieldNo
     private final ByteSerializerVisitor serializer;
     private final MessageDeserializer<FieldNodeContext> deserializer;
     private final FieldNode fieldNode;
+    private final String name;
     private final Set<Integer> adl;
     private final FieldNodeContext context;
     private UdpSensorDataPusher sensorDataProcess;
@@ -39,16 +39,22 @@ public class FieldNodeClient extends Client<FieldNodeContext> implements FieldNo
      * Creates a new FieldNodeClient.
      *
      * @param fieldNode the field node
+     * @param name the name for the field node
      */
-    public FieldNodeClient(FieldNode fieldNode) {
+    public FieldNodeClient(FieldNode fieldNode, String name) {
         super();
         if (fieldNode == null) {
             throw new IllegalArgumentException("Cannot create FieldNodeClient, because field node is null.");
         }
 
+        if (name == null) {
+            throw new IllegalArgumentException("Cannot create FieldNodeClient, because name is null.");
+        }
+
         serializer = new NofspSerializer();
         deserializer = new NofspFieldNodeDeserializer();
         this.fieldNode = fieldNode;
+        this.name = name;
         fieldNode.addListener(this);
         this.adl = new HashSet<>();
         this.context = new FieldNodeContext(this, fieldNode, this.adl, getLoggers());
@@ -76,7 +82,7 @@ public class FieldNodeClient extends Client<FieldNodeContext> implements FieldNo
      */
     private void registerFieldNode() {
         FieldNodeInformation fieldNodeInformation =
-                new FieldNodeInformation(fieldNode.getFNST(), fieldNode.getFNSM(), fieldNode.getName());
+                new FieldNodeInformation(fieldNode.getFNST(), fieldNode.getFNSM(), name);
         try {
             sendRequest(new RegisterFieldNodeRequest(fieldNodeInformation));
         } catch (IOException e) {
@@ -88,6 +94,14 @@ public class FieldNodeClient extends Client<FieldNodeContext> implements FieldNo
         sensorDataProcess = new UdpSensorDataPusher(getServerInetAddress(), CentralServer.DATA_PORT_NUMBER, serializer);
     }
 
+    /**
+     * Returns the name of the field node client.
+     *
+     * @return the name
+     */
+    public String getName() {
+        return name;
+    }
 
     /**
      * Sends a request to update the state of an actuator.

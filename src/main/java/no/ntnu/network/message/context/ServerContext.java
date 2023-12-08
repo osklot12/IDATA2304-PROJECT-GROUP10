@@ -4,7 +4,7 @@ import no.ntnu.exception.ClientRegistrationException;
 import no.ntnu.exception.NoSuchAddressException;
 import no.ntnu.exception.SubscriptionException;
 import no.ntnu.fieldnode.device.DeviceClass;
-import no.ntnu.tools.SimpleLogger;
+import no.ntnu.tools.logger.SimpleLogger;
 import no.ntnu.network.ControlCommAgent;
 import no.ntnu.network.DataCommAgent;
 import no.ntnu.network.representation.FieldNodeInformation;

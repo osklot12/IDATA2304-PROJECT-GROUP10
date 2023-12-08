@@ -8,6 +8,11 @@ import java.time.format.DateTimeFormatter;
  */
 public class TimeFormatter {
     /**
+     * Does not allow creating instances of the class.
+     */
+    private TimeFormatter() {}
+
+    /**
      * Formats the current time into HH:mm format.
      *
      * @return the current time formatted

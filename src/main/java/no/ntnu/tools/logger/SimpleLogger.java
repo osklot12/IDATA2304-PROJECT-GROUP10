@@ -1,4 +1,4 @@
-package no.ntnu.tools;
+package no.ntnu.tools.logger;
 
 /**
  * Logs events for network traffic.

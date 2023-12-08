@@ -1,7 +1,7 @@
 package no.ntnu.network.controlprocess;
 
 import no.ntnu.network.message.serialize.tool.tlv.Tlv;
-import no.ntnu.tools.SystemOutLogger;
+import no.ntnu.tools.logger.SystemOutLogger;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -31,13 +31,10 @@ public class TcpTlvSender {
      * Sends a TLV to the remote socket.
      *
      * @param tlv tlv to send
+     * @throws IOException thrown if an I/O exception occurs
      */
-    public void sendTlv(Tlv tlv) {
-        try {
-            outputStream.write(tlv.toBytes());
-            outputStream.flush();
-        } catch (IOException e) {
-            SystemOutLogger.error("Cannot send message: " + e.getMessage());
-        }
+    public void sendTlv(Tlv tlv) throws IOException {
+        outputStream.write(tlv.toBytes());
+        outputStream.flush();
     }
 }

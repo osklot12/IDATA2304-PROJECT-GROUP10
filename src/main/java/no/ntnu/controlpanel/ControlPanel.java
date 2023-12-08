@@ -2,14 +2,12 @@ package no.ntnu.controlpanel;
 
 import no.ntnu.controlpanel.virtual.*;
 import no.ntnu.controlpanel.virtual.actuator.VirtualStandardActuator;
-import no.ntnu.fieldnode.FieldNodeListener;
 import no.ntnu.fieldnode.device.DeviceClass;
 import no.ntnu.network.representation.FieldNodeAgent;
 import no.ntnu.network.connectionservice.sensordatarouter.SensorDataDestination;
 import no.ntnu.network.message.deserialize.component.DeviceLookupTable;
 import no.ntnu.network.message.sensordata.SensorDataMessage;
 import no.ntnu.network.message.sensordata.SensorDataReceiver;
-import no.ntnu.tools.SystemOutLogger;
 
 import java.util.*;
 

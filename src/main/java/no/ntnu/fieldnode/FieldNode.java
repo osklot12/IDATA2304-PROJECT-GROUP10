@@ -18,32 +18,9 @@ import java.util.*;
  */
 public class FieldNode implements SduSensorListener, ActuatorListener {
     private static final int INITIAL_DEVICE_ADDRESS = 1; // address to assign to first device
-    private static final String STANDARD_NAME = "FieldNode";
     private Environment environment;
     private final Map<Integer, Device> devices;
-    private final String name;
     private final FieldNodeEventBroker eventBroker;
-
-    /**
-     * Creates a new FieldNode.
-     *
-     * @param environment the environment in which to place the field node
-     * @param name the name of the field node
-     */
-    public FieldNode(Environment environment, String name) {
-        if (environment == null) {
-            throw new IllegalArgumentException("Cannot create FieldNode, because environment is null.");
-        }
-
-        if (name == null) {
-            throw new IllegalArgumentException("Cannot create FieldNode, because name is null.");
-        }
-
-        this.environment = environment;
-        this.devices = new HashMap<>();
-        this.name = name;
-        this.eventBroker = new FieldNodeEventBroker();
-    }
 
     /**
      * Creates a new FieldNode.
@@ -51,7 +28,13 @@ public class FieldNode implements SduSensorListener, ActuatorListener {
      * @param environment the environment in which to place the field node
      */
     public FieldNode(Environment environment) {
-        this(environment, STANDARD_NAME);
+        if (environment == null) {
+            throw new IllegalArgumentException("Cannot create FieldNode, because environment is null.");
+        }
+
+        this.environment = environment;
+        this.devices = new HashMap<>();
+        this.eventBroker = new FieldNodeEventBroker();
     }
 
     /**
@@ -108,15 +91,6 @@ public class FieldNode implements SduSensorListener, ActuatorListener {
         getActuators().forEach((key, value) -> fnsm.put(key, value.getState()));
 
         return fnsm;
-    }
-
-    /**
-     * Returns the name of the field node.
-     *
-     * @return the name of field node
-     */
-    public String getName() {
-        return name;
     }
 
     private Map<Integer, Actuator> getActuators() {
