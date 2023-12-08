@@ -8,14 +8,11 @@ import no.ntnu.network.message.deserialize.component.NofspMessageDeserializer;
 import no.ntnu.network.message.deserialize.component.NofspSensorDataDeserializer;
 import no.ntnu.network.message.deserialize.component.SensorDataMessageDeserializer;
 import no.ntnu.network.message.request.*;
-import no.ntnu.network.message.response.ActuatorStateSetServerResponse;
-import no.ntnu.network.message.response.AdlUpdatedResponse;
-import no.ntnu.network.message.response.HeartbeatResponse;
-import no.ntnu.network.message.response.VirtualActuatorUpdatedResponse;
+import no.ntnu.network.message.response.*;
 import no.ntnu.network.message.response.error.AdlUpdateRejectedError;
 import no.ntnu.network.message.response.error.DeviceInteractionFailedError;
 import no.ntnu.network.message.response.error.NoSuchVirtualDeviceError;
-import no.ntnu.network.message.sensordata.SduSensorDataMessage;
+import no.ntnu.network.message.response.error.SyncEncryptionRejectedError;
 import no.ntnu.network.message.sensordata.SensorDataMessage;
 import no.ntnu.network.message.serialize.NofspSerializationConstants;
 import no.ntnu.network.message.serialize.tool.DataTypeConverter;
@@ -23,10 +20,10 @@ import no.ntnu.network.message.serialize.tool.tlv.Tlv;
 import no.ntnu.network.message.serialize.tool.tlv.TlvReader;
 import no.ntnu.network.representation.FieldNodeInformation;
 
+import javax.crypto.SecretKey;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * A deserializer for the central server, deserializing server-specific messages.
@@ -71,6 +68,8 @@ public class NofspServerDeserializer extends NofspMessageDeserializer<ServerCont
         addResponseMessageDeserialization(NofspSerializationConstants.NO_SUCH_VIRTUAL_DEVICE_CODE, this::getNoSuchVirtualDeviceError);
         addResponseMessageDeserialization(NofspSerializationConstants.ACTUATOR_STATE_SET_CODE, this::getActuatorStateSetServerResponse);
         addResponseMessageDeserialization(NofspSerializationConstants.DEVICE_INTERACTION_FAILED, this::getDeviceInteractionFailedError);
+        addResponseMessageDeserialization(NofspSerializationConstants.SYNC_ENCRYPTION_RESPONSE_CODE, this::getSyncEncryptionResponse);
+        addResponseMessageDeserialization(NofspSerializationConstants.SYNC_ENCRYPTION_REJECTED_CODE, this::getSyncEncryptionRejectedError);
     }
 
     /**
@@ -386,8 +385,47 @@ public class NofspServerDeserializer extends NofspMessageDeserializer<ServerCont
      * @param messageId the message id
      * @param parameterReader a TlvReader holding the parameter tlvs
      * @return the deserialized request
+     * @throws IOException thrown if an I/O exception occurs
      */
     private DisconnectRequest getDisconnectRequest(int messageId, TlvReader parameterReader) {
         return new DisconnectRequest(messageId);
+    }
+
+    /**
+     * Deserializes a {@code SyncEncryptionResponse}.
+     *
+     * @param messageId the message id
+     * @param parameterReader a TlvReader holding the parameter tlvs
+     * @return the deserialized response
+     * @throws IOException thrown if an I/O exception occurs
+     */
+    private SyncEncryptionResponse getSyncEncryptionResponse(int messageId, TlvReader parameterReader) throws IOException {
+        SyncEncryptionResponse response = null;
+
+        // deserializes the secret key
+        SecretKey key = getAESSecretKey(parameterReader.readNextTlv()).key();
+
+        response = new SyncEncryptionResponse(messageId, key);
+
+        return response;
+    }
+
+    /**
+     * Deserializes a {@code SyncEncryptionRejectedError}.
+     *
+     * @param messageId the message id
+     * @param parameterReader a TlvReader holding the parameter tlvs
+     * @return the deserialized response
+     * @throws IOException thrown if an I/O exception occurs
+     */
+    private SyncEncryptionRejectedError getSyncEncryptionRejectedError(int messageId, TlvReader parameterReader) throws IOException {
+        SyncEncryptionRejectedError response = null;
+
+        // deserializes the error description
+        String description = getRegularString(parameterReader.readNextTlv());
+
+        response = new SyncEncryptionRejectedError(messageId, description);
+
+        return response;
     }
 }

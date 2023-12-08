@@ -7,6 +7,7 @@ import no.ntnu.fieldnode.device.DeviceClass;
 import no.ntnu.tools.logger.SimpleLogger;
 import no.ntnu.network.ControlCommAgent;
 
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -20,7 +21,7 @@ public class ControlPanelContext extends ClientContext {
      * Creates a ControlPanelContext.
      *
      * @param agent the communication agent
-     * @param controlPanel the control panel to operate on
+     * @param controlPanel the control panel
      */
     public ControlPanelContext(ControlCommAgent agent, ControlPanel controlPanel, Set<SimpleLogger> loggers) {
         super(agent, loggers);
@@ -29,6 +30,16 @@ public class ControlPanelContext extends ClientContext {
         }
 
         this.controlPanel = controlPanel;
+    }
+
+    /**
+     * Creates a new ControlPanelContext.
+     *
+     * @param agent the communication agent
+     * @param controlPanel the control panel
+     */
+    public ControlPanelContext(ControlCommAgent agent, ControlPanel controlPanel) {
+        this(agent, controlPanel, new HashSet<>());
     }
 
     /**

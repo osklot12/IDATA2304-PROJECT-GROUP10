@@ -55,6 +55,24 @@ public interface ByteSerializerVisitor {
     Tlv visitString(ByteSerializableString string) throws IOException;
 
     /**
+     * Serializes a {@code ByteSerializablePublicKey}.
+     *
+     * @param key the key to serialize
+     * @return the serialized key
+     * @throws IOException thrown if serialization fails
+     */
+    Tlv visitPublicKey(ByteSerializablePublicKey key) throws IOException;
+
+    /**
+     * Serializes a {@code ByteSerializableSecretKey}.
+     *
+     * @param key the key to serialize
+     * @return the serialized key
+     * @throws IOException thrown if serialization fails
+     */
+    Tlv visitSecretKey(ByteSerializableSecretKey key) throws IOException;
+
+    /**
      * Serializes a {@code ByteSerializableList} object.
      *
      * @param list list to serialize

@@ -17,6 +17,7 @@ import no.ntnu.network.message.response.ResponseMessage;
 import no.ntnu.tools.eventformatter.ServerEventFormatter;
 
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -32,12 +33,12 @@ public class ServerContext extends MessageContext {
      * Creates a new CentralServerContext.
      *
      * @param agent       the communication agent
-     * @param udpDataSink the
-     * @param centralHub  the central hub to operate on
+     * @param dataCommAgentProvider the provider of data communication agents
+     * @param centralHub  the central hub
      */
-    public ServerContext(ControlCommAgent agent, UdpDataCommAgentProvider udpDataSink, CentralHub centralHub, Set<SimpleLogger> loggers) {
+    public ServerContext(ControlCommAgent agent, UdpDataCommAgentProvider dataCommAgentProvider, CentralHub centralHub, Set<SimpleLogger> loggers) {
         super(agent);
-        if (udpDataSink == null) {
+        if (dataCommAgentProvider == null) {
             throw new IllegalStateException("Cannot create ServerContext, because dataAgentProvider is null.");
         }
 
@@ -49,9 +50,20 @@ public class ServerContext extends MessageContext {
             throw new IllegalArgumentException("Cannot create Servercontext, because loggers is null.");
         }
 
-        this.udpDataSink = udpDataSink;
+        this.udpDataSink = dataCommAgentProvider;
         this.centralHub = centralHub;
         this.loggers = loggers;
+    }
+
+    /**
+     * Creates a new CentralServerContext.
+     *
+     * @param agent the communication agent
+     * @param dataCommAgentProvider the provider of data communication agents
+     * @param centralHub the central hub
+     */
+    public ServerContext(ControlCommAgent agent, UdpDataCommAgentProvider dataCommAgentProvider, CentralHub centralHub) {
+        this(agent, dataCommAgentProvider, centralHub, new HashSet<>());
     }
 
     /**

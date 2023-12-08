@@ -4,6 +4,7 @@ import no.ntnu.environment.Environment;
 import no.ntnu.fieldnode.FieldNode;
 import no.ntnu.fieldnode.FieldNodeBuilder;
 import no.ntnu.network.client.FieldNodeClient;
+import no.ntnu.tools.FieldNodeClientGenerator;
 import no.ntnu.tools.logger.ReferencedSystemOutLogger;
 
 import java.util.ArrayList;
@@ -19,11 +20,6 @@ import java.util.List;
  * </p>
  */
 public class SimulatedFieldNodeSetupRunner {
-    private static final int SENSOR_NOISE = 1; // level of sensor noise for all sensors
-    private static final Environment TOMATO_GREENHOUSE = new Environment();
-    private static final Environment FLOWER_GREENHOUSE = new Environment();
-    private static final Environment SECRET_BASEMENT_GREENHOUSE = new Environment();
-
     /**
      * The entrypoint for connecting simulated field nodes to the central server.
      * Keep in mind that the central server must be running in order to
@@ -32,60 +28,25 @@ public class SimulatedFieldNodeSetupRunner {
      */
     public static void main(String[] args) {
         getFieldNodeClients().forEach(client -> {
-            client.connect(CentralServerRunner.IP_ADDRESS);
             client.addLogger(new ReferencedSystemOutLogger(client.getName()));
+            client.connect(CentralServerRunner.IP_ADDRESS);
         });
     }
 
+    /**
+     * Returns a list of multiple simulated field node clients.
+     *
+     * @return a list of field node clients
+     */
     private static List<FieldNodeClient> getFieldNodeClients() {
         List<FieldNodeClient> runList = new ArrayList<>();
 
-        runList.add(getTomatoClientOne());
-        runList.add(getTomatoClientTwo());
-        runList.add(getFlowerClientOne());
-        runList.add(getFlowerClientTwo());
-        runList.add(getSecretBasementClient());
+        runList.add(FieldNodeClientGenerator.getTomatoClientOne());
+        runList.add(FieldNodeClientGenerator.getTomatoClientTwo());
+        runList.add(FieldNodeClientGenerator.getFlowerClientOne());
+        runList.add(FieldNodeClientGenerator.getFlowerClientTwo());
+        runList.add(FieldNodeClientGenerator.getSecretBasementClient());
 
         return runList;
-    }
-
-    private static FieldNodeClient getTomatoClientOne() {
-        FieldNode tomatoNodeOne = new FieldNodeBuilder(TOMATO_GREENHOUSE).addTemperatureSensor(SENSOR_NOISE)
-                .addTemperatureSensor(SENSOR_NOISE).addHumiditySensor(SENSOR_NOISE).addLuminositySensor(SENSOR_NOISE)
-                .addAirConditioner().addDimmer().build();
-
-        return new FieldNodeClient(tomatoNodeOne, "Tomato house node 1");
-    }
-
-    private static FieldNodeClient getTomatoClientTwo() {
-        FieldNode tomatoNodeTwo = new FieldNodeBuilder(TOMATO_GREENHOUSE).addTemperatureSensor(SENSOR_NOISE)
-                .addHumiditySensor(SENSOR_NOISE).addLuminositySensor(SENSOR_NOISE).addAirConditioner()
-                .addAirConditioner().addHumidifier().addDimmer().addDimmer().build();
-
-        return new FieldNodeClient(tomatoNodeTwo, "Tomato house node 2");
-    }
-
-    private static FieldNodeClient getFlowerClientOne() {
-        FieldNode flowerNodeOne = new FieldNodeBuilder(FLOWER_GREENHOUSE).addTemperatureSensor(SENSOR_NOISE)
-                .addHumiditySensor(SENSOR_NOISE).addLuminositySensor(SENSOR_NOISE).addAirConditioner()
-                .addHumidifier().addDimmer().build();
-
-        return new FieldNodeClient(flowerNodeOne, "Flower house node 1");
-    }
-
-    private static FieldNodeClient getFlowerClientTwo() {
-        FieldNode flowerNodeTwo = new FieldNodeBuilder(FLOWER_GREENHOUSE).addTemperatureSensor(SENSOR_NOISE)
-                .addHumiditySensor(SENSOR_NOISE).addLuminositySensor(SENSOR_NOISE).addAirConditioner()
-                .addHumidifier().addDimmer().addDimmer().addHumidifier().build();
-
-        return new FieldNodeClient(flowerNodeTwo, "Flower house node 2");
-    }
-
-    private static FieldNodeClient getSecretBasementClient() {
-        FieldNode secretNode = new FieldNodeBuilder(SECRET_BASEMENT_GREENHOUSE).addTemperatureSensor(SENSOR_NOISE)
-                .addTemperatureSensor(SENSOR_NOISE).addLuminositySensor(SENSOR_NOISE).addAirConditioner()
-                .addAirConditioner().build();
-
-        return new FieldNodeClient(secretNode, "Secret basement node");
     }
 }

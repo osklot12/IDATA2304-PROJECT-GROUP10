@@ -8,9 +8,15 @@ import no.ntnu.network.message.serialize.tool.tlv.Tlv;
 import no.ntnu.network.message.serialize.tool.tlv.TlvFrame;
 import no.ntnu.network.message.serialize.tool.tlv.TlvReader;
 
+import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
+import java.security.KeyFactory;
+import java.security.NoSuchAlgorithmException;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.X509EncodedKeySpec;
 import java.util.*;
 
 /**
@@ -65,8 +71,17 @@ public abstract class NofspDeserializer {
         // type: Integer
         deserializerMap.put(ByteHandler.bytesToString(NofspSerializationConstants.INTEGER_BYTES), this::getInteger);
 
+        // type: Double
+        deserializerMap.put(ByteHandler.bytesToString(NofspSerializationConstants.DOUBLE_BYTES), this::getDouble);
+
         // type: String
         deserializerMap.put(ByteHandler.bytesToString(NofspSerializationConstants.STRING_BYTES), this::getString);
+
+        // type: PublicKey
+        deserializerMap.put(ByteHandler.bytesToString(NofspSerializationConstants.PUBLIC_KEY_BYTES), this::getRSAPublicKey);
+
+        // type: SecretKey
+        deserializerMap.put(ByteHandler.bytesToString(NofspSerializationConstants.SECRET_KEY_BYTES), this::getAESSecretKey);
 
         // type: Set
         deserializerMap.put(ByteHandler.bytesToString(NofspSerializationConstants.SET_BYTES), this::getSet);
@@ -185,6 +200,59 @@ public abstract class NofspDeserializer {
         }
 
         return getString(stringTlv).toString();
+    }
+
+    /**
+     * Deserializes a public key Tlv.
+     *
+     * @param keyTlv the public key tlv to deserialize
+     * @return the public key
+     * @throws IOException thrown if an I/O exception occurs
+     */
+    protected ByteSerializablePublicKey getRSAPublicKey(Tlv keyTlv) throws IOException {
+        if (keyTlv == null) {
+            throw new IllegalArgumentException("Cannot deserialize TLV, because keyTlv is null.");
+        }
+
+        ByteSerializablePublicKey result = null;
+
+        X509EncodedKeySpec keySpec = new X509EncodedKeySpec(keyTlv.valueField());
+        KeyFactory keyFactory = getKeyFactory();
+        try {
+            result = new ByteSerializablePublicKey(keyFactory.generatePublic(keySpec));
+        } catch (InvalidKeySpecException e) {
+            throw new IOException("Cannot deserialize public key: " + e.getMessage());
+        }
+
+        return result;
+    }
+
+    /**
+     * Deserializes a secret key Tlv.
+     *
+     * @param keyTlv the secret key tlv to deserialize
+     * @return the secret key
+     * @throws IOException thrown if an I/O exception occurs
+     */
+    protected ByteSerializableSecretKey getAESSecretKey(Tlv keyTlv) throws IOException {
+        if (keyTlv == null) {
+            throw new IllegalArgumentException("Cannot deserialize TLV, because keyTlv is null.");
+        }
+
+        SecretKey key = new SecretKeySpec(keyTlv.valueField(), 0, keyTlv.valueField().length, "AES");
+        return new ByteSerializableSecretKey(key);
+    }
+
+    private static KeyFactory getKeyFactory() throws IOException {
+        KeyFactory keyFactory;
+
+        try {
+            keyFactory = KeyFactory.getInstance("RSA");
+        } catch (NoSuchAlgorithmException e) {
+            throw new IOException("Cannot deserialize public key: " + e.getMessage());
+        }
+
+        return keyFactory;
     }
 
     /**

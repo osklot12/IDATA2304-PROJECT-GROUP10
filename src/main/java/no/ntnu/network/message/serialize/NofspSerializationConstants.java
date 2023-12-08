@@ -22,6 +22,8 @@ public class NofspSerializationConstants {
     public static final byte[] STRING_BYTES = new byte[] {0, 1};
     public static final byte[] DOUBLE_BYTES = new byte[] {0, 3};
     public static final byte[] NULL_BYTES = new byte[] {0, 4};
+    public static final byte[] PUBLIC_KEY_BYTES = new byte[] {0, 5};
+    public static final byte[] SECRET_KEY_BYTES = new byte[] {0, 6};
     public static final byte[] SET_BYTES = new byte[] {0, 10};
     public static final byte[] LIST_BYTES = new byte[] {0, 11};
     public static final byte[] MAP_BYTES = new byte[] {0, 12};
@@ -42,6 +44,7 @@ public class NofspSerializationConstants {
     public static final String FNSM_NOTIFICATION_COMMAND = "FNSMNOT";
     public static final String ACTIVATE_ACTUATOR_COMMAND = "ACTACT";
     public static final String DISCONNECT_CLIENT_COMMAND = "DISC";
+    public static final String SYNC_ENCRYPTION_COMMAND = "PKEY";
 
     // status codes - successful requests
     public static final int HEART_BEAT_CODE = 0;
@@ -54,6 +57,7 @@ public class NofspSerializationConstants {
     public static final int VIRTUAL_ACTUATOR_UPDATED_CODE = 27;
     public static final int ACTUATOR_STATE_SET_CODE = 30;
     public static final int DISCONNECTION_ALLOWED_CODE = 50;
+    public static final int SYNC_ENCRYPTION_RESPONSE_CODE = 90;
 
     // status codes - error
     public static final int AUTHENTICATION_FAILED_CODE = 100;
@@ -64,4 +68,5 @@ public class NofspSerializationConstants {
     public static final int NO_SUCH_VIRTUAL_DEVICE_CODE = 105;
     public static final int FIELD_NODE_UNREACHABLE_CODE = 106;
     public static final int DEVICE_INTERACTION_FAILED = 107;
+    public static final int SYNC_ENCRYPTION_REJECTED_CODE = 150;
 }

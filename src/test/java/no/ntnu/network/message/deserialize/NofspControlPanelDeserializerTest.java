@@ -4,22 +4,24 @@ import no.ntnu.controlpanel.ControlPanel;
 import no.ntnu.fieldnode.device.DeviceClass;
 import no.ntnu.network.message.context.ControlPanelContext;
 import no.ntnu.network.message.deserialize.component.MessageDeserializer;
+import no.ntnu.network.message.encryption.keygen.AsymmetricKeyPairGenerator;
+import no.ntnu.network.message.encryption.keygen.RSAKeyPairGenerator;
 import no.ntnu.network.message.request.HeartbeatRequest;
+import no.ntnu.network.message.request.SyncEncryptionRequest;
 import no.ntnu.network.message.request.ServerFnsmNotificationRequest;
 import no.ntnu.network.message.response.ActuatorStateSetControlPanelResponse;
 import no.ntnu.network.message.response.FieldNodePoolResponse;
 import no.ntnu.network.message.response.SubscribedToFieldNodeResponse;
 import no.ntnu.network.message.response.UnsubscribedFromFieldNodeResponse;
 import no.ntnu.network.message.response.error.FieldNodeUnreachableError;
-import no.ntnu.network.message.serialize.NofspSerializationConstants;
 import no.ntnu.network.message.serialize.tool.tlv.Tlv;
-import no.ntnu.network.message.serialize.tool.tlv.TlvReader;
 import no.ntnu.network.message.serialize.visitor.ByteSerializerVisitor;
 import no.ntnu.network.message.serialize.visitor.NofspSerializer;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -153,5 +155,21 @@ public class NofspControlPanelDeserializerTest {
         Tlv tlv = serializer.serialize(response);
 
         assertEquals(response, deserializer.deserializeMessage(tlv));
+    }
+
+    /**
+     * Tests the serialization of {@code PublicKeySharingRequest}.
+     *
+     * @throws IOException thrown if an I/O exception occurs
+     */
+    @Test
+    public void testPublicKeySharingRequest() throws IOException, NoSuchAlgorithmException {
+        AsymmetricKeyPairGenerator keyPairGenerator = new RSAKeyPairGenerator();
+        keyPairGenerator.createKeys();
+        SyncEncryptionRequest<ControlPanelContext> request = new SyncEncryptionRequest<>(keyPairGenerator.getKeyPair().getPublic());
+
+        Tlv tlv = serializer.serialize(request);
+
+        assertEquals(request, deserializer.deserializeMessage(tlv));
     }
 }

@@ -2,6 +2,7 @@ package no.ntnu.network.message.deserialize.component;
 
 import no.ntnu.network.message.context.ClientContext;
 import no.ntnu.network.message.request.HeartbeatRequest;
+import no.ntnu.network.message.request.SyncEncryptionRequest;
 import no.ntnu.network.message.response.DisconnectionAllowedResponse;
 import no.ntnu.network.message.response.RegistrationConfirmationResponse;
 import no.ntnu.network.message.response.error.SubscriptionError;
@@ -10,6 +11,7 @@ import no.ntnu.network.message.serialize.NofspSerializationConstants;
 import no.ntnu.network.message.serialize.tool.tlv.TlvReader;
 
 import java.io.IOException;
+import java.security.PublicKey;
 
 /**
  * A message deserializer for client messages.
@@ -32,6 +34,7 @@ public abstract class NofspClientMessageDeserializer<C extends ClientContext> ex
     private void initializeCommonDeserializationMethods() {
         // requests
         addRequestMessageDeserialization(NofspSerializationConstants.HEART_BEAT, this::getHeartbeatRequest);
+        addRequestMessageDeserialization(NofspSerializationConstants.SYNC_ENCRYPTION_COMMAND, this::getSyncEncryptionRequest);
 
         // responses
         addResponseMessageDeserialization(NofspSerializationConstants.NODE_REGISTRATION_CONFIRMED_CODE, this::getRegistrationConfirmedResponse);
@@ -117,5 +120,24 @@ public abstract class NofspClientMessageDeserializer<C extends ClientContext> ex
      */
     private DisconnectionAllowedResponse<C> getDisconnectionAllowedResponse(int messageId, TlvReader parameterReader) {
         return new DisconnectionAllowedResponse<>(messageId);
+    }
+
+    /**
+     * Deserializes a {@code PublicKeySharingRequest}.
+     *
+     * @param messageId the message id
+     * @param parameterReader a TlvReader holding the request parameters
+     * @return the deserialized request
+     * @throws IOException thrown if an I/O exception occurs
+     */
+    private SyncEncryptionRequest<C> getSyncEncryptionRequest(int messageId, TlvReader parameterReader) throws IOException {
+        SyncEncryptionRequest<C> request = null;
+
+        // deserializes the public key
+        PublicKey key = getRSAPublicKey(parameterReader.readNextTlv()).key();
+
+        request = new SyncEncryptionRequest<>(messageId, key);
+
+        return request;
     }
 }

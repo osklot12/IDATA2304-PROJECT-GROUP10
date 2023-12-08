@@ -24,12 +24,6 @@ import java.util.Map;
  * described by NOFSP.
  */
 public class NofspSerializer implements ByteSerializerVisitor {
-    /**
-     * Creates a new NofspSerializer.
-     */
-    public NofspSerializer() {
-    }
-
     @Override
     public Tlv serialize(ByteSerializable serializable) throws IOException {
         return serializable.accept(this);
@@ -58,6 +52,22 @@ public class NofspSerializer implements ByteSerializerVisitor {
     public Tlv visitString(ByteSerializableString string) throws IOException {
         byte[] typeField = NofspSerializationConstants.STRING_BYTES;
         byte[] valueField = string.getString().getBytes(StandardCharsets.UTF_8);
+
+        return createTlv(typeField, valueField);
+    }
+
+    @Override
+    public Tlv visitPublicKey(ByteSerializablePublicKey key) throws IOException {
+        byte[] typeField = NofspSerializationConstants.PUBLIC_KEY_BYTES;
+        byte[] valueField = key.key().getEncoded();
+
+        return createTlv(typeField, valueField);
+    }
+
+    @Override
+    public Tlv visitSecretKey(ByteSerializableSecretKey key) throws IOException {
+        byte[] typeField = NofspSerializationConstants.SECRET_KEY_BYTES;
+        byte[] valueField = key.key().getEncoded();
 
         return createTlv(typeField, valueField);
     }

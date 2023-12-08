@@ -6,19 +6,16 @@ import no.ntnu.network.centralserver.centralhub.CentralHub;
 import no.ntnu.network.message.Message;
 import no.ntnu.network.message.common.ControlMessage;
 import no.ntnu.network.message.context.ServerContext;
-import no.ntnu.network.message.deserialize.component.MessageDeserializer;
+import no.ntnu.network.message.encryption.keygen.AESKeyGenerator;
+import no.ntnu.network.message.encryption.keygen.SymmetricKeyGenerator;
 import no.ntnu.network.message.request.*;
-import no.ntnu.network.message.response.ActuatorStateSetServerResponse;
-import no.ntnu.network.message.response.AdlUpdatedResponse;
-import no.ntnu.network.message.response.HeartbeatResponse;
-import no.ntnu.network.message.response.VirtualActuatorUpdatedResponse;
+import no.ntnu.network.message.response.*;
 import no.ntnu.network.message.response.error.AdlUpdateRejectedError;
 import no.ntnu.network.message.response.error.DeviceInteractionFailedError;
 import no.ntnu.network.message.response.error.NoSuchVirtualDeviceError;
+import no.ntnu.network.message.response.error.SyncEncryptionRejectedError;
 import no.ntnu.network.message.sensordata.SduSensorDataMessage;
-import no.ntnu.network.message.serialize.NofspSerializationConstants;
 import no.ntnu.network.message.serialize.tool.tlv.Tlv;
-import no.ntnu.network.message.serialize.tool.tlv.TlvReader;
 import no.ntnu.network.message.serialize.visitor.ByteSerializerVisitor;
 import no.ntnu.network.message.serialize.visitor.NofspSerializer;
 import no.ntnu.network.representation.FieldNodeInformation;
@@ -26,6 +23,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -287,5 +285,35 @@ public class NofspServerDeserializerTest {
         Tlv tlv = serializer.serialize(request);
 
         assertEquals(request, deserializer.deserializeMessage(tlv));
+    }
+
+    /**
+     * Tests the serialization of the {@code SyncEncryptionResponse}.
+     *
+     * @throws IOException thrown if an I/O exception occurs
+     */
+    @Test
+    public void testSyncEncryptionResponseSerialization() throws IOException, NoSuchAlgorithmException {
+        SymmetricKeyGenerator keyGenerator = new AESKeyGenerator();
+        keyGenerator.createKey();
+        SyncEncryptionResponse response = new SyncEncryptionResponse(keyGenerator.getKey());
+
+        Tlv tlv = serializer.serialize(response);
+
+        assertEquals(response, deserializer.deserializeMessage(tlv));
+    }
+
+    /**
+     * Tests the serialization of the {@code SyncEncryptionRejectedError}.
+     *
+     * @throws IOException thrown if an I/O exception occurs
+     */
+    @Test
+    public void testSyncEncryptionRejectedErrorSerialization() throws IOException {
+        SyncEncryptionRejectedError response = new SyncEncryptionRejectedError("TestError");
+
+        Tlv tlv = serializer.serialize(response);
+
+        assertEquals(response, deserializer.deserializeMessage(tlv));
     }
 }

@@ -34,4 +34,26 @@ public class ByteSerializableDouble implements ByteSerializable {
     public Tlv accept(ByteSerializerVisitor visitor) throws IOException {
         return visitor.visitDouble(this);
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == this) {
+            return true;
+        }
+
+        if (!(o instanceof ByteSerializableDouble b)) {
+            return false;
+        }
+
+        return b.getDouble() == theDouble;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = 17;
+
+        result = result * 31 + Double.hashCode(theDouble);
+
+        return result;
+    }
 }

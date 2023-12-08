@@ -1,14 +1,17 @@
 package no.ntnu.network.message.deserialize.component;
 
 import no.ntnu.network.message.common.*;
-import no.ntnu.network.message.serialize.NofspSerializationConstants;
+import no.ntnu.network.message.encryption.keygen.AESKeyGenerator;
+import no.ntnu.network.message.encryption.keygen.AsymmetricKeyPairGenerator;
+import no.ntnu.network.message.encryption.keygen.RSAKeyPairGenerator;
+import no.ntnu.network.message.encryption.keygen.SymmetricKeyGenerator;
 import no.ntnu.network.message.serialize.tool.tlv.Tlv;
-import no.ntnu.network.message.serialize.tool.tlv.TlvReader;
 import no.ntnu.network.message.serialize.visitor.NofspSerializer;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.security.NoSuchAlgorithmException;
 
 import static org.junit.Assert.*;
 
@@ -92,5 +95,37 @@ public class NofspDeserializerTest {
         Tlv tlv = serializer.serialize(set);
 
         assertEquals(set, deserializer.deserialize(tlv));
+    }
+
+    /**
+     * Tests that public keys are serialized and deserialized as expected.
+     *
+     * @throws IOException thrown if an I/O exception occurs
+     */
+    @Test
+    public void testPublicKeySerialization() throws IOException, NoSuchAlgorithmException {
+        AsymmetricKeyPairGenerator keyPairGenerator = new RSAKeyPairGenerator();
+        keyPairGenerator.createKeys();
+        ByteSerializablePublicKey publicKey = new ByteSerializablePublicKey(keyPairGenerator.getKeyPair().getPublic());
+
+        Tlv tlv = serializer.serialize(publicKey);
+
+        assertEquals(publicKey, deserializer.deserialize(tlv));
+    }
+
+    /**
+     * Tests that secret keys are serialized and deserialized as expected.
+     *
+     * @throws IOException thrown if an I/O exception occurs
+     */
+    @Test
+    public void testSecretKeySerialization() throws IOException, NoSuchAlgorithmException {
+        SymmetricKeyGenerator keyGenerator = new AESKeyGenerator();
+        keyGenerator.createKey();
+        ByteSerializableSecretKey secretKey = new ByteSerializableSecretKey(keyGenerator.getKey());
+
+        Tlv tlv = serializer.serialize(secretKey);
+
+        assertEquals(secretKey, deserializer.deserialize(tlv));
     }
 }
