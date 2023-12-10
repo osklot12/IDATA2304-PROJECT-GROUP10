@@ -1,6 +1,8 @@
 package no.ntnu.network.client;
 
 import no.ntnu.controlpanel.ControlPanel;
+import no.ntnu.network.message.encryption.cipher.decrypt.DecryptionStrategy;
+import no.ntnu.network.message.encryption.cipher.encrypt.EncryptionStrategy;
 import no.ntnu.network.representation.FieldNodeAgent;
 import no.ntnu.network.centralserver.CentralServer;
 import no.ntnu.network.connectionservice.sensordatarouter.UdpSensorDataRouter;
@@ -52,7 +54,7 @@ public class ControlPanelClient extends Client<ControlPanelContext> implements F
 
         if (startHandlingIncomingSensorData()) {
             if (connectToServer(serverAddress, CentralServer.CONTROL_PORT_NUMBER, serializer, deserializer)) {
-                registerControlPanel();
+                initializeRegistration();
             } else {
                 sensorDataRouter.stop();
                 throw new IOException("Failed to connect to server with address: " + serverAddress);
@@ -72,6 +74,7 @@ public class ControlPanelClient extends Client<ControlPanelContext> implements F
 
         try {
             UdpSensorDataSink sensorDataSink = new UdpSensorDataSink(deserializer);
+            context.setDataSink(sensorDataSink);
             sensorDataRouter = new UdpSensorDataRouter(sensorDataSink);
             sensorDataRouter.addDestination(controlPanel);
             sensorDataRouter.start();
@@ -81,18 +84,6 @@ public class ControlPanelClient extends Client<ControlPanelContext> implements F
         }
 
         return success;
-    }
-
-    /**
-     * Registers the control panel at the server.
-     */
-    private void registerControlPanel() {
-        try {
-            sendRequest(new RegisterControlPanelRequest(controlPanel.getCompatibilityList(),
-                    sensorDataRouter.getLocalPortNumber()));
-        } catch (IOException e) {
-            logError("Cannot send registration request: " + e.getMessage());
-        }
     }
 
     /**

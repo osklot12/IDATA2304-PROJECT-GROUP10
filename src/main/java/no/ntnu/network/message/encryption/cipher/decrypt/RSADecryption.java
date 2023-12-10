@@ -4,19 +4,19 @@ import no.ntnu.exception.EncryptionException;
 import no.ntnu.network.message.encryption.cipher.StandardCipher;
 
 import javax.crypto.Cipher;
-import java.security.Key;
+import java.security.PrivateKey;
 
 /**
- * A decryption strategy using the AES decryption strategy.
+ * A decryption strategy using the RSA algorithm.
  */
-public class AESDecryptor extends StandardCipher implements DecryptionStrategy {
+public class RSADecryption extends StandardCipher implements DecryptionStrategy {
     /**
-     * Creates a new AESDecryptor.
+     * Creates a new RSADecryption.
      *
-     * @param key the secret key to use for encryption
+     * @param key the private key to use for encryption
      */
-    public AESDecryptor(Key key) {
-        super("AES", Cipher.DECRYPT_MODE, key);
+    public RSADecryption(PrivateKey key) {
+        super("RSA", Cipher.DECRYPT_MODE, key);
     }
 
     @Override

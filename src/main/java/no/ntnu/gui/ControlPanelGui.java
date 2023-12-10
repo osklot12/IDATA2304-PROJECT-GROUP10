@@ -57,7 +57,7 @@ public class ControlPanelGui extends Application implements ControlPanelListener
         stage.setScene(scene);
         stage.show();
 
-        sendFieldNodePoolRequest();
+
     }
 
     /**

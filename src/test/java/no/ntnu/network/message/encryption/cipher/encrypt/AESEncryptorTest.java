@@ -1,13 +1,14 @@
 package no.ntnu.network.message.encryption.cipher.encrypt;
 
 import no.ntnu.exception.EncryptionException;
-import no.ntnu.network.message.encryption.cipher.decrypt.AESDecryptor;
+import no.ntnu.network.message.encryption.cipher.decrypt.AESDecryption;
 import no.ntnu.network.message.encryption.keygen.AESKeyGenerator;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.nio.charset.StandardCharsets;
 import java.security.NoSuchAlgorithmException;
+import java.util.Arrays;
 
 import static org.junit.Assert.*;
 
@@ -16,8 +17,8 @@ import static org.junit.Assert.*;
  * The class verifies that the encryption/decryption works as expected.
  */
 public class AESEncryptorTest {
-    AESEncryptor encryptor;
-    AESDecryptor decryptor;
+    AESEncryption encryptor;
+    AESDecryption decryptor;
 
     /**
      * Setting up for the following test methods.
@@ -27,8 +28,8 @@ public class AESEncryptorTest {
         AESKeyGenerator keyGen = new AESKeyGenerator();
         keyGen.createKey();
 
-        encryptor = new AESEncryptor(keyGen.getKey());
-        decryptor = new AESDecryptor(keyGen.getKey());
+        encryptor = new AESEncryption(keyGen.getKey());
+        decryptor = new AESDecryption(keyGen.getKey());
     }
 
     /**
@@ -43,5 +44,20 @@ public class AESEncryptorTest {
         byte[] encryptedBytes = encryptor.encrypt(bytes);
 
         assertArrayEquals(bytes, decryptor.decrypt(encryptedBytes));
+    }
+
+    /**
+     * Tests that the bytes are actually encrypted, and not just remains the same, which may not be observed by the
+     * previous test.
+     *
+     * @throws EncryptionException thrown if encryption fails
+     */
+    @Test
+    public void testEffect() throws EncryptionException {
+        byte[] bytes = "This is the string to encrypt".getBytes(StandardCharsets.UTF_8);
+
+        byte[] encryptedBytes = encryptor.encrypt(bytes);
+
+        assertFalse(Arrays.equals(bytes, encryptedBytes));
     }
 }

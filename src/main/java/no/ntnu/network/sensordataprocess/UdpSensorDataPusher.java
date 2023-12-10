@@ -1,6 +1,10 @@
 package no.ntnu.network.sensordataprocess;
 
+import no.ntnu.exception.EncryptionException;
 import no.ntnu.network.DataCommAgent;
+import no.ntnu.network.message.encryption.TlvEncryption;
+import no.ntnu.network.message.encryption.cipher.encrypt.EncryptionStrategy;
+import no.ntnu.network.message.encryption.cipher.encrypt.PlainTextEncryption;
 import no.ntnu.network.message.sensordata.SensorDataMessage;
 import no.ntnu.network.message.serialize.tool.tlv.Tlv;
 import no.ntnu.network.message.serialize.visitor.ByteSerializerVisitor;
@@ -19,6 +23,7 @@ public class UdpSensorDataPusher implements DataCommAgent {
     private final int destPortNumber;
     private final UdpDatagramSender messageSender;
     private final ByteSerializerVisitor serializer;
+    private EncryptionStrategy encryption;
 
     /**
      * Creates a new SensorDataProcess.
@@ -31,11 +36,45 @@ public class UdpSensorDataPusher implements DataCommAgent {
         DatagramSocket datagramSocket = new DatagramSocket();
         this.messageSender = new UdpDatagramSender(datagramSocket, serializer, MAX_DATAGRAM_SIZE);
         this.serializer = serializer;
+        this.encryption = new PlainTextEncryption();
+    }
+
+    /**
+     * Sets the encryption used for sending Tlvs.
+     *
+     * @param encryption the encryption strategy to use
+     */
+    public void setEncryption(EncryptionStrategy encryption) {
+        if (encryption == null) {
+            throw new IllegalArgumentException("Cannot set encryption, because encryption strategy is null.");
+        }
+
+        this.encryption = encryption;
     }
 
     @Override
     public void sendSensorData(SensorDataMessage sensorData) throws IOException {
-        Tlv messageTlv = serializer.serialize(sensorData);
-        messageSender.sendMessage(messageTlv.toBytes(), destIpAddress, destPortNumber);
+        Tlv rawTlv = serializer.serialize(sensorData);
+        Tlv processedTlv = processTlv(rawTlv);
+        messageSender.sendMessage(processedTlv.toBytes(), destIpAddress, destPortNumber);
+    }
+
+    /**
+     * Processes a raw TLV.
+     *
+     * @param rawTlv the raw tlv to process
+     * @return the processed tlv
+     * @throws IOException thrown if an I/O exception occurs
+     */
+    private Tlv processTlv(Tlv rawTlv) throws IOException {
+        Tlv processedTlv = null;
+
+        try {
+            processedTlv = TlvEncryption.encryptTlv(rawTlv, encryption);
+        } catch (EncryptionException e) {
+            throw new IOException("Could not process the TLV: " + e.getMessage());
+        }
+
+        return processedTlv;
     }
 }

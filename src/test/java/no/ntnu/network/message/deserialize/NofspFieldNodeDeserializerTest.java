@@ -2,11 +2,19 @@ package no.ntnu.network.message.deserialize;
 
 import no.ntnu.network.message.context.FieldNodeContext;
 import no.ntnu.network.message.deserialize.component.MessageDeserializer;
+import no.ntnu.network.message.encryption.keygen.AESKeyGenerator;
+import no.ntnu.network.message.encryption.keygen.AsymmetricKeyPairGenerator;
+import no.ntnu.network.message.encryption.keygen.RSAKeyPairGenerator;
+import no.ntnu.network.message.encryption.keygen.SymmetricKeyGenerator;
 import no.ntnu.network.message.request.AdlUpdateRequest;
 import no.ntnu.network.message.request.FieldNodeActivateActuatorRequest;
+import no.ntnu.network.message.response.AsymmetricEncryptionResponse;
 import no.ntnu.network.message.response.DisconnectionAllowedResponse;
 import no.ntnu.network.message.response.ServerFnsmUpdatedResponse;
+import no.ntnu.network.message.response.SymmetricEncryptionResponse;
+import no.ntnu.network.message.response.error.KeyGenError;
 import no.ntnu.network.message.response.error.ServerFnsmUpdateRejectedError;
+import no.ntnu.network.message.response.error.UnsecureRequestError;
 import no.ntnu.network.message.serialize.NofspSerializationConstants;
 import no.ntnu.network.message.serialize.tool.tlv.Tlv;
 import no.ntnu.network.message.serialize.tool.tlv.TlvReader;
@@ -15,7 +23,11 @@ import no.ntnu.network.message.serialize.visitor.NofspSerializer;
 import org.junit.Before;
 import org.junit.Test;
 
+import javax.crypto.SecretKey;
 import java.io.IOException;
+import java.lang.reflect.Field;
+import java.security.NoSuchAlgorithmException;
+import java.security.PublicKey;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -104,6 +116,76 @@ public class NofspFieldNodeDeserializerTest {
     @Test
     public void testDisconnectionAllowedResponseSerialization() throws IOException {
         DisconnectionAllowedResponse<FieldNodeContext> response = new DisconnectionAllowedResponse<>();
+
+        Tlv tlv = serializer.serialize(response);
+
+        assertEquals(response, deserializer.deserializeMessage(tlv));
+    }
+
+    /**
+     * Tests the serialization of the {@code AsymmetricEncryptionResponse}.
+     * This test covers the response for all clients, as it is implemented in the base class for client message
+     * deserialization.
+     *
+     * @throws IOException thrown if an I/O exception occurs
+     */
+    @Test
+    public void testAsymmetricEncryptionResponseSerialization() throws IOException, NoSuchAlgorithmException {
+        AsymmetricKeyPairGenerator keyGen = new RSAKeyPairGenerator();
+        keyGen.createKeys();
+        PublicKey key = keyGen.getKeyPair().getPublic();
+        AsymmetricEncryptionResponse<FieldNodeContext> response = new AsymmetricEncryptionResponse<>(key);
+
+        Tlv tlv = serializer.serialize(response);
+
+        assertEquals(response, deserializer.deserializeMessage(tlv));
+    }
+
+    /**
+     * Tests the serialization of the {@code SymmetricEncryptionResponse}.
+     * This test covers the response for all clients, as it is implemented in the base class for client message
+     * deserialization.
+     *
+     * @throws IOException thrown if an I/O exception occurs
+     */
+    @Test
+    public void testSymmetricEncryptionResponseSerialization() throws IOException, NoSuchAlgorithmException {
+        SymmetricKeyGenerator keyGen = new AESKeyGenerator();
+        keyGen.createKey();
+        SecretKey secretKey = keyGen.getKey();
+        SymmetricEncryptionResponse<FieldNodeContext> response = new SymmetricEncryptionResponse<>(secretKey);
+
+        Tlv tlv = serializer.serialize(response);
+
+        assertEquals(response, deserializer.deserializeMessage(tlv));
+    }
+
+    /**
+     * Tests the serialization of the {@code UnsecureRequestError}.
+     * This test covers the response for all clients, as it is implemented in the base class for client message
+     * deserialization.
+     *
+     * @throws IOException thrown if an I/O exception occurs
+     */
+    @Test
+    public void testUnsecureRequestErrorSerialization() throws IOException {
+        UnsecureRequestError<FieldNodeContext> response = new UnsecureRequestError<>("TestError");
+
+        Tlv tlv = serializer.serialize(response);
+
+        assertEquals(response, deserializer.deserializeMessage(tlv));
+    }
+
+    /**
+     * Tests the serialization of the {@code KeyGenError}.
+     * This test covers the response for all clients, as it is implemented in the base class for client message
+     * deserialization.
+     *
+     * @throws IOException thrown if an I/O exception occurs
+     */
+    @Test
+    public void testKeyGenErrorSerialization() throws IOException {
+        KeyGenError<FieldNodeContext> response = new KeyGenError<>("TestError");
 
         Tlv tlv = serializer.serialize(response);
 

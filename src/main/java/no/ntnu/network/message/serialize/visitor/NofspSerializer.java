@@ -182,9 +182,11 @@ public class NofspSerializer implements ByteSerializerVisitor {
      */
     private List<Tlv> serializeAll(ByteSerializable... serializables) throws IOException {
         List<Tlv> tlvs = new ArrayList<>();
+
         for (ByteSerializable serializable : serializables) {
             tlvs.add(serialize(serializable));
         }
+
         return tlvs;
     }
 

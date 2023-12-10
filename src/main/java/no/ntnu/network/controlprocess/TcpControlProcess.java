@@ -4,6 +4,8 @@ import no.ntnu.network.message.Message;
 import no.ntnu.network.message.common.ControlMessage;
 import no.ntnu.network.message.context.MessageContext;
 import no.ntnu.network.message.deserialize.component.MessageDeserializer;
+import no.ntnu.network.message.encryption.cipher.decrypt.DecryptionStrategy;
+import no.ntnu.network.message.encryption.cipher.encrypt.EncryptionStrategy;
 import no.ntnu.network.message.serialize.tool.tlv.Tlv;
 import no.ntnu.network.message.serialize.visitor.ByteSerializerVisitor;
 
@@ -44,6 +46,24 @@ public class TcpControlProcess<C extends MessageContext> {
         this.tlvReceiver = new TcpTlvReceiver(socket, deserializer.getTlvFrame());
         this.serializer = serializer;
         this.deserializer = deserializer;
+    }
+
+    /**
+     * Sets the encryption used for sending Tlvs.
+     *
+     * @param encryption the encryption strategy to use
+     */
+    public void setEncryption(EncryptionStrategy encryption) {
+        tlvSender.setEncryption(encryption);
+    }
+
+    /**
+     * Sets the decryption used for receiving Tlvs.
+     *
+     * @param decryption the decryption strategy to use
+     */
+    public void setDecryption(DecryptionStrategy decryption) {
+        tlvReceiver.setDecryption(decryption);
     }
 
     /**

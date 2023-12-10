@@ -1,10 +1,14 @@
 package no.ntnu.network.message.context;
 
 import no.ntnu.network.ControlCommAgent;
+import no.ntnu.network.message.encryption.cipher.decrypt.DecryptionStrategy;
+import no.ntnu.network.message.encryption.cipher.encrypt.EncryptionStrategy;
 import no.ntnu.network.message.request.RequestMessage;
 import no.ntnu.network.message.response.ResponseMessage;
+import no.ntnu.tools.logger.SimpleLogger;
 
 import java.io.IOException;
+import java.util.Set;
 
 /**
  * A set of operations that are used by messages for processing, encapsulating the logic required.
@@ -12,18 +16,24 @@ import java.io.IOException;
  */
 public abstract class MessageContext {
     protected final ControlCommAgent agent;
+    private final Set<SimpleLogger> loggers;
 
     /**
      * Creates a new MessageContext.
      *
      * @param agent the communication agent
      */
-    protected MessageContext(ControlCommAgent agent) {
+    protected MessageContext(ControlCommAgent agent, Set<SimpleLogger> loggers) {
         if (agent == null) {
             throw new IllegalArgumentException("Cannot create MessageContext, because agent is null.");
         }
 
+        if (loggers == null) {
+            throw new IllegalArgumentException("Cannot create MessageContext, because loggers is null.");
+        }
+
         this.agent = agent;
+        this.loggers = loggers;
     }
 
     /**
@@ -82,5 +92,50 @@ public abstract class MessageContext {
      */
     public void closeConnection() {
         agent.close();
+    }
+
+    /**
+     * Sets the encryption strategy used to send messages.
+     *
+     * @param encryption the encryption strategy to use
+     */
+    public void setEncryption(EncryptionStrategy encryption) {
+        agent.setEncryption(encryption);
+    }
+
+    /**
+     * Returns whether received messages are secure or not.
+     *
+     * @return true if received messages are secure, false otherwise
+     */
+    public boolean receivedMessagesSecure() {
+        return agent.receivedMessagesSecure();
+    }
+
+    /**
+     * Sets the decryption strategy used to receive messages.
+     *
+     * @param decryption the decryption strategy to use
+     */
+    public void setDecryption(DecryptionStrategy decryption) {
+        agent.setDecryption(decryption);
+    }
+
+    /**
+     * Logs info.
+     *
+     * @param message the information to log
+     */
+    protected void logInfo(String message) {
+        loggers.forEach(logger -> logger.logInfo(message));
+    }
+
+    /**
+     * Logs an error.
+     *
+     * @param error the error message to log
+     */
+    protected void logError(String error) {
+        loggers.forEach(logger -> logger.logError(error));
     }
 }

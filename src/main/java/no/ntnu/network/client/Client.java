@@ -3,6 +3,7 @@ package no.ntnu.network.client;
 import no.ntnu.network.ControlProcessAgent;
 import no.ntnu.network.message.context.ClientContext;
 import no.ntnu.network.message.deserialize.component.MessageDeserializer;
+import no.ntnu.network.message.request.AsymmetricEncryptionRequest;
 import no.ntnu.network.message.request.RequestMessage;
 import no.ntnu.network.message.response.ResponseMessage;
 import no.ntnu.network.message.serialize.visitor.ByteSerializerVisitor;
@@ -63,6 +64,18 @@ public abstract class Client<C extends ClientContext> extends ControlProcessAgen
      * @throws IOException thrown if an I/O exception occurs
      */
     public abstract void connect(String serverAddress) throws IOException;
+
+    /**
+     * Initializes registration at the central server, starting with requesting asymmetric encryption.
+     */
+    protected void initializeRegistration() {
+        try {
+            sendRequest(new AsymmetricEncryptionRequest());
+        } catch (IOException e) {
+            logError("Could not send request: " + e.getMessage());
+        }
+    }
+
 
     /**
      * Disconnects from the server

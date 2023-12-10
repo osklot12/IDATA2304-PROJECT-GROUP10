@@ -12,7 +12,6 @@ import no.ntnu.network.message.response.*;
 import no.ntnu.network.message.response.error.AdlUpdateRejectedError;
 import no.ntnu.network.message.response.error.DeviceInteractionFailedError;
 import no.ntnu.network.message.response.error.NoSuchVirtualDeviceError;
-import no.ntnu.network.message.response.error.SyncEncryptionRejectedError;
 import no.ntnu.network.message.sensordata.SensorDataMessage;
 import no.ntnu.network.message.serialize.NofspSerializationConstants;
 import no.ntnu.network.message.serialize.tool.DataTypeConverter;
@@ -59,6 +58,8 @@ public class NofspServerDeserializer extends NofspMessageDeserializer<ServerCont
         addRequestMessageDeserialization(NofspSerializationConstants.ACTIVATE_ACTUATOR_COMMAND, this::getServerActivateActuatorRequest);
         addRequestMessageDeserialization(NofspSerializationConstants.UNSUBSCRIBE_FROM_FIELD_NODE_COMMAND, this::getUnsubscribeFromFieldNodeRequest);
         addRequestMessageDeserialization(NofspSerializationConstants.DISCONNECT_CLIENT_COMMAND, this::getDisconnectRequest);
+        addRequestMessageDeserialization(NofspSerializationConstants.ASYMMETRIC_ENCRYPTION_REQUEST, this::getAsymmetricEncryptionRequest);
+        addRequestMessageDeserialization(NofspSerializationConstants.SYMMETRIC_ENCRYPTION_REQUEST, this::getSymmetricEncryptionRequest);
 
         // responses
         addResponseMessageDeserialization(NofspSerializationConstants.HEART_BEAT_CODE, this::getHeartBeatResponse);
@@ -67,9 +68,7 @@ public class NofspServerDeserializer extends NofspMessageDeserializer<ServerCont
         addResponseMessageDeserialization(NofspSerializationConstants.VIRTUAL_ACTUATOR_UPDATED_CODE, this::getVirtualActuatorUpdatedResponse);
         addResponseMessageDeserialization(NofspSerializationConstants.NO_SUCH_VIRTUAL_DEVICE_CODE, this::getNoSuchVirtualDeviceError);
         addResponseMessageDeserialization(NofspSerializationConstants.ACTUATOR_STATE_SET_CODE, this::getActuatorStateSetServerResponse);
-        addResponseMessageDeserialization(NofspSerializationConstants.DEVICE_INTERACTION_FAILED, this::getDeviceInteractionFailedError);
-        addResponseMessageDeserialization(NofspSerializationConstants.SYNC_ENCRYPTION_RESPONSE_CODE, this::getSyncEncryptionResponse);
-        addResponseMessageDeserialization(NofspSerializationConstants.SYNC_ENCRYPTION_REJECTED_CODE, this::getSyncEncryptionRejectedError);
+        addResponseMessageDeserialization(NofspSerializationConstants.DEVICE_INTERACTION_FAILED_CODE, this::getDeviceInteractionFailedError);
     }
 
     /**
@@ -385,47 +384,38 @@ public class NofspServerDeserializer extends NofspMessageDeserializer<ServerCont
      * @param messageId the message id
      * @param parameterReader a TlvReader holding the parameter tlvs
      * @return the deserialized request
-     * @throws IOException thrown if an I/O exception occurs
      */
     private DisconnectRequest getDisconnectRequest(int messageId, TlvReader parameterReader) {
         return new DisconnectRequest(messageId);
     }
 
     /**
-     * Deserializes a {@code SyncEncryptionResponse}.
+     * Deserializes a {@code AsymmetricEncryptionRequest}.
      *
      * @param messageId the message id
      * @param parameterReader a TlvReader holding the parameter tlvs
-     * @return the deserialized response
+     * @return the deserialized request
+     */
+    private AsymmetricEncryptionRequest getAsymmetricEncryptionRequest(int messageId, TlvReader parameterReader) {
+        return new AsymmetricEncryptionRequest(messageId);
+    }
+
+    /**
+     * Deserializes a {@code SymmetricEncryptionRequest}.
+     *
+     * @param messageId the message id
+     * @param parameterReader a TlvReader holding the parameter tlvs
+     * @return the deserialized request
      * @throws IOException thrown if an I/O exception occurs
      */
-    private SyncEncryptionResponse getSyncEncryptionResponse(int messageId, TlvReader parameterReader) throws IOException {
-        SyncEncryptionResponse response = null;
+    private SymmetricEncryptionRequest getSymmetricEncryptionRequest(int messageId, TlvReader parameterReader) throws IOException {
+        SymmetricEncryptionRequest request = null;
 
         // deserializes the secret key
         SecretKey key = getAESSecretKey(parameterReader.readNextTlv()).key();
 
-        response = new SyncEncryptionResponse(messageId, key);
+        request = new SymmetricEncryptionRequest(messageId, key);
 
-        return response;
-    }
-
-    /**
-     * Deserializes a {@code SyncEncryptionRejectedError}.
-     *
-     * @param messageId the message id
-     * @param parameterReader a TlvReader holding the parameter tlvs
-     * @return the deserialized response
-     * @throws IOException thrown if an I/O exception occurs
-     */
-    private SyncEncryptionRejectedError getSyncEncryptionRejectedError(int messageId, TlvReader parameterReader) throws IOException {
-        SyncEncryptionRejectedError response = null;
-
-        // deserializes the error description
-        String description = getRegularString(parameterReader.readNextTlv());
-
-        response = new SyncEncryptionRejectedError(messageId, description);
-
-        return response;
+        return request;
     }
 }

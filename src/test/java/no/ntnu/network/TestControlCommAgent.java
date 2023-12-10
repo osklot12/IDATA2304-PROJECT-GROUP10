@@ -1,5 +1,7 @@
 package no.ntnu.network;
 
+import no.ntnu.network.message.encryption.cipher.decrypt.DecryptionStrategy;
+import no.ntnu.network.message.encryption.cipher.encrypt.EncryptionStrategy;
 import no.ntnu.network.message.request.RequestMessage;
 import no.ntnu.network.message.response.ResponseMessage;
 import no.ntnu.network.sensordataprocess.UdpDataCommAgentProvider;
@@ -17,6 +19,8 @@ public class TestControlCommAgent implements ControlCommAgent, UdpDataCommAgentP
     private ResponseMessage responseSent;
     private int clientNodeAddress;
     private boolean closed;
+    private EncryptionStrategy encryption;
+    private DecryptionStrategy decryption;
 
     /**
      * Creates a new TestControlCommAgent.
@@ -60,6 +64,21 @@ public class TestControlCommAgent implements ControlCommAgent, UdpDataCommAgentP
     }
 
     @Override
+    public void setEncryption(EncryptionStrategy encryption) {
+        this.encryption = encryption;
+    }
+
+    @Override
+    public boolean receivedMessagesSecure() {
+        return false;
+    }
+
+    @Override
+    public void setDecryption(DecryptionStrategy decryption) {
+        this.decryption = decryption;
+    }
+
+    @Override
     public void close() {
         closed = true;
     }
@@ -89,6 +108,24 @@ public class TestControlCommAgent implements ControlCommAgent, UdpDataCommAgentP
      */
     public boolean isClosed() {
         return closed;
+    }
+
+    /**
+     * Returns the encryption strategy.
+     *
+     * @return the encryption strategy
+     */
+    public EncryptionStrategy getEncryption() {
+        return encryption;
+    }
+
+    /**
+     * Returns the decryption strategy.
+     *
+     * @return the decryption strategy
+     */
+    public DecryptionStrategy getDecryption() {
+        return decryption;
     }
 
     @Override

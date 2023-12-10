@@ -1,5 +1,9 @@
 package no.ntnu.network;
 
+import no.ntnu.network.message.encryption.cipher.decrypt.DecryptionStrategy;
+import no.ntnu.network.message.encryption.cipher.decrypt.PlainTextDecryption;
+import no.ntnu.network.message.encryption.cipher.encrypt.EncryptionStrategy;
+import no.ntnu.network.message.encryption.cipher.encrypt.PlainTextEncryption;
 import no.ntnu.tools.logger.SimpleLogger;
 import no.ntnu.network.connectionservice.ConnectionService;
 import no.ntnu.network.connectionservice.requestmanager.RequestManager;
@@ -41,6 +45,7 @@ public abstract class ControlProcessAgent<C extends MessageContext> implements C
     private volatile int clientNodeAddress;
     protected RequestManager requestManager;
     private final Set<SimpleLogger> loggers;
+    private boolean messagesAreEncrypted;
 
     /**
      * Creates a new CommunicationAgent.
@@ -50,6 +55,7 @@ public abstract class ControlProcessAgent<C extends MessageContext> implements C
         this.connected = false;
         this.clientNodeAddress = -1;
         this.loggers = new HashSet<>();
+        this.messagesAreEncrypted = false;
     }
 
     /**
@@ -340,5 +346,23 @@ public abstract class ControlProcessAgent<C extends MessageContext> implements C
      */
     public Set<SimpleLogger> getLoggers() {
         return loggers;
+    }
+
+    @Override
+    public void setEncryption(EncryptionStrategy encryption) {
+        controlProcess.setEncryption(encryption);
+    }
+
+    @Override
+    public boolean receivedMessagesSecure() {
+        return messagesAreEncrypted;
+    }
+
+    @Override
+    public void setDecryption(DecryptionStrategy decryption) {
+        controlProcess.setDecryption(decryption);
+        if (!messagesAreEncrypted && !(decryption instanceof PlainTextDecryption)) {
+            messagesAreEncrypted = true;
+        }
     }
 }

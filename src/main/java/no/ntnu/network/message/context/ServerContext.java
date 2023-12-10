@@ -27,7 +27,6 @@ import java.util.Set;
 public class ServerContext extends MessageContext {
     private final UdpDataCommAgentProvider udpDataSink;
     private final CentralHub centralHub;
-    private final Set<SimpleLogger> loggers;
 
     /**
      * Creates a new CentralServerContext.
@@ -35,9 +34,10 @@ public class ServerContext extends MessageContext {
      * @param agent       the communication agent
      * @param dataCommAgentProvider the provider of data communication agents
      * @param centralHub  the central hub
+     * @param loggers the loggers
      */
     public ServerContext(ControlCommAgent agent, UdpDataCommAgentProvider dataCommAgentProvider, CentralHub centralHub, Set<SimpleLogger> loggers) {
-        super(agent);
+        super(agent, loggers);
         if (dataCommAgentProvider == null) {
             throw new IllegalStateException("Cannot create ServerContext, because dataAgentProvider is null.");
         }
@@ -46,13 +46,8 @@ public class ServerContext extends MessageContext {
             throw new IllegalArgumentException("Cannot create ServerContext, because central hub is null.");
         }
 
-        if (loggers == null) {
-            throw new IllegalArgumentException("Cannot create Servercontext, because loggers is null.");
-        }
-
         this.udpDataSink = dataCommAgentProvider;
         this.centralHub = centralHub;
-        this.loggers = loggers;
     }
 
     /**
@@ -229,11 +224,11 @@ public class ServerContext extends MessageContext {
 
     @Override
     public void logReceivingRequest(RequestMessage request) {
-        loggers.forEach(logger -> logger.logInfo(ServerEventFormatter.requestReceived(request, agent.getRemoteEntityAsString())));
+        logInfo(ServerEventFormatter.requestReceived(request, agent.getRemoteEntityAsString()));
     }
 
     @Override
     public void logReceivingResponse(ResponseMessage response) {
-        loggers.forEach(logger -> logger.logInfo(ServerEventFormatter.responseReceived(response, agent.getRemoteEntityAsString())));
+        logInfo(ServerEventFormatter.responseReceived(response, agent.getRemoteEntityAsString()));
     }
 }

@@ -5,7 +5,7 @@ import no.ntnu.exception.EncryptionException;
 /**
  * An encryption strategy that does not perform any encryption.
  */
-public class PlainTextEncryptor implements EncryptionStrategy {
+public class PlainTextEncryption implements EncryptionStrategy {
     @Override
     public byte[] encrypt(byte[] data) throws EncryptionException {
         return data;

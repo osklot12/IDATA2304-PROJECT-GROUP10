@@ -9,13 +9,13 @@ import java.security.PublicKey;
 /**
  * An encryption strategy using the RSA algorithm.
  */
-public class RSAEncryptor extends StandardCipher implements EncryptionStrategy {
+public class RSAEncryption extends StandardCipher implements EncryptionStrategy {
     /**
-     * Creates a new RSAEncryptor.
+     * Creates a new RSAEncryption.
      *
      * @param key the key public to use for encryption
      */
-    public RSAEncryptor(PublicKey key) {
+    public RSAEncryption(PublicKey key) {
         super("RSA", Cipher.ENCRYPT_MODE, key);
     }
 

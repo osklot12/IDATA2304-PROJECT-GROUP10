@@ -13,7 +13,6 @@ import no.ntnu.network.message.response.*;
 import no.ntnu.network.message.response.error.AdlUpdateRejectedError;
 import no.ntnu.network.message.response.error.DeviceInteractionFailedError;
 import no.ntnu.network.message.response.error.NoSuchVirtualDeviceError;
-import no.ntnu.network.message.response.error.SyncEncryptionRejectedError;
 import no.ntnu.network.message.sensordata.SduSensorDataMessage;
 import no.ntnu.network.message.serialize.tool.tlv.Tlv;
 import no.ntnu.network.message.serialize.visitor.ByteSerializerVisitor;
@@ -22,6 +21,7 @@ import no.ntnu.network.representation.FieldNodeInformation;
 import org.junit.Before;
 import org.junit.Test;
 
+import javax.crypto.SecretKey;
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
@@ -288,32 +288,33 @@ public class NofspServerDeserializerTest {
     }
 
     /**
-     * Tests the serialization of the {@code SyncEncryptionResponse}.
+     * Tests the serialization of the {@code AsymmetricEncryptionRequest}.
      *
      * @throws IOException thrown if an I/O exception occurs
      */
     @Test
-    public void testSyncEncryptionResponseSerialization() throws IOException, NoSuchAlgorithmException {
-        SymmetricKeyGenerator keyGenerator = new AESKeyGenerator();
-        keyGenerator.createKey();
-        SyncEncryptionResponse response = new SyncEncryptionResponse(keyGenerator.getKey());
+    public void testAsymmetricEncryptionRequestSerialization() throws IOException {
+        AsymmetricEncryptionRequest request = new AsymmetricEncryptionRequest();
 
-        Tlv tlv = serializer.serialize(response);
+        Tlv tlv = serializer.serialize(request);
 
-        assertEquals(response, deserializer.deserializeMessage(tlv));
+        assertEquals(request, deserializer.deserializeMessage(tlv));
     }
 
     /**
-     * Tests the serialization of the {@code SyncEncryptionRejectedError}.
+     * Tests the serialization of the {@code SymmetricEncryptionRequest}.
      *
      * @throws IOException thrown if an I/O exception occurs
      */
     @Test
-    public void testSyncEncryptionRejectedErrorSerialization() throws IOException {
-        SyncEncryptionRejectedError response = new SyncEncryptionRejectedError("TestError");
+    public void testSymmetricEncryptionRequestSerialization() throws IOException, NoSuchAlgorithmException {
+        SymmetricKeyGenerator keyGen = new AESKeyGenerator();
+        keyGen.createKey();
+        SecretKey key = keyGen.getKey();
+        SymmetricEncryptionRequest request = new SymmetricEncryptionRequest(key);
 
-        Tlv tlv = serializer.serialize(response);
+        Tlv tlv = serializer.serialize(request);
 
-        assertEquals(response, deserializer.deserializeMessage(tlv));
+        assertEquals(request, deserializer.deserializeMessage(tlv));
     }
 }

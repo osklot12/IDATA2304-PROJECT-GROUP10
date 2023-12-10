@@ -1,5 +1,9 @@
 package no.ntnu.network.controlprocess;
 
+import no.ntnu.exception.EncryptionException;
+import no.ntnu.network.message.encryption.TlvEncryption;
+import no.ntnu.network.message.encryption.cipher.decrypt.DecryptionStrategy;
+import no.ntnu.network.message.encryption.cipher.decrypt.PlainTextDecryption;
 import no.ntnu.network.message.serialize.tool.InputStreamByteSource;
 import no.ntnu.network.message.serialize.tool.tlv.Tlv;
 import no.ntnu.network.message.serialize.tool.tlv.TlvFrame;
@@ -13,6 +17,7 @@ import java.net.Socket;
  */
 public class TcpTlvReceiver {
     private final TlvReader socketReader;
+    private DecryptionStrategy decryption;
 
     /**
      * Creates a new TCPMessageReceiver.
@@ -30,6 +35,20 @@ public class TcpTlvReceiver {
         }
 
         this.socketReader = new TlvReader(new InputStreamByteSource(socket.getInputStream()), tlvFrame);
+        this.decryption = new PlainTextDecryption();
+    }
+
+    /**
+     * Sets the decryption used for receiving Tlvs.
+     *
+     * @param decryption the decryption strategy to use
+     */
+    public void setDecryption(DecryptionStrategy decryption) {
+        if (decryption == null) {
+            throw new IllegalArgumentException("Cannot set decryption, because decryption strategy is null.");
+        }
+
+        this.decryption = decryption;
     }
 
     /**
@@ -40,6 +59,15 @@ public class TcpTlvReceiver {
      * @throws IOException thrown if an I/O exception occurs
      */
     public Tlv getNextTlv() throws IOException {
-        return socketReader.readNextTlv();
+        Tlv processedTlv = null;
+
+        Tlv encryptedTlv = socketReader.readNextTlv();
+        try {
+            processedTlv = TlvEncryption.decryptTlv(encryptedTlv, decryption);
+        } catch (EncryptionException e) {
+            throw new IOException("Could not decrypt the TLV: " + e.getMessage());
+        }
+
+        return processedTlv;
     }
 }

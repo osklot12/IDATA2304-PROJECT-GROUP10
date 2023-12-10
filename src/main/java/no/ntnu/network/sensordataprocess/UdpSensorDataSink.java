@@ -1,6 +1,10 @@
 package no.ntnu.network.sensordataprocess;
 
+import no.ntnu.exception.EncryptionException;
 import no.ntnu.network.message.deserialize.component.SensorDataMessageDeserializer;
+import no.ntnu.network.message.encryption.TlvEncryption;
+import no.ntnu.network.message.encryption.cipher.decrypt.DecryptionStrategy;
+import no.ntnu.network.message.encryption.cipher.decrypt.PlainTextDecryption;
 import no.ntnu.network.message.sensordata.SensorDataMessage;
 import no.ntnu.network.message.serialize.NofspSerializationConstants;
 import no.ntnu.network.message.serialize.tool.tlv.Tlv;
@@ -19,6 +23,7 @@ public class UdpSensorDataSink {
     private static final int MAX_DATAGRAM_SIZE = 1024; // careful of not exceeding the MTU
     private final UdpDatagramReceiver datagramReceiver;
     private final SensorDataMessageDeserializer deserializer;
+    private DecryptionStrategy decryption;
 
     /**
      * Creates a new UdpSensorDataSink.
@@ -34,6 +39,7 @@ public class UdpSensorDataSink {
         this.deserializer = deserializer;
         DatagramSocket datagramSocket = new DatagramSocket();
         this.datagramReceiver = new UdpDatagramReceiver(datagramSocket, MAX_DATAGRAM_SIZE);
+        this.decryption = new PlainTextDecryption();
     }
 
     /**
@@ -50,6 +56,20 @@ public class UdpSensorDataSink {
         this.deserializer = deserializer;
         DatagramSocket datagramSocket = new DatagramSocket(portNumber);
         this.datagramReceiver = new UdpDatagramReceiver(datagramSocket, MAX_DATAGRAM_SIZE);
+        this.decryption = new PlainTextDecryption();
+    }
+
+    /**
+     * Sets the decryption used for receiving Tlvs.
+     *
+     * @param decryption the decryption strategy to use
+     */
+    public void setDecryption(DecryptionStrategy decryption) {
+        if (decryption == null) {
+            throw new IllegalArgumentException("Cannot set decryption, because decryption strategy is null.");
+        }
+
+        this.decryption = decryption;
     }
 
     /**
@@ -62,12 +82,43 @@ public class UdpSensorDataSink {
     public SensorDataMessage receiveNextMessage() throws IOException {
         SensorDataMessage message = null;
 
-        DatagramPacket receivedDatagram = datagramReceiver.getNextDatagramPacket();
-        byte[] messageBytes = Arrays.copyOfRange(receivedDatagram.getData(), 0, receivedDatagram.getLength());
-        Tlv messageTlv = TlvReader.constructTlv(messageBytes, NofspSerializationConstants.TLV_FRAME);
-        message = deserializer.deserializeSensorData(messageTlv);
+        Tlv rawTlv = receiveNextRawTlv();
+        Tlv processedTlv = processTlv(rawTlv);
+        message = deserializer.deserializeSensorData(processedTlv);
 
         return message;
+    }
+
+    /**
+     * Processes a raw TLV.
+     *
+     * @param rawTlv the raw tlv to process
+     * @return the processed tlv
+     * @throws IOException thrown if an I/O exception occurs
+     */
+    private Tlv processTlv(Tlv rawTlv) throws IOException {
+        Tlv processedTlv = null;
+
+        try {
+            processedTlv = TlvEncryption.decryptTlv(rawTlv, decryption);
+        } catch (EncryptionException e) {
+            throw new IOException("Could not process the TLV: " + e.getMessage());
+        }
+
+        return processedTlv;
+    }
+
+    /**
+     * Receives the next raw Tlv from the remote socket, without any processing.
+     *
+     * @return the next raw tlv
+     * @throws IOException thrown if an I/O exception occurs
+     */
+    private Tlv receiveNextRawTlv() throws IOException {
+        DatagramPacket receivedDatagram = datagramReceiver.getNextDatagramPacket();
+        byte[] messageBytes = Arrays.copyOfRange(receivedDatagram.getData(), 0, receivedDatagram.getLength());
+
+        return TlvReader.constructTlv(messageBytes, NofspSerializationConstants.TLV_FRAME);
     }
 
     /**

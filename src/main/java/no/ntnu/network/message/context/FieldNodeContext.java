@@ -3,9 +3,12 @@ package no.ntnu.network.message.context;
 import no.ntnu.exception.ActuatorInteractionFailedException;
 import no.ntnu.exception.NoSuchDeviceException;
 import no.ntnu.fieldnode.FieldNode;
+import no.ntnu.network.message.request.RegisterFieldNodeRequest;
+import no.ntnu.network.representation.FieldNodeInformation;
 import no.ntnu.tools.logger.SimpleLogger;
 import no.ntnu.network.ControlCommAgent;
 
+import java.io.IOException;
 import java.util.Iterator;
 import java.util.Set;
 
@@ -15,29 +18,37 @@ import java.util.Set;
 public class FieldNodeContext extends ClientContext {
     private final FieldNode fieldNode;
     private final Set<Integer> adl;
+    private final String name;
 
     /**
      * Creates a FieldNodeContext.
      *
-     * @param agent the communication agent
+     * @param agent     the communication agent
      * @param fieldNode the field node to operate on
-     * @param adl the active device list for the field node
+     * @param adl       the active device list for the field node
+     * @param name the name of the field node client
+     * @param loggers   the loggers
      */
-    public FieldNodeContext(ControlCommAgent agent, FieldNode fieldNode, Set<Integer> adl, Set<SimpleLogger> loggers) {
+    public FieldNodeContext(ControlCommAgent agent, FieldNode fieldNode, Set<Integer> adl, String name, Set<SimpleLogger> loggers) {
         super(agent, loggers);
         if (fieldNode == null) {
             throw new IllegalArgumentException("Cannot create FieldNodeContext, because field node is null");
         }
 
+        if (name == null) {
+            throw new IllegalArgumentException("Cannot create FieldNodeContext, because name is null.");
+        }
+
         this.fieldNode = fieldNode;
         this.adl = adl;
+        this.name = name;
     }
 
     /**
      * Sets the state of an actuator.
      *
      * @param actuatorAddress the address of the actuator
-     * @param newState the new state to set
+     * @param newState        the new state to set
      * @throws ActuatorInteractionFailedException thrown if state for the given actuator cannot be set
      */
     public void setActuatorState(int actuatorAddress, int newState) throws ActuatorInteractionFailedException {
@@ -105,5 +116,16 @@ public class FieldNodeContext extends ClientContext {
         }
 
         return hasDevice;
+    }
+
+    @Override
+    public void register() {
+        FieldNodeInformation fieldNodeInformation =
+                new FieldNodeInformation(fieldNode.getFNST(), fieldNode.getFNSM(), name);
+        try {
+            agent.sendRequest(new RegisterFieldNodeRequest(fieldNodeInformation));
+        } catch (IOException e) {
+            logError("Cannot send registration request: " + e.getMessage());
+        }
     }
 }

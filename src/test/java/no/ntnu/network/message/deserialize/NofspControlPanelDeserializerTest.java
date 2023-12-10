@@ -7,7 +7,6 @@ import no.ntnu.network.message.deserialize.component.MessageDeserializer;
 import no.ntnu.network.message.encryption.keygen.AsymmetricKeyPairGenerator;
 import no.ntnu.network.message.encryption.keygen.RSAKeyPairGenerator;
 import no.ntnu.network.message.request.HeartbeatRequest;
-import no.ntnu.network.message.request.SyncEncryptionRequest;
 import no.ntnu.network.message.request.ServerFnsmNotificationRequest;
 import no.ntnu.network.message.response.ActuatorStateSetControlPanelResponse;
 import no.ntnu.network.message.response.FieldNodePoolResponse;
@@ -155,21 +154,5 @@ public class NofspControlPanelDeserializerTest {
         Tlv tlv = serializer.serialize(response);
 
         assertEquals(response, deserializer.deserializeMessage(tlv));
-    }
-
-    /**
-     * Tests the serialization of {@code PublicKeySharingRequest}.
-     *
-     * @throws IOException thrown if an I/O exception occurs
-     */
-    @Test
-    public void testPublicKeySharingRequest() throws IOException, NoSuchAlgorithmException {
-        AsymmetricKeyPairGenerator keyPairGenerator = new RSAKeyPairGenerator();
-        keyPairGenerator.createKeys();
-        SyncEncryptionRequest<ControlPanelContext> request = new SyncEncryptionRequest<>(keyPairGenerator.getKeyPair().getPublic());
-
-        Tlv tlv = serializer.serialize(request);
-
-        assertEquals(request, deserializer.deserializeMessage(tlv));
     }
 }

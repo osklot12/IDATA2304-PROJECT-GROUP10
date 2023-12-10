@@ -11,7 +11,7 @@ import java.security.Key;
 import java.security.NoSuchAlgorithmException;
 
 /**
- * A base class for ciphers.
+ * A base class for standard ciphers.
  */
 public abstract class StandardCipher {
     private final String transformation;
@@ -37,12 +37,6 @@ public abstract class StandardCipher {
         this.transformation = transformation;
         this.mode = mode;
         this.key = key;
-    }
-
-    protected byte[] transform(byte[] data) throws EncryptionException {
-        Cipher cipher = getCipher();
-        initializeCipher(cipher);
-        return transformData(data, cipher);
     }
 
     /**
@@ -78,7 +72,7 @@ public abstract class StandardCipher {
     }
 
     /**
-     * Transforms data.
+     * Transforms data, assuming that a cipher has already been established.
      *
      * @param data the data to transform
      * @param cipher the cipher to use for transformation
@@ -95,5 +89,18 @@ public abstract class StandardCipher {
         }
 
         return result;
+    }
+
+    /**
+     * Transforms data.
+     *
+     * @param data the data to transform
+     * @return the transformed data
+     * @throws EncryptionException thrown if data transformation fails
+     */
+    protected byte[] transform(byte[] data) throws EncryptionException {
+        Cipher cipher = getCipher();
+        initializeCipher(cipher);
+        return transformData(data, cipher);
     }
 }

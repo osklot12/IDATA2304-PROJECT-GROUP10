@@ -1,5 +1,7 @@
 package no.ntnu.network;
 
+import no.ntnu.network.message.encryption.cipher.decrypt.DecryptionStrategy;
+import no.ntnu.network.message.encryption.cipher.encrypt.EncryptionStrategy;
 import no.ntnu.network.message.request.RequestMessage;
 import no.ntnu.network.message.response.ResponseMessage;
 
@@ -58,6 +60,27 @@ public interface ControlCommAgent {
      * @param address the client node address
      */
     void setClientNodeAddress(int address);
+
+    /**
+     * Sets the encryption strategy used to encrypt messages.
+     *
+     * @param encryption the encryption strategy to use
+     */
+    void setEncryption(EncryptionStrategy encryption);
+
+    /**
+     * Returns whether received messages are secure or not.
+     *
+     * @return true if received messages are secure, false otherwise
+     */
+    boolean receivedMessagesSecure();
+
+    /**
+     * Sets the decryption strategy used to decrypt messages.
+     *
+     * @param decryption the decryption strategy to use
+     */
+    void setDecryption(DecryptionStrategy decryption);
 
     /**
      * Closes the connection.

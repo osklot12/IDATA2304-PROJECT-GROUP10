@@ -13,7 +13,7 @@ public class DeviceInteractionFailedError extends ErrorMessage<ServerContext> {
      * @param errorDescription the description of the error
      */
     public DeviceInteractionFailedError(String errorDescription) {
-        super(NofspSerializationConstants.DEVICE_INTERACTION_FAILED, errorDescription);
+        super(NofspSerializationConstants.DEVICE_INTERACTION_FAILED_CODE, errorDescription);
     }
 
     /**

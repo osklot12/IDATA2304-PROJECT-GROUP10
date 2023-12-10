@@ -57,7 +57,7 @@ public class FieldNodeClient extends Client<FieldNodeContext> implements FieldNo
         this.name = name;
         fieldNode.addListener(this);
         this.adl = new HashSet<>();
-        this.context = new FieldNodeContext(this, fieldNode, this.adl, getLoggers());
+        this.context = new FieldNodeContext(this, fieldNode, this.adl, name, getLoggers());
     }
 
     @Override
@@ -68,25 +68,12 @@ public class FieldNodeClient extends Client<FieldNodeContext> implements FieldNo
 
         if (connectToServer(serverAddress, CentralServer.CONTROL_PORT_NUMBER, serializer, deserializer)) {
             // connected and needs to register before using services of server
-            registerFieldNode();
+            initializeRegistration();
             try {
                 establishSensorDataProcess();
             } catch (SocketException e) {
                 logError("Could not establish sensor data process: " + e.getMessage());
             }
-        }
-    }
-
-    /**
-     * Registers the field node at the server.
-     */
-    private void registerFieldNode() {
-        FieldNodeInformation fieldNodeInformation =
-                new FieldNodeInformation(fieldNode.getFNST(), fieldNode.getFNSM(), name);
-        try {
-            sendRequest(new RegisterFieldNodeRequest(fieldNodeInformation));
-        } catch (IOException e) {
-            logError("Cannot send registration request: " + e.getMessage());
         }
     }
 

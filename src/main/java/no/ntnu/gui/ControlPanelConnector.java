@@ -11,6 +11,7 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import no.ntnu.controlpanel.ControlPanel;
 import no.ntnu.network.client.ControlPanelClient;
+import no.ntnu.tools.logger.SystemOutLogger;
 
 import java.io.IOException;
 
@@ -45,6 +46,7 @@ public class ControlPanelConnector extends Application {
         }
 
         ControlPanelConnector.client = new ControlPanelClient(controlPanel);
+        client.addLogger(new SystemOutLogger());
         launch();
     }
 

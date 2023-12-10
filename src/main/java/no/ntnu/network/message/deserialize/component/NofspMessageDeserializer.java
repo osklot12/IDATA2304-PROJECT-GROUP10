@@ -2,6 +2,8 @@ package no.ntnu.network.message.deserialize.component;
 
 import no.ntnu.network.message.Message;
 import no.ntnu.network.message.context.MessageContext;
+import no.ntnu.network.message.response.error.KeyGenError;
+import no.ntnu.network.message.response.error.UnsecureRequestError;
 import no.ntnu.network.message.serialize.NofspSerializationConstants;
 import no.ntnu.network.message.serialize.tool.ByteHandler;
 import no.ntnu.network.message.serialize.tool.tlv.Tlv;
@@ -120,6 +122,9 @@ public abstract class NofspMessageDeserializer<C extends MessageContext> extends
     private void initializeMessageDeserializerMap() {
         addMessageDeserialization(NofspSerializationConstants.REQUEST_BYTES, this::getRequestMessage);
         addMessageDeserialization(NofspSerializationConstants.RESPONSE_BYTES, this::getResponseMessage);
+
+        addResponseMessageDeserialization(NofspSerializationConstants.UNSECURE_REQUEST_ERROR_CODE, this::getUnsecureRequestError);
+        addResponseMessageDeserialization(NofspSerializationConstants.KEY_GEN_ERROR_CODE, this::getKeyGenError);
     }
 
     /**
@@ -216,10 +221,12 @@ public abstract class NofspMessageDeserializer<C extends MessageContext> extends
         return result;
     }
 
-    private int getResponseStatusCode(Tlv statusCodeTlv) {
-        return getInteger(statusCodeTlv).getInteger();
-    }
-
+    /**
+     * Returns a TlvReader holding the message parameters.
+     *
+     * @param parameterContainerTlv the tlv holding the parameter tlvs in its value field
+     * @return the parameter reader
+     */
     private static TlvReader getParameterReader(Tlv parameterContainerTlv) {
         TlvReader parameterReader = null;
 
@@ -230,12 +237,72 @@ public abstract class NofspMessageDeserializer<C extends MessageContext> extends
         return parameterReader;
     }
 
-    private String getRequestMessageCommand(Tlv requestMessageCommandTlv) throws IOException {
+    /**
+     * Returns the Message ID for a control message.
+     *
+     * @param messageIdTlv the TlvReader holding the message fields
+     * @return the message id
+     */
+    private int getMessageId(Tlv messageIdTlv) {
+        return getInteger(messageIdTlv).getInteger();
+    }
+
+    /**
+     * Returns the command for a Request Message.
+     *
+     * @param requestMessageCommandTlv the command tlv
+     * @return the request command
+     */
+    private String getRequestMessageCommand(Tlv requestMessageCommandTlv) {
         return getString(requestMessageCommandTlv).getString();
     }
 
-    private int getMessageId(Tlv messageIdTlv) throws IOException {
-        return getInteger(messageIdTlv).getInteger();
+    /**
+     * Returns the status code for a Response Message.
+     *
+     * @param statusCodeTlv the status code tlv
+     * @return the status code
+     */
+    private int getResponseStatusCode(Tlv statusCodeTlv) {
+        return getInteger(statusCodeTlv).getInteger();
+    }
+
+    /**
+     * Deserializes an {@code UnsecureRequestError}.
+     *
+     * @param messageId the message id
+     * @param parameterReader a TlvReader holding the parameter tlvs
+     * @return the deserialized response
+     * @throws IOException thrown if an I/O exception occurs
+     */
+    private UnsecureRequestError<C> getUnsecureRequestError(int messageId, TlvReader parameterReader) throws IOException {
+        UnsecureRequestError<C> response = null;
+
+        // deserializes the error description
+        String description = getRegularString(parameterReader.readNextTlv());
+
+        response = new UnsecureRequestError<>(description);
+
+        return response;
+    }
+
+    /**
+     * Deserializes a {@code KeyGenError}.
+     *
+     * @param messageId the message id
+     * @param parameterReader a TlvReader holding the parameter tlvs
+     * @return the deserialized response
+     * @throws IOException thrown if an I/O exception occurs
+     */
+    private KeyGenError<C> getKeyGenError(int messageId, TlvReader parameterReader) throws IOException {
+        KeyGenError<C> response = null;
+
+        // deserializes the error description
+        String description = getRegularString(parameterReader.readNextTlv());
+
+        response = new KeyGenError<>(description);
+
+        return response;
     }
 
     @Override

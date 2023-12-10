@@ -1,8 +1,5 @@
 package no.ntnu.run;
 
-import no.ntnu.environment.Environment;
-import no.ntnu.fieldnode.FieldNode;
-import no.ntnu.fieldnode.FieldNodeBuilder;
 import no.ntnu.network.client.FieldNodeClient;
 import no.ntnu.tools.FieldNodeClientGenerator;
 import no.ntnu.tools.logger.ReferencedSystemOutLogger;

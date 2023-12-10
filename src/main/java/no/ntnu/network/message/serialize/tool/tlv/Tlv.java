@@ -1,5 +1,7 @@
 package no.ntnu.network.message.serialize.tool.tlv;
 
+import no.ntnu.network.message.encryption.cipher.decrypt.DecryptionStrategy;
+import no.ntnu.network.message.encryption.cipher.encrypt.EncryptionStrategy;
 import no.ntnu.network.message.serialize.tool.ByteHandler;
 
 import java.util.Arrays;

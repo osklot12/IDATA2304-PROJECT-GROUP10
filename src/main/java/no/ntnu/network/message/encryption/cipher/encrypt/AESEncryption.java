@@ -9,13 +9,13 @@ import java.security.Key;
 /**
  * An encryption strategy using the AES algorithm.
  */
-public class AESEncryptor extends StandardCipher implements EncryptionStrategy {
+public class AESEncryption extends StandardCipher implements EncryptionStrategy {
     /**
-     * Creates a new AESEncryptor.
+     * Creates a new AESEncryption.
      *
      * @param key the secret key to use for encryption
      */
-    public AESEncryptor(Key key) {
+    public AESEncryption(Key key) {
         super("AES", Cipher.ENCRYPT_MODE, key);
     }
 

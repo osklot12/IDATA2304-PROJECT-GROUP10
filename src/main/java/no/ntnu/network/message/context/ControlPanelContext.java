@@ -4,9 +4,12 @@ import no.ntnu.controlpanel.ControlPanel;
 import no.ntnu.controlpanel.virtual.VirtualFieldNode;
 import no.ntnu.exception.NoSuchVirtualDeviceException;
 import no.ntnu.fieldnode.device.DeviceClass;
+import no.ntnu.network.message.request.RegisterControlPanelRequest;
+import no.ntnu.network.sensordataprocess.UdpSensorDataSink;
 import no.ntnu.tools.logger.SimpleLogger;
 import no.ntnu.network.ControlCommAgent;
 
+import java.io.IOException;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -16,12 +19,14 @@ import java.util.Set;
  */
 public class ControlPanelContext extends ClientContext {
     private final ControlPanel controlPanel;
+    private UdpSensorDataSink dataSink;
 
     /**
      * Creates a ControlPanelContext.
      *
      * @param agent the communication agent
      * @param controlPanel the control panel
+     * @param loggers the loggers
      */
     public ControlPanelContext(ControlCommAgent agent, ControlPanel controlPanel, Set<SimpleLogger> loggers) {
         super(agent, loggers);
@@ -40,6 +45,18 @@ public class ControlPanelContext extends ClientContext {
      */
     public ControlPanelContext(ControlCommAgent agent, ControlPanel controlPanel) {
         this(agent, controlPanel, new HashSet<>());
+    }
+
+    /**
+     * Sets the data sink for the control panel.
+     *
+     * @param dataSink the data sink
+     */
+    public void setDataSink(UdpSensorDataSink dataSink) {
+        if (dataSink == null) {
+            throw new IllegalArgumentException("Cannot set data sink, because dataSink is null.");
+        }
+        this.dataSink = dataSink;
     }
 
     /**
@@ -95,5 +112,19 @@ public class ControlPanelContext extends ClientContext {
         }
 
         controlPanel.setFieldNodePool(fieldNodePool);
+    }
+
+    @Override
+    public void register() {
+        if (dataSink == null) {
+            throw new IllegalStateException("Cannot register, because data sink has not yet been set.");
+        }
+
+        try {
+            agent.sendRequest(new RegisterControlPanelRequest(controlPanel.getCompatibilityList(),
+                    dataSink.getPortNumber()));
+        } catch (IOException e) {
+            logError("Cannot send registration request: " + e.getMessage());
+        }
     }
 }
