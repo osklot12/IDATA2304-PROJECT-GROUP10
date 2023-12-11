@@ -17,6 +17,8 @@ import java.util.List;
  * </p>
  */
 public class SimulatedFieldNodeSetupRunner {
+    private static final String IP_ADDRESS = "localhost";
+
     /**
      * The entrypoint for connecting simulated field nodes to the central server.
      * Keep in mind that the central server must be running in order to
@@ -26,7 +28,7 @@ public class SimulatedFieldNodeSetupRunner {
     public static void main(String[] args) {
         getFieldNodeClients().forEach(client -> {
             client.addLogger(new ReferencedSystemOutLogger(client.getName()));
-            client.connect(CentralServerRunner.IP_ADDRESS);
+            client.connect(IP_ADDRESS);
         });
     }
 
