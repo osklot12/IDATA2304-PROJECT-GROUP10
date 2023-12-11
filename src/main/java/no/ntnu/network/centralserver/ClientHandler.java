@@ -24,7 +24,7 @@ import java.net.Socket;
  * Responsible for handling all communication with a single client, acting as a communication agent for that client.
  */
 public class ClientHandler extends ControlProcessAgent<ServerContext> implements Runnable, ConnServiceShutdownListener, UdpDataCommAgentProvider {
-    private static final long HEARTBEAT_INTERVAL = 30000;
+    private static final long HEARTBEAT_INTERVAL = 15000;
     private static final long CLIENT_ACCEPTANCE_PHASE = 3000;
     private final ByteSerializerVisitor serializer;
     private final MessageDeserializer<ServerContext> deserializer;

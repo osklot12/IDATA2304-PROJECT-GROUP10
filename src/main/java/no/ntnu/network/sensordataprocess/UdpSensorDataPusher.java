@@ -18,7 +18,7 @@ import java.net.SocketException;
  * A sensor data process responsible for pushing sensor data messages to a given destination using UDP.
  */
 public class UdpSensorDataPusher implements DataCommAgent {
-    private static final int MAX_DATAGRAM_SIZE = 1024; // careful of not exceeding the MTU
+    private static final int MAX_DATAGRAM_SIZE = 800; // careful of not exceeding the MTU
     private final InetAddress destIpAddress;
     private final int destPortNumber;
     private final UdpDatagramSender messageSender;

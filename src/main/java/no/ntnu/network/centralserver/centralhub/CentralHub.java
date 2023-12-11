@@ -129,18 +129,6 @@ public class CentralHub implements SensorDataDestination, DeviceLookupTable {
     }
 
     /**
-     * Deregisters a client.
-     *
-     * @param clientAddress the client address
-     */
-    public synchronized void deregisterClient(int clientAddress) {
-        removeSensorDataSubscriber(clientAddress);
-        if ((fieldNodes.remove(clientAddress) == null)) {
-            controlPanels.remove(clientAddress);
-        }
-    }
-
-    /**
      * Registers a client in a register.
      *
      * @param client   the client to register
@@ -158,6 +146,28 @@ public class CentralHub implements SensorDataDestination, DeviceLookupTable {
         }
 
         return clientAddress;
+    }
+
+    /**
+     * Deregisters a client.
+     *
+     * @param clientAddress the client address
+     */
+    public synchronized void deregisterClient(int clientAddress) {
+        if (fieldNodes.remove(clientAddress) != null) {
+            handleFieldNodeRemoval(clientAddress);
+        } else if (controlPanels.remove(clientAddress) != null) {
+            removeSensorDataSubscriber(clientAddress);
+        }
+    }
+
+    /**
+     * Handles the removal of a field node.
+     *
+     * @param clientAddress the address of the field node
+     */
+    private void handleFieldNodeRemoval(int clientAddress) {
+        sensorDataRoutingTable.remove(clientAddress);
     }
 
     /**

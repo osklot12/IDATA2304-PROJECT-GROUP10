@@ -34,16 +34,7 @@ public class FieldNodePoolPullRequest extends StandardProcessingRequestMessage<S
 
     @Override
     protected ResponseMessage executeAndCreateResponse(ServerContext context) {
-        ResponseMessage response = null;
-
-        if (context.isClientRegistered()) {
-            response = new FieldNodePoolResponse(context.getFieldNodePool());
-        } else {
-            response = new AuthenticationFailedError<>("Cannot provide field node pool, because" +
-                    "control panel is not registered.");
-        }
-
-        return response;
+        return new FieldNodePoolResponse(context.getFieldNodePool());
     }
 
     @Override

@@ -20,7 +20,7 @@ import java.util.Arrays;
  * A sensor data process responsible for receiving sensor data messages from a specific source using UDP.
  */
 public class UdpSensorDataSink {
-    private static final int MAX_DATAGRAM_SIZE = 1024; // careful of not exceeding the MTU
+    private static final int MAX_DATAGRAM_SIZE = 800; // careful of not exceeding the MTU
     private final UdpDatagramReceiver datagramReceiver;
     private final SensorDataMessageDeserializer deserializer;
     private DecryptionStrategy decryption;
