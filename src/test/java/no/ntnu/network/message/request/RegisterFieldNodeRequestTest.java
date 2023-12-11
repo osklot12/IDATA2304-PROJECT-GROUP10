@@ -4,6 +4,8 @@ import no.ntnu.fieldnode.device.DeviceClass;
 import no.ntnu.network.TestControlCommAgent;
 import no.ntnu.network.centralserver.centralhub.CentralHub;
 import no.ntnu.network.message.context.ServerContext;
+import no.ntnu.network.message.response.RegistrationConfirmationResponse;
+import no.ntnu.network.message.response.error.RegistrationDeclinedError;
 import no.ntnu.network.representation.FieldNodeInformation;
 import org.junit.Before;
 import org.junit.Test;
@@ -56,6 +58,22 @@ public class RegisterFieldNodeRequestTest {
     public void testSuccessfulRegistration() throws IOException {
         request.process(context);
 
-        assertTrue(agent.getClientNodeAddress() != -1);
+        assertNotEquals(agent.getClientNodeAddress(), -1);
+        assertNotNull(hub.getFieldNodeClientProxy(agent.getClientNodeAddress()));
+        assertTrue(agent.getResponseSent() instanceof RegistrationConfirmationResponse<?>);
+    }
+
+    /**
+     * Tests that an invalid processing of the request will respond with an error.
+     *
+     * @throws IOException thrown if an I/O exception occurs
+     */
+    @Test
+    public void testInvalidRegistration() throws IOException {
+        request.process(context);
+        // trying to register the same client twice is not valid
+        request.process(context);
+
+        assertTrue(agent.getResponseSent() instanceof RegistrationDeclinedError);
     }
 }

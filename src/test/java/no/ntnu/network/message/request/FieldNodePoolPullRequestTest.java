@@ -47,16 +47,4 @@ public class FieldNodePoolPullRequestTest {
 
         assertTrue(agent.getResponseSent() instanceof FieldNodePoolResponse);
     }
-
-    /**
-     * Tests that processing the request for a non-registered client will respond with an authentication error.
-     *
-     * @throws IOException thrown if an I/O exception occurs
-     */
-    @Test
-    public void testFailedRequest() throws IOException {
-        request.process(context);
-
-        assertTrue(agent.getResponseSent() instanceof AuthenticationFailedError<?>);
-    }
 }

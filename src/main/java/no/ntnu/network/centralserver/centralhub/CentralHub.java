@@ -53,15 +53,6 @@ public class CentralHub implements SensorDataDestination, DeviceLookupTable {
     }
 
     /**
-     * Logs info.
-     *
-     * @param message the information to log
-     */
-    private void logInfo(String message) {
-        loggers.forEach(logger -> logger.logInfo(message));
-    }
-
-    /**
      * Logs an error.
      *
      * @param message the error message to log
@@ -197,6 +188,26 @@ public class CentralHub implements SensorDataDestination, DeviceLookupTable {
         allAddresses.addAll(controlPanels.keySet());
 
         return allAddresses;
+    }
+
+    /**
+     * Returns the control panel proxy for with a given address.
+     *
+     * @param address the address of the control panel proxy
+     * @return the control panel proxy, null if no control panel with the provided address exists
+     */
+    public ControlPanelClientProxy getControlPanelProxy(int address) {
+        return controlPanels.get(address);
+    }
+
+    /**
+     * Returns the field node client proxy with a given address.
+     *
+     * @param address the address of the field node proxy
+     * @return the field node proxy, null if no field node with the provided address exists
+     */
+    public FieldNodeClientProxy getFieldNodeClientProxy(int address) {
+        return fieldNodes.get(address);
     }
 
     /**
@@ -345,7 +356,7 @@ public class CentralHub implements SensorDataDestination, DeviceLookupTable {
      * @param fieldNodeAddress the address of the field node
      * @return the field node subscribers
      */
-    private Set<Integer> getFieldNodeSubscribers(int fieldNodeAddress) {
+    public Set<Integer> getFieldNodeSubscribers(int fieldNodeAddress) {
         return sensorDataRoutingTable.get(fieldNodeAddress);
     }
 

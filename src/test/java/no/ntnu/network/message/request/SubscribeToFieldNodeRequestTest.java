@@ -50,9 +50,11 @@ public class SubscribeToFieldNodeRequestTest {
         int clientAddress = hub.registerControlPanel(compatibilityList, agent, agent.getDataCommAgent(1023));
         agent.setClientNodeAddress(clientAddress);
 
-        request = new SubscribeToFieldNodeRequest(0);
+        int fieldNodeAddress = 0;
+        request = new SubscribeToFieldNodeRequest(fieldNodeAddress);
         request.process(context);
 
+        assertTrue(hub.getFieldNodeSubscribers(fieldNodeAddress).contains(clientAddress));
         assertTrue(agent.getResponseSent() instanceof SubscribedToFieldNodeResponse);
     }
 

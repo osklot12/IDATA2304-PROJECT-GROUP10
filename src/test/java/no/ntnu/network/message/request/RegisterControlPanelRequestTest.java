@@ -40,7 +40,8 @@ public class RegisterControlPanelRequestTest {
     }
 
     /**
-     * Tests that a valid processing of the message will respond with a confirmation.
+     * Tests that a valid processing of the request will register the control panel to the central hub, and send
+     * a registration confirmation response.
      *
      * @throws IOException thrown if an I/O exception occurs
      */
@@ -48,11 +49,13 @@ public class RegisterControlPanelRequestTest {
     public void testValidRegistration() throws IOException {
         request.process(context);
 
+        assertNotEquals(agent.getClientNodeAddress(), -1);
+        assertNotNull(hub.getControlPanelProxy(agent.getClientNodeAddress()));
         assertTrue(agent.getResponseSent() instanceof RegistrationConfirmationResponse<?>);
     }
 
     /**
-     * Tests that an invalid processing of the message will respond with an error.
+     * Tests that an invalid processing of the request will respond with an error.
      *
      * @throws IOException thrown if an I/O exception occurs
      */
